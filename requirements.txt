@@ -1,0 +1,3 @@
+-e .
+-e git://github.com/nosedjango/nosedjango.git@ed7d7f9aa969252ff799ec159f828eaa8c1cbc5a#egg=nosedjango-dev
+lxml==3.0.1
