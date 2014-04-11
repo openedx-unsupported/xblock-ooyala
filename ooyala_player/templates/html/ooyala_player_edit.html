@@ -1,0 +1,26 @@
+<div class="wrapper-comp-settings is-active" id="settings-tab">
+  <script id="metadata-editor-tpl" type="text/template">// JS crashes when empty //</script>
+  <ul class="list-input settings-list">
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_display_name">Title</label>
+            <input class="input setting-input edit-display-name" id="edit_display_name" value="{{ self.display_name }}" type="text">
+          </div>
+          <span class="tip setting-help">The title of the Drag and Drop that is displayed to the user</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_content_id">Content Id</label>
+            <input class="input setting-input edit-content-id" id="edit_content_id" value="{{ self.content_id }}" type="text">
+          </div>
+          <span class="tip setting-help">This is the Ooyala Content Identifier</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_transcript_id">Transcript Id</label>
+            <input class="input setting-input edit-transcript-id" id="edit_transcript_id" value="{{ self.transcript_id }}" type="text">
+          </div>
+      </li>
+  </ul>
+</div>
+<span class="xblock-editor-error-message"></span>

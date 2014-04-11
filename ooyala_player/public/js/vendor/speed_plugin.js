@@ -12,7 +12,7 @@ OO.plugin("SpeedModule", function (OO, _, $, W) {
      */
 
     var PlugIn = {};
-    $('head').append('<link rel="stylesheet" type="text/css" href="speedButton.css">');
+    /*$('head').append('<link rel="stylesheet" type="text/css" href="speedButton.css">');*/
 
 
     // A constructor for the module class

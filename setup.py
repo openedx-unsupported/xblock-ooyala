@@ -30,7 +30,7 @@ setup(
         'XBlock',
     ],
     entry_points={
-        'xblock.v1': 'ooyala-player = ooyala_player:OoyalaBlock',
+        'xblock.v1': 'ooyala-player = ooyala_player:OoyalaPlayerBlock',
     },
-    package_data=package_data("ooyala_player", ["static", "templates", "public"]),
+    package_data=package_data("ooyala_player", ["templates", "public"]),
 )
