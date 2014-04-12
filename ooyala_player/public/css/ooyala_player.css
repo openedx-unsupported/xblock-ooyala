@@ -1,0 +1,21 @@
+#ooyalaplayer {
+    position: absolute;
+}
+
+.transcript-container {
+    position: absolute;
+    margin-top: 361px;
+}
+
+.ooyala-player-container {
+    position: relative;
+}
+
+#ooyala-overlay {
+    position: absolute;
+    top: 50px;
+    width: 590px;
+    height:130px;
+    color: #0384CE;
+    z-index:20000;
+}

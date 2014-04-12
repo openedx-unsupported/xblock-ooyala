@@ -13,6 +13,25 @@ function OoyalaPlayerBlock(runtime, element) {
            /*onCreate: window.onCreate,*/
            autoplay: false
          });
+
+        var pop = Popcorn('.video');
+
+       pop.footnote({
+         start: 39,
+         end: 45,
+         text: "Thats <b>Sasha!!</b> one of our colleagues!",
+         target: "ooyala-overlay"
+       });
+
+       pop.footnote({
+         start: 4,
+         end: 15,
+         text: "<a href='http://www.edx.org'>Welcome</a> to <b>McKinsey Academys 7 STEP APPROACH!!</b>!",
+         target: "ooyala-overlay"
+       });
+
+       pop.play();
+
     });
 
 }
