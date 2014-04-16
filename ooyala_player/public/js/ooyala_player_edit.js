@@ -1,9 +1,10 @@
 function OoyalaPlayerEditBlock(runtime, element) {
-    $(element).find('.action-save').bind('click', function() {
+    $(element).find('.save-button').bind('click', function() {
         var data = {
             'display_name': $('.edit-display-name', element).val(),
             'content_id': $('.edit-content-id', element).val(),
-            'transcript_id': $('.edit-transcript-id', element).val()
+            'transcript_file_id': $('.edit-transcript-file-id', element).val(),
+            'transcript_project_id': $('.edit-transcript-project-id', element).val()
         };
 
         $('.xblock-editor-error-message', element).html();

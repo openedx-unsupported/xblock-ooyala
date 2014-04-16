@@ -4,13 +4,13 @@
 # Imports ###########################################################
 
 import logging
+import textwrap
 
 from xblock.core import XBlock
 from xblock.fields import Scope, String
 from xblock.fragment import Fragment
 
 from .utils import render_template
-
 
 # Globals ###########################################################
 
@@ -83,12 +83,13 @@ class OoyalaPlayerBlock(XBlock):
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/underscore.js'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/ooyala_player.js'))
 
-        transcript_js_url = '''
+        transcript_js_url = textwrap.dedent('''
                             //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
                             plugin=transcript&settings=width:640,height:240,skin:frost,
                             can_collapse:true,collapse_onload:true,can_print:true,can_download:true,
                             scan_view:true&player_type=ooyala&player_id={2}
                             '''.format(self.transcript_project_id, self.transcript_file_id, self.player_id)
+                            )
 
         fragment.add_javascript_url(transcript_js_url)
 

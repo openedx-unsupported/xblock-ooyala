@@ -17,10 +17,22 @@
       </li>
       <li class="field comp-setting-entry is-set">
           <div class="wrapper-comp-setting">
-            <label class="label setting-label" for="edit_transcript_id">Transcript Id</label>
-            <input class="input setting-input edit-transcript-id" id="edit_transcript_id" value="{{ self.transcript_id }}" type="text">
+            <label class="label setting-label" for="edit_transcript_project_id">Transcript Id</label>
+            <input class="input setting-input edit-transcript-project-id" id="edit_transcript_project_id" value="{{ self.transcript_project_id }}" type="text">
           </div>
+          <span class="tip setting-help">This is the 3Play Transcript Project Identifier</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_transcript_file_id">Transcript Id</label>
+            <input class="input setting-input edit-transcript-file-id" id="edit_transcript_file_id" value="{{ self.transcript_file_id }}" type="text">
+          </div>
+          <span class="tip setting-help">This is the 3Play Transcript File Identifier</span>
       </li>
   </ul>
 </div>
 <span class="xblock-editor-error-message"></span>
+<div class="row module-actions">
+    <a href="#" class="save-button action-primary action">Save</a>
+    <a href="#" class="cancel-button action">Cancel</a>
+</div>
