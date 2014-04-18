@@ -10,8 +10,11 @@ function OoyalaPlayerBlock(runtime, element) {
         $('#transcript_'+transcript_id).appendTo('.transcript-container');
 
          window[player_id] = OO.Player.create('ooyalaplayer', content_id, {
-           /*onCreate: window.onCreate,*/
-           autoplay: false
+             /*onCreate: window.onCreate,*/
+             autoplay: false,
+             {% if self.enable_player_token %}
+             embedToken : '{{ self.player_token }}'
+             {% endif %}
          });
 
         var pop = Popcorn('.video');
