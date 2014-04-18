@@ -6,12 +6,16 @@
 import logging
 import textwrap
 
+from lxml import etree
+from StringIO import StringIO
+
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
 
 from .utils import render_template
 from .tokens import generate_player_token
+from .overlay import OoyalaOverlay
 
 # Globals ###########################################################
 
@@ -87,12 +91,31 @@ class OoyalaPlayerBlock(XBlock):
         default=600
     )
 
+    xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
+                        scope=Scope.content)
+
     player_id = '635104fd644c4170ae227af2de27deab'
 
     @property
     def player_token(self):
         return generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
                                      self.content_id, self.expiration_time)
+
+    @property
+    def overlays(self):
+        """
+        Parse the xml config and return the overlays
+        """
+
+        overlays = []
+        node = etree.parse(StringIO(self.xml_config)).getroot()
+        overlays_node = node.find('overlays')
+        if overlays_node is not None:
+            for child_id, xml_child in enumerate(overlays_node.findall('overlay')):
+                overlay = OoyalaOverlay.init_overlay_from_node(xml_child)
+                overlays.append(overlay)
+
+        return overlays
 
     def student_view(self, context):
         """
@@ -122,7 +145,14 @@ class OoyalaPlayerBlock(XBlock):
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/popcorn.js'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/underscore.js'))
-        fragment.add_javascript(render_template('public/js/ooyala_player.js', {'self': self}))
+
+        overlay_fragments = ""
+        for overlay in self.overlays:
+            overlay_fragments += overlay.render()
+        fragment.add_javascript(render_template('public/js/ooyala_player.js', {
+            'self': self,
+            'overlay_fragments': overlay_fragments
+        }))
 
         transcript_js_url = textwrap.dedent('''\
         //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
@@ -155,16 +185,28 @@ class OoyalaPlayerBlock(XBlock):
     @XBlock.json_handler
     def studio_submit(self, submissions, suffix=''):
 
-        self.display_name = submissions['display_name']
-        self.content_id = submissions['content_id']
-        self.transcript_file_id = submissions['transcript_file_id']
-        self.transcript_project_id = submissions['transcript_project_id']
-        self.enable_player_token = submissions['enable_player_token']
-        self.partner_code = submissions['partner_code']
-        self.api_key = submissions['api_key']
-        self.api_secret_key = submissions['api_secret_key']
-        self.expiration_time = submissions['expiration_time']
+        xml_config = submissions['xml_config']
+        try:
+            etree.parse(StringIO(xml_config))
+        except etree.XMLSyntaxError as e:
+            response = {
+                'result': 'error',
+                'message': e.message
+            }
+        else:
+            response = {
+                'result': 'success',
+            }
 
-        return {
-            'result': 'success',
-        }
+            self.xml_config = xml_config
+            self.display_name = submissions['display_name']
+            self.content_id = submissions['content_id']
+            self.transcript_file_id = submissions['transcript_file_id']
+            self.transcript_project_id = submissions['transcript_project_id']
+            self.enable_player_token = submissions['enable_player_token']
+            self.partner_code = submissions['partner_code']
+            self.api_key = submissions['api_key']
+            self.api_secret_key = submissions['api_secret_key']
+            self.expiration_time = submissions['expiration_time']
+
+        return response
