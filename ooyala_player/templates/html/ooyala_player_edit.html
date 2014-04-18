@@ -70,6 +70,13 @@
           </div>
           <span class="tip setting-help">Expiration time in seconds. Needed to generate a player token.</span>
       </li>
+      <li class="field comp-setting-entry is-set">
+        <div class="wrapper-comp-settings is-active" id="settings-tab">
+          <label class="label setting-label" for="edit_xml_config">XML Configuration</label>
+          <script id="metadata-editor-tpl" type="text/template">// JS crashes when empty //</script>
+          <textarea class="block-xml-editor">{{ self.xml_config }}</textarea>
+        </div>
+      </li>
   </ul>
 </div>
 <span class="xblock-editor-error-message"></span>
