@@ -29,6 +29,47 @@
           </div>
           <span class="tip setting-help">This is the 3Play Transcript File Identifier</span>
       </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_enable_player_token">Enable Player Token</label>
+            <select
+               id="edit_enable_player_token"
+               class="input setting-input edit-enable-player-token"
+               >
+              <option value="True" {% if self.enable_player_token %} selected {% endif %}>True</option>
+              <option value="False" {% if not self.enable_player_token %} selected {% endif %}>False</option>
+            </select>
+          </div>
+          <span class="tip setting-help">Needed to generate a player token.</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_partner_code">Partner Code</label>
+            <input class="input setting-input edit-partner-code" id="edit_partner_code" value="{{ self.partner_code }}" type="text">
+          </div>
+          <span class="tip setting-help">Needed to generate a player token.</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_api_key">Api Key</label>
+            <input class="input setting-input edit-api-key" id="edit_api_key" value="{{ self.api_key }}" type="text">
+          </div>
+          <span class="tip setting-help">Needed to generate a player token.</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_api_secret_key">Api Secret Key</label>
+            <input class="input setting-input edit-api-secret-key" id="edit_api_secret_key" value="{{ self.api_secret_key }}" type="text">
+          </div>
+          <span class="tip setting-help">Needed to generate a player token.</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_api_expiration_time">Expiration Time</label>
+            <input class="input setting-input edit-expiration-time" id="edit_expiration_time" value="{{ self.expiration_time }}" type="text">
+          </div>
+          <span class="tip setting-help">Expiration time in seconds. Needed to generate a player token.</span>
+      </li>
   </ul>
 </div>
 <span class="xblock-editor-error-message"></span>
