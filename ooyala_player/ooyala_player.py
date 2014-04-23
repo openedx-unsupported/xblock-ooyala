@@ -125,7 +125,7 @@ class OoyalaPlayerBlock(XBlock):
         context = {
             'title': self.display_name,
             'content_id': self.content_id,
-            'transcript_id': self.transcript_file_id,
+            'transcript_file_id': self.transcript_file_id,
             'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
         }
@@ -154,15 +154,15 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments
         }))
 
-        transcript_js_url = textwrap.dedent('''\
-        //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
-        plugin=transcript&settings=width:640,height:240,skin:frost,
-        can_collapse:true,collapse_onload:true,can_print:true,can_download:true,
-        scan_view:true&player_type=ooyala&player_id={2}
-        '''.format(self.transcript_project_id, self.transcript_file_id, self.player_id)
-                            )
+        if self.transcript_project_id and self.transcript_file_id:
+            transcript_js_url = textwrap.dedent('''\
+            //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
+            plugin=transcript&settings=width:640,height:240,skin:frost,
+            can_collapse:true,collapse_onload:true,can_print:true,can_download:true,
+            scan_view:true&player_type=ooyala&player_id={2}
+            '''.format(self.transcript_project_id, self.transcript_file_id, self.player_id))
 
-        fragment.add_javascript_url(transcript_js_url)
+            fragment.add_javascript_url(transcript_js_url)
 
         fragment.initialize_js('OoyalaPlayerBlock')
 

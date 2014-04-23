@@ -3,12 +3,16 @@
 }
 
 .transcript-container {
-    position: absolute;
-    margin-top: 361px;
+    position: relative;
+    margin-top: 10px;
+    height: auto;
 }
 
 .ooyala-player-container {
     position: relative;
+    width: 640px;
+    min-height: 360px;
+    height:auto;
 }
 
 #ooyala-overlay {
