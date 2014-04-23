@@ -1,6 +1,5 @@
 function OoyalaPlayerBlock(runtime, element) {
     OO.ready(function() {
-
         var content_id = $('.ooyalaplayer', element).data('content-id');
         var player_id = $('.ooyalaplayer', element).data('player-id');
         var transcript_id = $('.ooyalaplayer', element).data('transcript-id');
@@ -23,6 +22,12 @@ function OoyalaPlayerBlock(runtime, element) {
 
         pop.play();
 
+        {% if self.transcript_project_id and self.transcript_file_id %}
+        // HACK to get the transcript plugin loaded in Studio.
+        setTimeout(function() {
+            p3_window_loaded = true;
+            run_p3();
+        }, 2000);
+        {% endif %}
     });
-
 }

@@ -125,7 +125,7 @@ class OoyalaPlayerBlock(XBlock):
         context = {
             'title': self.display_name,
             'content_id': self.content_id,
-            'transcript_id': self.transcript_file_id,
+            'transcript_file_id': self.transcript_file_id,
             'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
         }
