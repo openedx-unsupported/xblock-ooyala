@@ -1,5 +1,6 @@
-<div class="wrapper-comp-settings is-active" id="settings-tab">
-  <script id="metadata-editor-tpl" type="text/template">// JS crashes when empty //</script>
+{% load i18n %}
+
+<div id="ooyalaplayer-edit" class="wrapper-comp-settings editor-with-buttons is-active" id="settings-tab">
   <ul class="list-input settings-list">
       <li class="field comp-setting-entry is-set">
           <div class="wrapper-comp-setting">
@@ -78,9 +79,16 @@
         </div>
       </li>
   </ul>
-</div>
-<span class="xblock-editor-error-message"></span>
-<div class="row module-actions">
-    <a href="#" class="save-button action-primary action">Save</a>
-    <a href="#" class="cancel-button action">Cancel</a>
+  <div class="xblock-actions">
+    <span class="xblock-editor-error-message"></span>
+    <ul>
+      <li class="action-item">
+        <a href="#" class="button action-primary save-button">{% trans "Save" %}</a>
+      </li>
+
+      <li class="action-item">
+        <a href="#" class="button cancel-button">{% trans "Cancel" %}</a>
+      </li>
+    </ul>
+  </div>
 </div>
