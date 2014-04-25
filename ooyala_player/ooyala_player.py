@@ -94,7 +94,7 @@ class OoyalaPlayerBlock(XBlock):
     xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
                         scope=Scope.content)
 
-    player_id = '635104fd644c4170ae227af2de27deab'
+    player_id = '8582dca2417b4e13bed27a4f0647c139'
 
     @property
     def player_token(self):
