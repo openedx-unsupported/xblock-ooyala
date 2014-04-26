@@ -39,21 +39,21 @@ class OoyalaPlayerBlock(XBlock):
         display_name="Content Id",
         help="Identifier for the Content Id.",
         scope=Scope.content,
-        default='hkdjY5bDq8v1L5e1S4NZ3nvIKi8ADt1n'
+        default='54bjVpbTr-BnKKHR1pIZ3Wb6wSSyJQUP'
     )
 
     transcript_file_id = String(
         display_name="3Play Transcript Id",
         help="Identifier for the 3Play Transcript File",
         scope=Scope.content,
-        default='375889'
+        default=''
     )
 
     transcript_project_id = String(
         display_name="3Play Transcript Project Id",
         help='Identifier for the 3Play Transcript Project',
         scope=Scope.content,
-        default='12901'
+        default=''
     )
 
     enable_player_token = Boolean(
@@ -94,7 +94,7 @@ class OoyalaPlayerBlock(XBlock):
     xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
                         scope=Scope.content)
 
-    player_id = '635104fd644c4170ae227af2de27deab'
+    player_id = '8582dca2417b4e13bed27a4f0647c139'
 
     @property
     def player_token(self):
