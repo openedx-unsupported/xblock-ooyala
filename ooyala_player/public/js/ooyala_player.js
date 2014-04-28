@@ -22,12 +22,17 @@ function OoyalaPlayerBlock(runtime, element) {
 
         pop.play();
 
-        {% if self.transcript_project_id and self.transcript_file_id %}
-        // HACK to get the transcript plugin loaded in Studio.
-        setTimeout(function() {
-            p3_window_loaded = true;
-            run_p3();
-        }, 2000);
+        {% if self.transcript_enabled %}
+        // The 3PlayMedia transcript plugin is made to load after the window "load" event. In
+        // Studio, we load things differently, so we need something to initialize the plugin.
+        // setup a simple interval to check if we can start the initialization.
+        var interval_id = setInterval(function() {
+            if (!_.isUndefined(run_p3)) {
+                p3_window_loaded = true;
+                run_p3();
+                clearInterval(interval_id);
+            }
+        }, 500);
         {% endif %}
     });
 }
