@@ -117,6 +117,10 @@ class OoyalaPlayerBlock(XBlock):
 
         return overlays
 
+    @property
+    def transcript_enabled(self):
+        return self.transcript_project_id and self.transcript_file_id
+
     def student_view(self, context):
         """
         Player view, displayed to the student
@@ -154,7 +158,7 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments
         }))
 
-        if self.transcript_project_id and self.transcript_file_id:
+        if self.transcript_enabled:
             transcript_js_url = textwrap.dedent('''\
             //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
             plugin=transcript&settings=width:640,height:240,skin:frost,
