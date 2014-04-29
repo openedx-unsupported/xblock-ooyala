@@ -1,4 +1,8 @@
 function OoyalaPlayerBlock(runtime, element) {
+
+    // Setup the speed plugin
+    OoyalaPlayerSpeedPlugin();
+
     OO.ready(function() {
         var content_id = $('.ooyalaplayer', element).data('content-id');
         var player_id = $('.ooyalaplayer', element).data('player-id');
