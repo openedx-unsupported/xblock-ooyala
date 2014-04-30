@@ -21,7 +21,12 @@ function OoyalaPlayerBlock(runtime, element) {
             player_options.embedToken = player_token;
         }
 
-        OO.Player.create(dom_id, content_id, player_options);
+        var id = 'ooyala-player-'+ dom_id;
+        if (!_.isUndefined(window[id])) {
+            window[id].destroy();
+        }
+
+        window[id] = OO.Player.create(dom_id, content_id, player_options);
 
         var pop = Popcorn('#' + dom_id + ' .video');
 
