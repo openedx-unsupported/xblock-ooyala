@@ -1,12 +1,12 @@
 {% autoescape off %}
 <div class="ooyala-player-xblock-wrapper">
     <div class="ooyala-player-container">
-        <div id='ooyalaplayer' class='ooyalaplayer' data-content-id='{{content_id}}'
+        <div id='{{dom_id}}' class='ooyalaplayer' data-content-id='{{content_id}}'
              data-player-id='{{player_id}}'
              data-transcript-id='{{transcript_file_id}}'
              >
         </div>
-        <div id="ooyala-overlay"></div>
+        <div id="ooyala-overlay" class="ooyala-overlay"></div>
     </div>
 
     <div class="transcript-container">
