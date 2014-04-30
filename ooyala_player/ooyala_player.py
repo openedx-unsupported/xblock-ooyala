@@ -126,12 +126,15 @@ class OoyalaPlayerBlock(XBlock):
         Player view, displayed to the student
         """
 
+        dom_id = 'ooyala-' + self.location.name
+
         context = {
             'title': self.display_name,
             'content_id': self.content_id,
             'transcript_file_id': self.transcript_file_id,
             'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
+            'dom_id': dom_id,
         }
 
         fragment = Fragment()
@@ -155,7 +158,8 @@ class OoyalaPlayerBlock(XBlock):
             overlay_fragments += overlay.render()
         fragment.add_javascript(render_template('public/js/ooyala_player.js', {
             'self': self,
-            'overlay_fragments': overlay_fragments
+            'overlay_fragments': overlay_fragments,
+            'dom_id': dom_id,
         }))
 
         if self.transcript_enabled:

@@ -8,7 +8,7 @@ function OoyalaPlayerBlock(runtime, element) {
         // after it is injected by the 3Play JS code
         $('#transcript_'+transcript_id).appendTo('.transcript-container');
 
-        window[player_id] = OO.Player.create('ooyalaplayer', content_id, {
+        window[player_id] = OO.Player.create('{{dom_id}}', content_id, {
             /*onCreate: window.onCreate,*/
             autoplay: false,
             {% if self.enable_player_token %}
