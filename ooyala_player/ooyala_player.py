@@ -167,8 +167,7 @@ class OoyalaPlayerBlock(XBlock):
         fragment.add_javascript(render_template('public/js/ooyala_player.js', {
             'self': self,
             'overlay_fragments': overlay_fragments,
-            'dom_id': dom_id,
-            'location_name': self.location.name
+            'dom_id': dom_id
         }))
 
         if self.transcript_enabled:
@@ -181,7 +180,7 @@ class OoyalaPlayerBlock(XBlock):
 
             fragment.add_javascript_url(transcript_js_url)
 
-        fragment.initialize_js('OoyalaPlayerBlock'+self.location.name)
+        fragment.initialize_js('OoyalaPlayerBlock')
 
         return fragment
 

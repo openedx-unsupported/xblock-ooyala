@@ -1,4 +1,4 @@
-function OoyalaPlayerBlock{{ location_name }}(runtime, element) {
+function OoyalaPlayerBlock(runtime, element) {
     OO.ready(function() {
         var content_id = $('.ooyalaplayer', element).data('content-id');
         var player_id = $('.ooyalaplayer', element).data('player-id');
