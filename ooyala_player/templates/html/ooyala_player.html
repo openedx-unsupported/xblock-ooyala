@@ -1,15 +1,23 @@
 {% autoescape off %}
 <div class="ooyala-player-xblock-wrapper">
     <div class="ooyala-player-container">
-        <div id='{{dom_id}}' class='ooyalaplayer' data-content-id='{{content_id}}'
+        <div id='{{dom_id}}' class='ooyalaplayer'
+             data-content-id='{{content_id}}'
+             data-dom-id='{{dom_id}}'
              data-player-id='{{player_id}}'
              data-transcript-id='{{transcript_file_id}}'
+             data-player-token='{{player_token}}'
+             data-transcript-enabled='{{transcript_enabled}}'
              >
         </div>
-        <div id="ooyala-overlay" class="ooyala-overlay"></div>
+        <div id="ooyala-overlay-container-{{dom_id}}" class="ooyala-overlay"></div>
     </div>
 
-    <div class="transcript-container">
+    <div class="ooyala-overlays">
+      {{overlay_fragments|safe}}
+    </div>
+
+    <div class="transcript-container-{{dom_id}}">
         <!-- Do not delete. The two following divs is to get ooyala transcript plugin loading properly in studio -->
         <div id="p3-js-main-root"></div>
         <div id="transcript_{{ transcript_file_id }}"></div>

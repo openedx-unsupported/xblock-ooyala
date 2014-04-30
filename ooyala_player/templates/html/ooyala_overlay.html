@@ -1,6 +1,8 @@
-pop.footnote({
-    start: {{ self.start }},
-    end: {{ self.end }},
-    text: "{{ self.text|escapejs|safe }}",
-    target: "ooyala-overlay"
-});
+<div
+   class="ooyala-overlay"
+   data-start="{{ self.start }}"
+   data-end="{{ self.end }}"
+   data-text="{{ self.text|escapejs|safe }}"
+   data-target="{{ self.target }}"
+   >
+</div>
