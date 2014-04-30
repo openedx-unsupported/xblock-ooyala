@@ -98,6 +98,9 @@ class OoyalaPlayerBlock(XBlock):
 
     @property
     def player_token(self):
+        if not self.enable_player_token:
+            return ''
+
         return generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
                                      self.content_id, self.expiration_time)
 
@@ -110,16 +113,17 @@ class OoyalaPlayerBlock(XBlock):
         overlays = []
         node = etree.parse(StringIO(self.xml_config)).getroot()
         overlays_node = node.find('overlays')
+        video_id = 'ooyala-' + self.location.name
         if overlays_node is not None:
             for child_id, xml_child in enumerate(overlays_node.findall('overlay')):
-                overlay = OoyalaOverlay.init_overlay_from_node(xml_child)
+                overlay = OoyalaOverlay.init_overlay_from_node(xml_child, video_id)
                 overlays.append(overlay)
 
         return overlays
 
     @property
     def transcript_enabled(self):
-        return self.transcript_project_id and self.transcript_file_id
+        return bool(self.transcript_project_id and self.transcript_file_id)
 
     def student_view(self, context):
         """
@@ -128,13 +132,20 @@ class OoyalaPlayerBlock(XBlock):
 
         dom_id = 'ooyala-' + self.location.name
 
+        overlay_fragments = ""
+        for overlay in self.overlays:
+            overlay_fragments += overlay.render()
+
         context = {
             'title': self.display_name,
             'content_id': self.content_id,
             'transcript_file_id': self.transcript_file_id,
             'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
-            'dom_id': dom_id
+            'player_token': self.player_token,
+            'dom_id': dom_id,
+            'transcript_enabled': self.transcript_enabled,
+            'overlay_fragments': overlay_fragments
         }
 
         fragment = Fragment()
@@ -153,9 +164,6 @@ class OoyalaPlayerBlock(XBlock):
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/popcorn.js'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/underscore.js'))
 
-        overlay_fragments = ""
-        for overlay in self.overlays:
-            overlay_fragments += overlay.render()
         fragment.add_javascript(render_template('public/js/ooyala_player.js', {
             'self': self,
             'overlay_fragments': overlay_fragments,

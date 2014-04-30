@@ -11,7 +11,7 @@ class OoyalaOverlay(object):
     """
 
     @classmethod
-    def init_overlay_from_node(cls, node):
+    def init_overlay_from_node(cls, node, video_id):
         """
         Parse an overlay xml child and initialize an overlay object.
         """
@@ -34,12 +34,17 @@ class OoyalaOverlay(object):
         else:
             text = node.text
 
-        return OoyalaOverlay(start, end, text)
+        return OoyalaOverlay(start, end, text, video_id)
 
-    def __init__(self, start, end, text):
+    def __init__(self, start, end, text, video_id):
         self.start = start
         self.end = end
         self.text = text
+        self.video_id = video_id
+
+    @property
+    def target(self):
+        return 'ooyala-overlay-container-' + self.video_id
 
     def render(self):
         """
