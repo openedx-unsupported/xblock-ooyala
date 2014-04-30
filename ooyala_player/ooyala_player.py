@@ -134,7 +134,7 @@ class OoyalaPlayerBlock(XBlock):
             'transcript_file_id': self.transcript_file_id,
             'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
-            'dom_id': dom_id,
+            'dom_id': dom_id
         }
 
         fragment = Fragment()
@@ -160,6 +160,7 @@ class OoyalaPlayerBlock(XBlock):
             'self': self,
             'overlay_fragments': overlay_fragments,
             'dom_id': dom_id,
+            'location_name': self.location.name
         }))
 
         if self.transcript_enabled:
@@ -172,7 +173,7 @@ class OoyalaPlayerBlock(XBlock):
 
             fragment.add_javascript_url(transcript_js_url)
 
-        fragment.initialize_js('OoyalaPlayerBlock')
+        fragment.initialize_js('OoyalaPlayerBlock'+self.location.name)
 
         return fragment
 
