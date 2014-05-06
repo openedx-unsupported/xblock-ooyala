@@ -51,7 +51,7 @@ function OoyalaPlayerBlock(runtime, element) {
             // Studio, we load things differently, so we need something to initialize the plugin.
             // setup a simple interval to check if we can start the initialization.
             var interval_id = setInterval(function() {
-                if (!_.isUndefined(run_p3)) {
+                if (!_.isUndefined(window['run_p3'])) {
                     p3_window_loaded = true;
                     run_p3();
                     clearInterval(interval_id);
