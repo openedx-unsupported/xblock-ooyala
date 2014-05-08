@@ -13,7 +13,7 @@ function OoyalaPlayerBlock(runtime, element) {
         $('#transcript_'+transcript_id).appendTo('.transcript-container-'+dom_id);
 
         var player_options = {
-            /*onCreate: window.onCreate,*/
+            onCreate: window.onCreate,
             autoplay: false
         };
 
@@ -26,7 +26,8 @@ function OoyalaPlayerBlock(runtime, element) {
             window[id].destroy();
         }
 
-        window[id] = OO.Player.create(dom_id, content_id, player_options);
+        /* we have to initialize the window[player_id], internal OO requirement? */
+        window[id] = window[player_id] = OO.Player.create(dom_id, content_id, player_options);
 
         var pop = Popcorn('#' + dom_id + ' .video');
 
@@ -52,6 +53,7 @@ function OoyalaPlayerBlock(runtime, element) {
             // setup a simple interval to check if we can start the initialization.
             var interval_id = setInterval(function() {
                 if (!_.isUndefined(window['run_p3'])) {
+                    p3_already_loaded = false;
                     p3_window_loaded = true;
                     run_p3();
                     clearInterval(interval_id);
