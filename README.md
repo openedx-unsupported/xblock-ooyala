@@ -71,4 +71,30 @@ Not available yet.
 Running tests
 -------------
 
-Not available yet.
+1. In a virtualenv, run
+
+```bash
+$ (cd .../xblock-sdk/; pip install -r requirements.txt)
+$ (cd .../xblock-ooyala/; pip install -r tests/requirements.txt)
+```
+
+2. In the xblock-sdk repository, create the following configuration file in `workbench/settings_ooyala.py`
+
+```python
+from settings import *
+
+INSTALLED_APPS += ('ooyala_player',)
+DATABASES['default']['NAME'] = 'workbench.sqlite'
+```
+
+3. Run this to sync the database before starting the workbench (answering no to the superuser question is ok):
+
+```bash
+$ .../xblock-sdk/manage.py syncdb --settings=workbench.settings_ooyala
+```
+
+4. To run the tests, from the xblock-ooyala repository root:
+
+```bash
+$ DJANGO_SETTINGS_MODULE="workbench.settings_ooyala" nosetests --rednose --verbose --with-cover --cover-package=ooyala_player
+```
