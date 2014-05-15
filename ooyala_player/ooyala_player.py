@@ -171,6 +171,10 @@ class OoyalaPlayerBlock(XBlock):
         }))
 
         if self.transcript_enabled:
+            transcript_css_js = "p3_external_stylesheet = '" + \
+                                self.runtime.local_resource_url(self, 'public/css/transcript.css') + "';"
+            fragment.add_javascript(transcript_css_js)
+
             transcript_js_url = textwrap.dedent('''\
             //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
             plugin=transcript&settings=width:640,height:240,skin:frost,

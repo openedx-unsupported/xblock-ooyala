@@ -6,12 +6,6 @@
     position: absolute;
 }
 
-.transcript-container {
-    position: relative;
-    margin-top: 10px;
-    height: auto;
-}
-
 .ooyala-player-container {
     position: relative;
     width: 640px;
