@@ -6,12 +6,6 @@
     position: absolute;
 }
 
-.transcript-container {
-    position: relative;
-    margin-top: 10px;
-    height: auto;
-}
-
 .ooyala-player-container {
     position: relative;
     width: 640px;
@@ -19,11 +13,73 @@
     height:auto;
 }
 
-.ooyala-overlay {
+.ooyala-overlay > div {
     position: absolute;
-    top: 50px;
-    width: 590px;
-    height:130px;
-    color: #0384CE;
+    top: 12px;
+    margin-left:318px;
+    height:auto;
     z-index:20000;
+    padding:10px 10px;
+    background:#FAFAFA;
+    width:300px;
+    border-radius:10px;
+    opacity:0.4;
+    font-family:Regular sans-serif;
+    font-size:14px;
+}
+
+.ooyalaplayer .oo_controls .oo_playhead_progress {
+    background-color:#4A4A4A !important;
+}
+
+.ooyalaplayer .oo_controls .oo_fullscreen_on {
+    cursor: pointer !important;
+    background-size:45px 46px !important;
+    background-image: url('../images/maximize_button.png') !important;
+    left: 561 !important;
+}
+
+.ooyalaplayer .oo_controls .oo_fullscreen_off {
+    cursor: pointer !important;
+    background-size: 45px 46px !important;
+    background-image: url('../images/minimize.png') !important;
+}
+
+.ooyalaplayer .oo_controls .oo_playhead {
+    cursor: pointer !important;
+    background-image: url('../images/scrubber.png') !important;
+    background-size: 57px 57px !important;
+}
+
+.ooyalaplayer .oo_controls .oo_play {
+    cursor:pointer !important;
+    background-size:45px 46px !important;
+    background-image: url('../images/play.png') !important;
+}
+
+.ooyalaplayer .oo_controls .oo_pause {
+    cursor: pointer !important;
+    background-size: 45px 46px !important;
+    background-image: url('../images/pause.png') !important;
+}
+
+.ooyalaplayer .oo_full_controls .oo_playhead {
+    cursor: pointer !important;
+    height: 28px !important;
+    width: 29px !important;
+    margin: -4px !important;
+    padding: 4px !important;
+    top: -18px !important;
+}
+
+.ooyalaplayer .oo_controls .oo_label {
+    font-family: Open sans-serif !important;
+    color: #D1D1D1 !important;
+}
+
+.ooyalaplayer .oo_full_controls .vod .oo_scrubber {
+    left: 73px !important;
+    right: 60px !important;
+    top: 9px !important;
+    bottom: 10px !important;
 }
