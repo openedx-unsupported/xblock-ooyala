@@ -23,6 +23,7 @@ def load_resource(resource_path):
     resource_content = pkg_resources.resource_string(__name__, resource_path)
     return unicode(resource_content)
 
+
 def render_template(template_path, context={}):
     """
     Evaluate a template by resource path, applying the provided context
@@ -31,8 +32,8 @@ def render_template(template_path, context={}):
     template = Template(template_str)
     return template.render(Context(context))
 
+
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
-

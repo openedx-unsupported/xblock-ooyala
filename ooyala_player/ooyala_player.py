@@ -156,7 +156,6 @@ class OoyalaPlayerBlock(XBlock):
         # custom speed plugin style
         fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/speedplugin.css'))
 
-        #fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/jquery-1_10_1.js'))
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
 
         player_url = '//player.ooyala.com/v3/{0}?platform=html5-priority'.format(self.player_id)
