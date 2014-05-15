@@ -121,5 +121,5 @@
 }
 
 .ooyala-player-xblock-wrapper .frost .scan-view {
-    display: none;
+    display: none !important;
 }
