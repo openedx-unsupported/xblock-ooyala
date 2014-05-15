@@ -6,6 +6,10 @@
     position: absolute;
 }
 
+.ooyalaplayer * {
+    box-sizing: border-box;
+}
+
 .ooyala-player-container {
     position: relative;
     width: 640px;
@@ -49,6 +53,7 @@
     cursor: pointer !important;
     background-image: url('../images/scrubber.png') !important;
     background-size: 57px 57px !important;
+    background-position: center;
 }
 
 .ooyalaplayer .oo_controls .oo_play {
@@ -69,7 +74,6 @@
     width: 29px !important;
     margin: -4px !important;
     padding: 4px !important;
-    top: -18px !important;
 }
 
 .ooyalaplayer .oo_controls .oo_label {
