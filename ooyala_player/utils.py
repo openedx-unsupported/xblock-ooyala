@@ -31,9 +31,3 @@ def render_template(template_path, context={}):
     template_str = load_resource(template_path)
     template = Template(template_str)
     return template.render(Context(context))
-
-
-class AttrDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
