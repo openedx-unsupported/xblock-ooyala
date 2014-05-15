@@ -20,6 +20,16 @@
     font-style: italic;
 }
 
+.ooyala-player-xblock-wrapper .p3-transcript-searchform button {
+    box-shadow: none;
+    display: inline;
+}
+
+.ooyala-player-xblock-wrapper .p3-transcript-searchform .p3-transcript-search-submit {
+    position: absolute;
+    left: 170px;
+}
+
 .ooyala-player-xblock-wrapper .ice .p3-transcript-controller {
     background: #FAFAFA;
     border-color: #E3E3E3;
@@ -34,6 +44,11 @@
     border-style: solid;
     border-width: 1px;
     background-image:none;
+}
+
+.ooyala-player-xblock-wrapper .frost .p3-transcript-button {
+    width: 22px;
+    margin: 0 2px;
 }
 
 .ooyala-player-xblock-wrapper .ice .p3-transcript-search-inputs {
@@ -103,4 +118,8 @@
 .ooyala-player-xblock-wrapper .frost .current_word {
     background: #39BBE2;
     color: #fff;
+}
+
+.ooyala-player-xblock-wrapper .frost .scan-view {
+    display: none;
 }
