@@ -1,23 +1,23 @@
-.hide {
-    display: none;
-}
-
-.ooyalaplayer {
-    position: absolute;
-}
-
-.ooyalaplayer * {
+.ooyala-player-xblock-wrapper * {
     box-sizing: border-box;
 }
 
-.ooyala-player-container {
+.ooyala-player-xblock-wrapper .hide {
+    display: none;
+}
+
+.ooyala-player-xblock-wrapper .ooyalaplayer {
+    position: absolute;
+}
+
+.ooyala-player-xblock-wrapper .ooyala-player-container {
     position: relative;
     width: 640px;
     min-height: 360px;
     height:auto;
 }
 
-.ooyala-overlay > div {
+.ooyala-player-xblock-wrapper .ooyala-overlay > div {
     position: absolute;
     top: 12px;
     margin-left:318px;
@@ -32,43 +32,43 @@
     font-size:14px;
 }
 
-.ooyalaplayer .oo_controls .oo_playhead_progress {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_playhead_progress {
     background-color:#4A4A4A !important;
 }
 
-.ooyalaplayer .oo_controls .oo_fullscreen_on {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_fullscreen_on {
     cursor: pointer !important;
     background-size:45px 46px !important;
     background-image: url('../images/maximize_button.png') !important;
     left: 561 !important;
 }
 
-.ooyalaplayer .oo_controls .oo_fullscreen_off {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_fullscreen_off {
     cursor: pointer !important;
     background-size: 45px 46px !important;
     background-image: url('../images/minimize.png') !important;
 }
 
-.ooyalaplayer .oo_controls .oo_playhead {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_playhead {
     cursor: pointer !important;
     background-image: url('../images/scrubber.png') !important;
     background-size: 57px 57px !important;
     background-position: center;
 }
 
-.ooyalaplayer .oo_controls .oo_play {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_play {
     cursor:pointer !important;
     background-size:45px 46px !important;
     background-image: url('../images/play.png') !important;
 }
 
-.ooyalaplayer .oo_controls .oo_pause {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_pause {
     cursor: pointer !important;
     background-size: 45px 46px !important;
     background-image: url('../images/pause.png') !important;
 }
 
-.ooyalaplayer .oo_full_controls .oo_playhead {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_full_controls .oo_playhead {
     cursor: pointer !important;
     height: 28px !important;
     width: 29px !important;
@@ -76,12 +76,12 @@
     padding: 4px !important;
 }
 
-.ooyalaplayer .oo_controls .oo_label {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_label {
     font-family: Open sans-serif !important;
     color: #D1D1D1 !important;
 }
 
-.ooyalaplayer .oo_full_controls .vod .oo_scrubber {
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_full_controls .vod .oo_scrubber {
     left: 73px !important;
     right: 60px !important;
     top: 9px !important;

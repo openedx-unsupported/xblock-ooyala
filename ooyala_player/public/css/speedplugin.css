@@ -1,4 +1,4 @@
-.speedButton {
+.ooyala-player-xblock-wrapper .speedButton {
     position:absolute;
     left:0;
     top:5px;
@@ -29,17 +29,17 @@
     text-decoration:none;
     text-align:center;
 }
-.speedButton:hover {
+.ooyala-player-xblock-wrapper .speedButton:hover {
     cursor:pointer;
     background-color:#B1C2CC;
 }
 
-.speedButton:active {
+.ooyala-player-xblock-wrapper .speedButton:active {
     position:relative;
     top:1px;
 }
 
-.volumeButton {
+.ooyala-player-xblock-wrapper .volumeButton {
     position:absolute;
     left:526;
     top:5px;
@@ -48,12 +48,12 @@
     background-image: url('https://cdn2.iconfinder.com/data/icons/peppyicons/512/volume-512.png');
 }
 
-.speedButton:hover {
+.ooyala-player-xblock-wrapper .speedButton:hover {
     cursor:pointer;
     background-color:#B1C2CC;
 }
 
-.speedButton:active {
+.ooyala-player-xblock-wrapper .speedButton:active {
     position:relative;
     top:1px;
 }

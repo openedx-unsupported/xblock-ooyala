@@ -1,26 +1,26 @@
-.transcript-container {
+.ooyala-player-xblock-wrapper .transcript-container {
     position: relative;
     margin-top: 10px;
     height: auto;
 }
 
-.ice .p3-timeline {
+.ooyala-player-xblock-wrapper .ice .p3-timeline {
     display: none;
 }
 
-.frost .p3-timeline {
+.ooyala-player-xblock-wrapper .frost .p3-timeline {
     display:none;
 }
 
-.ice .p3-transcript-bottombar-logo {
+.ooyala-player-xblock-wrapper .ice .p3-transcript-bottombar-logo {
     background: none;
 }
 
-.p3-transcript-search-inputs input {
+.ooyala-player-xblock-wrapper .p3-transcript-search-inputs input {
     font-style: italic;
 }
 
-.ice .p3-transcript-controller {
+.ooyala-player-xblock-wrapper .ice .p3-transcript-controller {
     background: #FAFAFA;
     border-color: #E3E3E3;
     border-style: solid;
@@ -28,7 +28,7 @@
     background-image:none;
 }
 
-.ice .p3-transcript-bottombar {
+.ooyala-player-xblock-wrapper .ice .p3-transcript-bottombar {
     background: #FAFAFA;
     border-color: #E3E3E3;
     border-style: solid;
@@ -36,11 +36,11 @@
     background-image:none;
 }
 
-.ice .p3-transcript-search-inputs {
+.ooyala-player-xblock-wrapper .ice .p3-transcript-search-inputs {
     font-family: sans-serif;
 }
 
-.ice .p3-transcript-main {
+.ooyala-player-xblock-wrapper .ice .p3-transcript-main {
     background-color: #fff;
     font-family: Open sans-serif;
     font-size: 14px;
@@ -49,58 +49,58 @@
     padding: 5px;
 }
 
-.ice .p3-transcript-mediabar {
+.ooyala-player-xblock-wrapper .ice .p3-transcript-mediabar {
     display:none;
 }
 
-.ice {
+.ooyala-player-xblock-wrapper .ice {
     border: none;
 }
 
-.frost {
+.ooyala-player-xblock-wrapper .frost {
     border: none;
 }
 
-.frost .current_word {
+.ooyala-player-xblock-wrapper .frost .current_word {
     background:#6182C8;
 }
 
-.frost .current_word {
+.ooyala-player-xblock-wrapper .frost .current_word {
     background:none;
     color:#000000;
 }
 
-.frost a.download {
+.ooyala-player-xblock-wrapper .frost a.download {
     background: url('../images/download.png') no-repeat center;
     padding-right: 24px;
 }
 
-.frost a.print {
+.ooyala-player-xblock-wrapper .frost a.print {
     background: url('../images/print.png') no-repeat center;
     padding-right:7px;
 }
 
-.frost a.locked {
+.ooyala-player-xblock-wrapper .frost a.locked {
     background: url('../images/lock.png') no-repeat center;
 }
 
 /* TODO the hover and active are to remove some course styles.. but the active doesn't work. */
-.frost .p3-transcript-search-submit,
-.frost .p3-transcript-search-submit:hover,
-.frost .p3-transcript-search-submit:active {
+.ooyala-player-xblock-wrapper .frost .p3-transcript-search-submit,
+.ooyala-player-xblock-wrapper .frost .p3-transcript-search-submit:hover,
+.ooyala-player-xblock-wrapper .frost .p3-transcript-search-submit:active {
     background: url('../images/search.png') no-repeat center;
     padding-left:21px;
 }
 
-.frost a.expand {
+.ooyala-player-xblock-wrapper .frost a.expand {
     background: url('../images/expand.png') no-repeat center;
 }
 
-.frost a.collapse {
+.ooyala-player-xblock-wrapper .frost a.collapse {
     background: url('../images/collapse.png') no-repeat center;
 }
 
-.frost .current_word {
+.ooyala-player-xblock-wrapper .frost .current_word {
     background: #39BBE2;
     color: #fff;
 }
