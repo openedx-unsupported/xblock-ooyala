@@ -5,6 +5,7 @@ from lxml import etree
 
 from .utils import render_template
 
+
 class OoyalaOverlay(object):
     """
     Class to represent an Ooyala overlay.
