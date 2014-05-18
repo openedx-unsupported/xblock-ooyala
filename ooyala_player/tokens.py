@@ -4,19 +4,26 @@ import datetime
 import hashlib
 import base64
 
-OOYALA_TOKEN_URL = 'http://player.ooyala.com/sas/embed_token/%s/%s?api_key=%s&expires=%s&signature=%s'
-
 
 def generate_player_token(partner_code, api_key, api_secret_key, video_code, expiration_time):
+
+    OOYALA_TOKEN_URL = 'http://player.ooyala.com/sas/embed_token/{}/{}?api_key={}&expires={}&signature={}'
+    expiry = _expiration_timestamp_from_delta(expiration_time)
+    signature = _generate_signature(partner_code, api_key, api_secret_key, video_code, expiry)
+
+    return OOYALA_TOKEN_URL.format(partner_code, video_code, api_key, expiry, signature)
+
+
+def _expiration_timestamp_from_delta(seconds):
+    return (datetime.datetime.now() + datetime.timedelta(seconds=seconds)).strftime('%s')
+
+
+def _generate_signature(partner_code, api_key, api_secret_key, video_code, expiry):
     http_method = "GET"
     slug = "/sas/embed_token/"
 
-    request_path = slug+partner_code+"/"+video_code
-
-    # Set the expiration date
-    expiry = (datetime.datetime.now() + datetime.timedelta(seconds=expiration_time)).strftime('%s')
-
     # Request string with parameters
+    request_path = slug + partner_code + "/" + video_code
     request_string = api_secret_key + http_method + request_path + api_key + expiry
 
     # Generate a SHA-256 digest in base64 for request string
@@ -32,6 +39,4 @@ def generate_player_token(partner_code, api_key, api_secret_key, video_code, exp
     res_base_clean = res_base_truncated.rstrip('=')
 
     # URL encode the signature with quote(string[, safe])
-    signature_for_query = urllib.quote(res_base_clean, '')
-
-    return OOYALA_TOKEN_URL % (partner_code, video_code, api_key, expiry, signature_for_query)
+    return urllib.quote(res_base_clean, '')
