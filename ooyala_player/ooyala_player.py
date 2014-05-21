@@ -153,8 +153,9 @@ class OoyalaPlayerBlock(XBlock):
         fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/ooyala_player.css'))
         fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/vendor/jquery-ui.css'))
 
-        # custom speed plugin style
+        # custom plugins styles
         fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/speedplugin.css'))
+        fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/transcript.css'))
 
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
 
@@ -172,10 +173,6 @@ class OoyalaPlayerBlock(XBlock):
         }))
 
         if self.transcript_enabled:
-            transcript_css_js = "p3_external_stylesheet = '" + \
-                                self.runtime.local_resource_url(self, 'public/css/transcript.css') + "';"
-            fragment.add_javascript(transcript_css_js)
-
             transcript_js_url = textwrap.dedent('''\
             //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
             plugin=transcript&settings=width:640,height:340,skin:frost,
