@@ -57,7 +57,7 @@
 
 .ooyala-player-xblock-wrapper .ice .p3-transcript-main {
     background-color: #fff;
-    font-family: Open sans-serif;
+    font-family: sans-serif;
     font-size: 14px;
     line-height: 22px;
     color: #333333;
@@ -74,15 +74,6 @@
 
 .ooyala-player-xblock-wrapper .frost {
     border: none;
-}
-
-.ooyala-player-xblock-wrapper .frost .current_word {
-    background:#6182C8;
-}
-
-.ooyala-player-xblock-wrapper .frost .current_word {
-    background:none;
-    color:#000000;
 }
 
 .ooyala-player-xblock-wrapper .frost a.download {
@@ -116,8 +107,8 @@
 }
 
 .ooyala-player-xblock-wrapper .frost .current_word {
-    background: #39BBE2;
-    color: #fff;
+    background: none;
+    color: #000;
 }
 
 .ooyala-player-xblock-wrapper .frost .scan-view {
