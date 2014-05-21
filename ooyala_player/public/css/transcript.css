@@ -90,12 +90,11 @@
     background: url('../images/lock.png') no-repeat center;
 }
 
-/* TODO the hover and active are to remove some course styles.. but the active doesn't work. */
 .ooyala-player-xblock-wrapper .frost .p3-transcript-search-submit,
 .ooyala-player-xblock-wrapper .frost .p3-transcript-search-submit:hover,
 .ooyala-player-xblock-wrapper .frost .p3-transcript-search-submit:active {
     background: url('../images/search.png') no-repeat center;
-    padding-left:21px;
+    padding: 0 21px 0;
 }
 
 .ooyala-player-xblock-wrapper .frost a.expand {
