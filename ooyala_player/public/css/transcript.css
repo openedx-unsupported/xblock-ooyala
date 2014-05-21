@@ -76,15 +76,6 @@
     border: none;
 }
 
-.ooyala-player-xblock-wrapper .frost .current_word {
-    background:#6182C8;
-}
-
-.ooyala-player-xblock-wrapper .frost .current_word {
-    background:none;
-    color:#000000;
-}
-
 .ooyala-player-xblock-wrapper .frost a.download {
     background: url('../images/download.png') no-repeat center;
     padding-right: 24px;
@@ -116,8 +107,8 @@
 }
 
 .ooyala-player-xblock-wrapper .frost .current_word {
-    background: #39BBE2;
-    color: #fff;
+    background: none;
+    color: #000;
 }
 
 .ooyala-player-xblock-wrapper .frost .scan-view {
