@@ -190,6 +190,7 @@ class OoyalaPlayerBlock(XBlock):
         try:
             unique_id = self.location.name
         except AttributeError:
+            # workaround for xblock workbench
             unique_id = self.parent.replace('.',  '-') + '-' + self.content_id
         return unique_id
 

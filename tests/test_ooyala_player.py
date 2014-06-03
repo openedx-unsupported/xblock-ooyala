@@ -20,3 +20,9 @@ def test_enabled_player_token_is_not_empty():
     field_data = DictFieldData({"enable_player_token": True})
     player = OoyalaPlayerBlock(None, field_data, None)
     assert_not_equal(player.player_token, '')
+
+# TODO: def test_enabple_player_token_case_1()
+# TODO: def test_enabple_player_token_case_2()
+# TODO: what about student_view ?
+# TODO: MAYBE: def test_parse_overlays()
+# TODO: def test_studio_submit_json_handler()

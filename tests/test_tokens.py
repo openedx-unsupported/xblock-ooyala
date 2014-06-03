@@ -7,7 +7,7 @@ from ooyala_player import tokens
 # Mocks and helpers
 
 
-class mockNow:
+class _MockNow:
     def __init__(self, mock_timestamp):
         self._old_datetime = datetime.datetime
         self.mock_timestamp = mock_timestamp
@@ -37,7 +37,7 @@ def _create_test_case(**kwargs):
 # Tests
 
 
-@mock.patch("datetime.datetime", new=mockNow(10**10))
+@mock.patch("datetime.datetime", new=_MockNow(10**10))
 def test_generate_player_token():
     expected_url, input_params = _create_test_case(
         partner_code="field_partner_code",
@@ -52,7 +52,7 @@ def test_generate_player_token():
     assert_equal(expected_url, result_url)
 
 
-@mock.patch("datetime.datetime", new=mockNow(10**10))
+@mock.patch("datetime.datetime", new=_MockNow(10**10))
 def test_generate_player_token_with_other_parameters():
     expected_url, input_params = _create_test_case(
         partner_code="examplePartnerCode1337",
@@ -67,7 +67,7 @@ def test_generate_player_token_with_other_parameters():
     assert_equal(expected_url, result_url)
 
 
-@mock.patch("datetime.datetime", new=mockNow(11**10))
+@mock.patch("datetime.datetime", new=_MockNow(11**10))
 def test_generate_player_token_at_another_time():
     expected_url, input_params = _create_test_case(
         partner_code="examplePartnerCode1337",
@@ -80,3 +80,43 @@ def test_generate_player_token_at_another_time():
 
     result_url = tokens.generate_player_token(**input_params)
     assert_equal(expected_url, result_url)
+
+
+def test_generate_signature():
+    params = {
+        "partner_code": "example_partner_code",
+        "api_key": "example_api_key",
+        "api_secret_key": "example_secret_key",
+        "video_code": "example_video_code",
+        "expiry": "12345",
+    }
+    _test_generate_signature(params, "RrIXVVw9UUYMAr85D7RT6X0DGoUP1q8vHvae%2FCuAJ3Q")
+
+    params = {
+        "partner_code": "anotherPartnerCode",
+        "api_key": "anotherApiKey",
+        "api_secret_key": "anotherSecretKey",
+        "video_code": "anotherVideoCode",
+        "expiry": "987654",
+    }
+    _test_generate_signature(params, "xsTjgLreux4xfOmYK28GNQHfC%2Fe3WkYvayv7hkLqLg4")
+
+
+def _test_generate_signature(params, expected):
+    result = tokens._generate_signature(**params)
+    assert_equal(result, expected)
+
+
+@mock.patch("datetime.datetime", new=_MockNow(0))
+def test_expiration_timestamp_from_delta():
+    _expiration_timestamp_test(10000, 1000, "11000")
+    _expiration_timestamp_test(12345000000, 98765, "12345098765")
+    _expiration_timestamp_test(55555, 43210, "98765")
+
+
+def _expiration_timestamp_test(mock_now, delta, expected_string):
+    datetime.datetime.mock_timestamp = mock_now
+
+    result = tokens._expiration_timestamp_from_delta(delta)
+    assert_equal(result, expected_string)
+
