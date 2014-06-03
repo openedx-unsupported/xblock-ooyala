@@ -1,3 +1,6 @@
 xblock_image_explorer.egg-info
 *.pyc
 *~
+/.coverage
+/dist
+/xblock_ooyala_player.egg-info
