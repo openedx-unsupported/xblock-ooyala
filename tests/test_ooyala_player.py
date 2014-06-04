@@ -1,9 +1,11 @@
 from nose.tools import assert_false, assert_equal, assert_not_equal
+import mock
 
 import json
 from xblock.field_data import DictFieldData
 
 from ooyala_player import OoyalaPlayerBlock
+import ooyala_player
 
 
 def test_player_token_is_disabled_by_default():
@@ -97,5 +99,33 @@ def test_studio_submit_json_handler_another_valid_input():
     for key in request_data:
         assert_equal(getattr(player, key), request_data[key])
 
-# TODO: what about student_view and studio_view?
-# TODO: MAYBE: def test_parse_overlays()
+
+class _MockOverlay:
+    def __init__(self, *args):
+        self.args = args
+
+    def __repr__(self):
+        return "_MockOverlay{}".format(self.args)
+
+    def __eq__(self, other):
+        return self.args == other.args
+
+
+@mock.patch("ooyala_player.overlay.OoyalaOverlay", new=_MockOverlay)
+def test_parse_overlays():
+    player = OoyalaPlayerBlock(None, None, None)
+    player.parent = "the_parent"
+    player.content_id = "the_parent"
+    player.xml_config = (
+        '<ooyala-player>'
+        '    <overlays>'
+        '        <overlay/>'
+        '        <overlay start="123" end="320" />'
+        '        <overlay start="134" end="160">The overlayed text</overlay>'
+        '    </overlays>'
+        '</ooyala-player>')
+    assert_equal(player.overlays, [
+        _MockOverlay(0, 0, None, "ooyala-" + player._get_unique_id()),
+        _MockOverlay(123, 320, None, "ooyala-" + player._get_unique_id()),
+        _MockOverlay(134, 160, "The overlayed text", "ooyala-" + player._get_unique_id()),
+    ])
