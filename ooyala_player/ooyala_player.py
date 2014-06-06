@@ -113,7 +113,7 @@ class OoyalaPlayerBlock(XBlock):
         overlays = []
         node = etree.parse(StringIO(self.xml_config)).getroot()
         overlays_node = node.find('overlays')
-        video_id = 'ooyala-' + self.location.name
+        video_id = 'ooyala-' + self._get_unique_id()
         if overlays_node is not None:
             for child_id, xml_child in enumerate(overlays_node.findall('overlay')):
                 overlay = OoyalaOverlay.init_overlay_from_node(xml_child, video_id)
@@ -130,7 +130,7 @@ class OoyalaPlayerBlock(XBlock):
         Player view, displayed to the student
         """
 
-        dom_id = 'ooyala-' + self.location.name
+        dom_id = 'ooyala-' + self._get_unique_id()
 
         overlay_fragments = ""
         for overlay in self.overlays:
@@ -186,6 +186,14 @@ class OoyalaPlayerBlock(XBlock):
 
         return fragment
 
+    def _get_unique_id(self):
+        try:
+            unique_id = self.location.name
+        except AttributeError:
+            # workaround for xblock workbench
+            unique_id = self.parent.replace('.',  '-') + '-' + self.content_id
+        return unique_id
+
     def studio_view(self, context):
         """
         Editing view in Studio
@@ -228,3 +236,8 @@ class OoyalaPlayerBlock(XBlock):
             self.expiration_time = submissions['expiration_time']
 
         return response
+
+    @staticmethod
+    def workbench_scenarios():
+        """A canned scenario for display in the workbench."""
+        return [("Ooyala scenario", "<vertical_demo><ooyala-player/></vertical_demo>")]
