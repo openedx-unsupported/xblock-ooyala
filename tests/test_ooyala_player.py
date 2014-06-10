@@ -92,7 +92,8 @@ def test_studio_submit_json_handler_another_valid_input():
         "partner_code": "the_partner_code",
         "api_key": "the_api_key",
         "api_secret_key": "the_secret_key",
-        "expiration_time": "10000"
+        "expiration_time": "10000",
+        "player_width": "320px"
     }
     result = player.studio_submit(_MockRequest(request_data))
     _assert_studio_submit(result, {"result": "success"})

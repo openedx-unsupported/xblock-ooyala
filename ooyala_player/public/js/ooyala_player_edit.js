@@ -12,6 +12,7 @@ function OoyalaPlayerEditBlock(runtime, element) {
             'partner_code': $('.edit-partner-code', element).val(),
             'api_key': $('.edit-api-key', element).val(),
             'api_secret_key': $('.edit-api-secret-key', element).val(),
+            'player_width': $('.edit-player-width', element).val(),
             'expiration_time': $('.edit-expiration-time', element).val(),
             'xml_config': xmlEditor.getValue()
         };

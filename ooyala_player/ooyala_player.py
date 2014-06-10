@@ -84,6 +84,13 @@ class OoyalaPlayerBlock(XBlock):
         default=''
     )
 
+    player_width = String(
+        display_name="Player Width",
+        help='The width of the player in pixels.',
+        scope=Scope.content,
+        default="740px"
+    )
+
     expiration_time = Integer(
         display_name="Expiration Time",
         help='Expiration time in seconds. Needed to generate a player token.',
@@ -145,7 +152,8 @@ class OoyalaPlayerBlock(XBlock):
             'player_token': self.player_token,
             'dom_id': dom_id,
             'transcript_enabled': self.transcript_enabled,
-            'overlay_fragments': overlay_fragments
+            'overlay_fragments': overlay_fragments,
+            'player_width': self.player_width,
         }
 
         fragment = Fragment()
@@ -234,6 +242,7 @@ class OoyalaPlayerBlock(XBlock):
             self.api_key = submissions['api_key']
             self.api_secret_key = submissions['api_secret_key']
             self.expiration_time = submissions['expiration_time']
+            self.player_width = submissions['player_width']
 
         return response
 

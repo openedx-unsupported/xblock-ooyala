@@ -66,6 +66,13 @@
       </li>
       <li class="field comp-setting-entry is-set">
           <div class="wrapper-comp-setting">
+            <label class="label setting-label" for="edit_player_width">Player Width</label>
+            <input class="input setting-input edit-player-width" id="edit_player_width" value="{{ self.player_width }}" type="text">
+          </div>
+          <span class="tip setting-help">Player width as a CSS length or percentage. The aspect ratio of the video is preserved, but it might produces black borders.</span>
+      </li>
+      <li class="field comp-setting-entry is-set">
+          <div class="wrapper-comp-setting">
             <label class="label setting-label" for="edit_api_expiration_time">Expiration Time</label>
             <input class="input setting-input edit-expiration-time" id="edit_expiration_time" value="{{ self.expiration_time }}" type="text">
           </div>
