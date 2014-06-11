@@ -13,7 +13,6 @@
 .ooyala-player-xblock-wrapper .ooyala-player-container {
     position: relative;
     width: 640px;
-    min-height: 360px;
     height:auto;
 }
 
