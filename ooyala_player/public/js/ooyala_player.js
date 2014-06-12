@@ -14,7 +14,7 @@ function OoyalaPlayerBlock(runtime, element) {
 
         var player_options = {
             onCreate: window.onCreate,
-            autoplay: false
+            autoplay: true
         };
 
         if (player_token) {
