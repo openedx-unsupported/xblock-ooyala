@@ -68,6 +68,20 @@
     background-image: url('../images/pause.png') !important;
 }
 
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error .oo_error_image {
+	position: absolute;
+	width: 100%;
+	height: 30%;
+	top: 20%;
+	background-image: url('../images/error.png') !important;
+}
+
+
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error .oo_error_message .oo_error_message_text {
+	font-family: "Open Sans", sans-serif;
+	font-size:14px;
+}
+
 .ooyala-player-xblock-wrapper .ooyalaplayer .oo_full_controls .oo_playhead {
     cursor: pointer !important;
     height: 28px !important;
@@ -87,3 +101,4 @@
     top: 9px !important;
     bottom: 10px !important;
 }
+
