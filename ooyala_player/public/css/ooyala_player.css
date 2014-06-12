@@ -28,7 +28,7 @@
     width:300px;
     border-radius:10px;
     opacity:0.4;
-    font-family:Regular sans-serif;
+    font-family:"Open Sans", sans-serif;
     font-size:14px;
 }
 
@@ -77,7 +77,7 @@
 }
 
 .ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_label {
-    font-family: Open sans-serif !important;
+    font-family: "Open Sans", sans-serif !important;
     color: #D1D1D1 !important;
 }
 
