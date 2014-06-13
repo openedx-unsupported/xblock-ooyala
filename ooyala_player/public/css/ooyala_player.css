@@ -87,3 +87,7 @@
     top: 9px !important;
     bottom: 10px !important;
 }
+
+.ooyala-player-xblock-wrapper .ooyalaplayer .innerWrapper {
+    z-index: 10;
+}
