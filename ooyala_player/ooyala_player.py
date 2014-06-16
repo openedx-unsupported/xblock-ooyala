@@ -39,7 +39,7 @@ class OoyalaPlayerBlock(XBlock):
         display_name="Content Id",
         help="Identifier for the Content Id.",
         scope=Scope.content,
-        default='54bjVpbTr-BnKKHR1pIZ3Wb6wSSyJQUP'
+        default='Q1eXg5NzpKqUUzBm5WTIb6bXuiWHrRMi'
     )
 
     transcript_file_id = String(
@@ -82,6 +82,20 @@ class OoyalaPlayerBlock(XBlock):
         help='Needed to generate a player token.',
         scope=Scope.content,
         default=''
+    )
+
+    player_width = String(
+        display_name="Player Width",
+        help='The width of the player in pixels.',
+        scope=Scope.content,
+        default="740px"
+    )
+
+    player_height = String(
+        display_name="Player Height",
+        help='The height of the player in pixels.',
+        scope=Scope.content,
+        default="360px"
     )
 
     expiration_time = Integer(
@@ -145,7 +159,9 @@ class OoyalaPlayerBlock(XBlock):
             'player_token': self.player_token,
             'dom_id': dom_id,
             'transcript_enabled': self.transcript_enabled,
-            'overlay_fragments': overlay_fragments
+            'overlay_fragments': overlay_fragments,
+            'player_width': self.player_width,
+            'player_height': self.player_height,
         }
 
         fragment = Fragment()
@@ -175,10 +191,10 @@ class OoyalaPlayerBlock(XBlock):
         if self.transcript_enabled:
             transcript_js_url = textwrap.dedent('''\
             //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
-            plugin=transcript&settings=width:640,height:340,skin:frost,
+            plugin=transcript&settings=width:{2},height:340px,skin:frost,
             can_collapse:true,collapse_onload:true,can_print:true,can_download:true,
-            scan_view:true&player_type=ooyala&player_id={2}
-            '''.format(self.transcript_project_id, self.transcript_file_id, self.player_id))
+            scan_view:true&player_type=ooyala&player_id={3}
+            '''.format(self.transcript_project_id, self.transcript_file_id, self.player_width, self.player_id))
 
             fragment.add_javascript_url(transcript_js_url)
 
@@ -234,6 +250,8 @@ class OoyalaPlayerBlock(XBlock):
             self.api_key = submissions['api_key']
             self.api_secret_key = submissions['api_secret_key']
             self.expiration_time = submissions['expiration_time']
+            self.player_width = submissions['player_width']
+            self.player_height = submissions['player_height']
 
         return response
 
