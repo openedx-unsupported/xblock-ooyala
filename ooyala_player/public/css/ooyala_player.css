@@ -15,6 +15,7 @@
     width: 640px;
     min-height: 360px;
     height:auto;
+    z-index:10;
 }
 
 .ooyala-player-xblock-wrapper .ooyala-overlay > div {
