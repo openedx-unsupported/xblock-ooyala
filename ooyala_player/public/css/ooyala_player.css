@@ -105,3 +105,15 @@
 .ooyala-player-xblock-wrapper .ooyalaplayer .innerWrapper {
     z-index: 10;
 }
+
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error_image {
+	background-origin: none;
+}
+
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error_message {
+	top:60%
+}
+
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_spinner {
+	z-index: 8;
+}
