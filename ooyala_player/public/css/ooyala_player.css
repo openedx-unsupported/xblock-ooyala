@@ -77,6 +77,11 @@
 }
 
 
+.ooyala-player-xblock-wrapper .ooyalaplayer .oo_replay {
+    content: url('../images/replay.png');
+}
+
+
 .ooyala-player-xblock-wrapper .ooyalaplayer .oo_error .oo_error_message .oo_error_message_text {
 	font-family: "Open Sans", sans-serif;
 	font-size:14px;
