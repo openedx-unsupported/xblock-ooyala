@@ -106,6 +106,10 @@
     background: url('../images/collapse.png') no-repeat center;
 }
 
+.ooyala-player-xblock-wrapper .frost a.unlocked {
+    background: url('../images/unlock_icon.png') no-repeat center;
+}
+
 .ooyala-player-xblock-wrapper .frost .current_word {
     background: none;
     color: #000;
