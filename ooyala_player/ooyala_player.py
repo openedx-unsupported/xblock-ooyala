@@ -95,7 +95,7 @@ class OoyalaPlayerBlock(XBlock):
         display_name="Player Height",
         help='The height of the player in pixels.',
         scope=Scope.content,
-        default="360px"
+        default="416px"
     )
 
     expiration_time = Integer(
