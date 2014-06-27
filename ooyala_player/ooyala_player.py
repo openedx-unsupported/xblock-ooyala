@@ -242,9 +242,9 @@ class OoyalaPlayerBlock(XBlock):
 
             self.xml_config = xml_config
             self.display_name = submissions['display_name']
-            self.content_id = submissions['content_id']
-            self.transcript_file_id = submissions['transcript_file_id']
-            self.transcript_project_id = submissions['transcript_project_id']
+            self.content_id = submissions['content_id'].strip()
+            self.transcript_file_id = submissions['transcript_file_id'].strip()
+            self.transcript_project_id = submissions['transcript_project_id'].strip()
             self.enable_player_token = submissions['enable_player_token']
             self.partner_code = submissions['partner_code']
             self.api_key = submissions['api_key']
