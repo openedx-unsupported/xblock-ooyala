@@ -3,9 +3,9 @@ function OoyalaPlayerBlock(runtime, element) {
         var content_id = $('.ooyalaplayer', element).data('content-id');
         var player_id = $('.ooyalaplayer', element).data('player-id');
         var transcript_id = $('.ooyalaplayer', element).data('transcript-id');
+        var transcript_enabled = $('.ooyalaplayer', element).data('transcript-enabled');
         var dom_id = $('.ooyalaplayer', element).data('dom-id');
         var player_token = $('.ooyalaplayer', element).data('player-token');
-        var transcript_enabled = $('.ooyalaplayer', element).data('transcript-enabled');
         var overlays = $('.ooyala-overlays .ooyala-overlay', element);
 
         var player_options = {
@@ -42,5 +42,20 @@ function OoyalaPlayerBlock(runtime, element) {
         });
 
         pop.play();
+
+        var container = $(".transcript-container-"+dom_id);
+        var toggle_buttons = container.find(".show-hide-transcript-btn");
+
+        toggle_buttons.click(function() {
+            var content = container.find(".transcript-content");
+            var footer = container.find(".transcript-footer");
+            if (content.is(":visible")) {
+                toggle_buttons.html("Show transcript");
+            } else {
+                toggle_buttons.html("Hide transcript");
+            }
+            content.toggle("fast");
+            footer.toggle("fast");
+        });
     });
 }

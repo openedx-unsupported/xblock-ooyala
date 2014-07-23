@@ -149,6 +149,7 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments,
             'player_width': self.player_width,
             'player_height': self.player_height,
+            'transcript_content': "Foo Bar Baz Placeholder",
         }
 
         fragment = Fragment()
