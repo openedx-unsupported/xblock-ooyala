@@ -49,13 +49,6 @@ class OoyalaPlayerBlock(XBlock):
         default=''
     )
 
-    transcript_project_id = String(
-        display_name="3Play Transcript Project Id",
-        help='Identifier for the 3Play Transcript Project',
-        scope=Scope.content,
-        default=''
-    )
-
     enable_player_token = Boolean(
         display_name="Enable Player Token",
         help='Set to True if a player token is required.',
@@ -137,7 +130,7 @@ class OoyalaPlayerBlock(XBlock):
 
     @property
     def transcript_enabled(self):
-        return bool(self.transcript_project_id and self.transcript_file_id)
+        return bool(self.transcript_file_id)
 
     def student_view(self, context):
         """
@@ -154,7 +147,6 @@ class OoyalaPlayerBlock(XBlock):
             'title': self.display_name,
             'content_id': self.content_id,
             'transcript_file_id': self.transcript_file_id,
-            'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
             'player_token': self.player_token,
             'dom_id': dom_id,
@@ -187,16 +179,6 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments,
             'dom_id': dom_id
         }))
-
-        if self.transcript_enabled:
-            transcript_js_url = textwrap.dedent('''\
-            //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
-            plugin=transcript&settings=width:{2},height:340px,skin:frost,
-            can_collapse:true,collapse_onload:true,can_print:true,can_download:true,
-            scan_view:true,light_scroll:true&player_type=ooyala&player_id={3}
-            '''.format(self.transcript_project_id, self.transcript_file_id, self.player_width, self.player_id))
-
-            fragment.add_javascript_url(transcript_js_url)
 
         fragment.initialize_js('OoyalaPlayerBlock')
 
@@ -244,7 +226,6 @@ class OoyalaPlayerBlock(XBlock):
             self.display_name = submissions['display_name']
             self.content_id = submissions['content_id'].strip()
             self.transcript_file_id = submissions['transcript_file_id'].strip()
-            self.transcript_project_id = submissions['transcript_project_id'].strip()
             self.enable_player_token = submissions['enable_player_token']
             self.partner_code = submissions['partner_code']
             self.api_key = submissions['api_key']

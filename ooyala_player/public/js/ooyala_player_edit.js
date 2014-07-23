@@ -7,7 +7,6 @@ function OoyalaPlayerEditBlock(runtime, element) {
             'display_name': $('.edit-display-name', element).val(),
             'content_id': $('.edit-content-id', element).val(),
             'transcript_file_id': $('.edit-transcript-file-id', element).val(),
-            'transcript_project_id': $('.edit-transcript-project-id', element).val(),
             'enable_player_token': $('.edit-enable-player-token', element).val(),
             'partner_code': $('.edit-partner-code', element).val(),
             'api_key': $('.edit-api-key', element).val(),
