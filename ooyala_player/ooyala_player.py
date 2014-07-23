@@ -5,6 +5,7 @@
 
 import logging
 import textwrap
+from urllib2 import urlopen
 
 from lxml import etree
 from StringIO import StringIO
@@ -128,6 +129,21 @@ class OoyalaPlayerBlock(XBlock):
 
         return overlays
 
+    def _retrieve_transcript(self):
+        url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
+                self.transcript_file_id,
+                self.api_key
+            )
+        try:
+            conn = urlopen(url)
+            transcript = conn.read()
+        except URLError as e:
+            return e
+        finally:
+            conn.close()
+
+        return transcript
+
     def student_view(self, context):
         """
         Player view, displayed to the student
@@ -149,7 +165,7 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments,
             'player_width': self.player_width,
             'player_height': self.player_height,
-            'transcript_content': "Foo Bar Baz Placeholder",
+            'transcript_content': self._retrieve_transcript(),
         }
 
         fragment = Fragment()
