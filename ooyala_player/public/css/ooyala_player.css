@@ -122,3 +122,24 @@
 .ooyala-player-xblock-wrapper .ooyalaplayer .oo_spinner {
 	z-index: 8;
 }
+
+.ooyala-player-xblock-wrapper .transcript-header,
+.ooyala-player-xblock-wrapper .transcript-content,
+.ooyala-player-xblock-wrapper .transcript-footer {
+    border-bottom: 1px solid lightgrey;
+}
+
+.ooyala-player-xblock-wrapper .transcript-header,
+.ooyala-player-xblock-wrapper .transcript-footer {
+    overflow: auto;
+}
+
+.ooyala-player-xblock-wrapper .print-transcript-btn,
+.ooyala-player-xblock-wrapper .show-hide-transcript-btn {
+    margin: 0.7em;
+    float: right;
+}
+
+.ooyala-player-xblock-wrapper .transcript-content {
+    padding: 1em;
+}

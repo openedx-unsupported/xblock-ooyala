@@ -20,13 +20,13 @@
     {% if transcript_file_id %}
     <div class="transcript-container-{{dom_id}}">
         <div class="transcript-header">
-            <a class="print-transcript-btn">&#xf02f;</a>
             <a class="show-hide-transcript-btn" >Show transcript</a>
+            <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
         </div>
         <div class="transcript-content" style="display: none">{{ transcript_content }}</div>
         <div class="transcript-footer" style="display: none">
-            <a class="print-transcript-btn">&#xf02f;</a>
             <a class="show-hide-transcript-btn" >Show transcript</a>
+            <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
         </div>
     </div>
     {% endif %}

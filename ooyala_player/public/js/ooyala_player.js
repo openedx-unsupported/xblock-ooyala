@@ -45,10 +45,11 @@ function OoyalaPlayerBlock(runtime, element) {
 
         var container = $(".transcript-container-"+dom_id);
         var toggle_buttons = container.find(".show-hide-transcript-btn");
+        var print_buttons = container.find(".print-transcript-btn");
+        var content = container.find(".transcript-content");
+        var footer = container.find(".transcript-footer");
 
         toggle_buttons.click(function() {
-            var content = container.find(".transcript-content");
-            var footer = container.find(".transcript-footer");
             if (content.is(":visible")) {
                 toggle_buttons.html("Show transcript");
             } else {
@@ -56,6 +57,13 @@ function OoyalaPlayerBlock(runtime, element) {
             }
             content.toggle("fast");
             footer.toggle("fast");
+        });
+
+        print_buttons.click(function () {
+            w = window.open();
+            w.document.write(content.html());
+            w.print();
+            w.close();
         });
     });
 }

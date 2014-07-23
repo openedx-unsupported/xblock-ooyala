@@ -175,7 +175,6 @@ class OoyalaPlayerBlock(XBlock):
 
         # custom plugins styles
         fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/speedplugin.css'))
-        fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/transcript.css'))
 
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
 
