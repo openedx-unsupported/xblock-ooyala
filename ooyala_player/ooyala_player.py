@@ -128,10 +128,6 @@ class OoyalaPlayerBlock(XBlock):
 
         return overlays
 
-    @property
-    def transcript_enabled(self):
-        return bool(self.transcript_file_id)
-
     def student_view(self, context):
         """
         Player view, displayed to the student
@@ -150,7 +146,6 @@ class OoyalaPlayerBlock(XBlock):
             'player_id': self.player_id,
             'player_token': self.player_token,
             'dom_id': dom_id,
-            'transcript_enabled': self.transcript_enabled,
             'overlay_fragments': overlay_fragments,
             'player_width': self.player_width,
             'player_height': self.player_height,
