@@ -17,6 +17,7 @@
       {{overlay_fragments|safe}}
     </div>
 
+    {% if transcript_file_id %}
     <div class="transcript-container-{{dom_id}}">
         <div class="transcript-header">
             <a class="print-transcript-btn">&#xf02f;</a>
@@ -28,5 +29,6 @@
             <a class="show-hide-transcript-btn" >Show transcript</a>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endautoescape %}
