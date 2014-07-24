@@ -5,6 +5,7 @@
 
 import logging
 import textwrap
+import json
 from urllib2 import urlopen
 
 from lxml import etree
@@ -129,6 +130,16 @@ class OoyalaPlayerBlock(XBlock):
 
         return overlays
 
+    def _format_error(self, err):
+        return '<div class="transcript-error-message">Error retrieving transcript: {}</div>'.format(err)
+
+    def _is_error(self, text):
+        try:
+            data = json.loads(text)
+        except ValueError:
+            return False
+        return data.get('iserror', False)
+
     def _retrieve_transcript(self):
         url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
                 self.transcript_file_id,
@@ -138,9 +149,12 @@ class OoyalaPlayerBlock(XBlock):
             conn = urlopen(url)
             transcript = conn.read()
         except URLError as e:
-            return e
+            return self._format_error(e)
         finally:
             conn.close()
+
+        if self._is_error(transcript):
+            return self._format_error(transcript)
 
         return transcript
 

@@ -143,3 +143,7 @@
 .ooyala-player-xblock-wrapper .transcript-content {
     padding: 1em;
 }
+
+.ooyala-player-xblock-wrapper .transcript-error-message {
+    color: red;
+}
