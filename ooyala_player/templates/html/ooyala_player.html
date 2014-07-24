@@ -1,13 +1,12 @@
 {% autoescape off %}
 <div class="ooyala-player-xblock-wrapper">
-	<div class="ooyala-player-container" style='width: {{player_width}}; height: {{player_height}};'>
+    <div class="ooyala-player-container" style='width: {{player_width}}; height: {{player_height}};'>
         <div id='{{dom_id}}' class='ooyalaplayer'
              data-content-id='{{content_id}}'
              data-dom-id='{{dom_id}}'
              data-player-id='{{player_id}}'
              data-transcript-id='{{transcript_file_id}}'
              data-player-token='{{player_token}}'
-             data-transcript-enabled='{{transcript_enabled}}'
              >
         </div>
         <div id="ooyala-overlay-container-{{dom_id}}" class="ooyala-overlay"></div>
@@ -18,10 +17,18 @@
       {{overlay_fragments|safe}}
     </div>
 
-    <div class="transcript-container-{{dom_id}} frost ice">
-        <!-- Do not delete. The two following divs is to get ooyala transcript plugin loading properly in studio -->
-        <div id="p3-js-main-root"></div>
-        <div id="transcript_{{ transcript_file_id }}"></div>
+    {% if transcript_file_id %}
+    <div class="transcript-container-{{dom_id}}">
+        <div class="transcript-header">
+            <a class="show-hide-transcript-btn" >Show transcript</a>
+            <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
+        </div>
+        <div class="transcript-content" style="display: none">{{ transcript_content }}</div>
+        <div class="transcript-footer" style="display: none">
+            <a class="show-hide-transcript-btn" >Show transcript</a>
+            <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
+        </div>
     </div>
+    {% endif %}
 </div>
 {% endautoescape %}

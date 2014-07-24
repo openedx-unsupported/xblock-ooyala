@@ -5,6 +5,8 @@
 
 import logging
 import textwrap
+import json
+from urllib2 import urlopen
 
 from lxml import etree
 from StringIO import StringIO
@@ -45,13 +47,6 @@ class OoyalaPlayerBlock(XBlock):
     transcript_file_id = String(
         display_name="3Play Transcript Id",
         help="Identifier for the 3Play Transcript File",
-        scope=Scope.content,
-        default=''
-    )
-
-    transcript_project_id = String(
-        display_name="3Play Transcript Project Id",
-        help='Identifier for the 3Play Transcript Project',
         scope=Scope.content,
         default=''
     )
@@ -135,9 +130,33 @@ class OoyalaPlayerBlock(XBlock):
 
         return overlays
 
-    @property
-    def transcript_enabled(self):
-        return bool(self.transcript_project_id and self.transcript_file_id)
+    def _format_error(self, err):
+        return '<div class="transcript-error-message">Error retrieving transcript: {}</div>'.format(err)
+
+    def _is_error(self, text):
+        try:
+            data = json.loads(text)
+        except ValueError:
+            return False
+        return data.get('iserror', False)
+
+    def _retrieve_transcript(self):
+        url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
+                self.transcript_file_id,
+                self.api_key
+            )
+        try:
+            conn = urlopen(url)
+            transcript = conn.read()
+        except URLError as e:
+            return self._format_error(e)
+        finally:
+            conn.close()
+
+        if self._is_error(transcript):
+            return self._format_error(transcript)
+
+        return transcript
 
     def student_view(self, context):
         """
@@ -154,14 +173,13 @@ class OoyalaPlayerBlock(XBlock):
             'title': self.display_name,
             'content_id': self.content_id,
             'transcript_file_id': self.transcript_file_id,
-            'transcript_project_id': self.transcript_project_id,
             'player_id': self.player_id,
             'player_token': self.player_token,
             'dom_id': dom_id,
-            'transcript_enabled': self.transcript_enabled,
             'overlay_fragments': overlay_fragments,
             'player_width': self.player_width,
             'player_height': self.player_height,
+            'transcript_content': self._retrieve_transcript(),
         }
 
         fragment = Fragment()
@@ -171,7 +189,6 @@ class OoyalaPlayerBlock(XBlock):
 
         # custom plugins styles
         fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/speedplugin.css'))
-        fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/transcript.css'))
 
         fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
 
@@ -187,16 +204,6 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments,
             'dom_id': dom_id
         }))
-
-        if self.transcript_enabled:
-            transcript_js_url = textwrap.dedent('''\
-            //static.3playmedia.com/p/projects/{0}/files/{1}/embed.js?
-            plugin=transcript&settings=width:{2},height:340px,skin:frost,
-            can_collapse:true,collapse_onload:true,can_print:true,can_download:true,
-            scan_view:true,light_scroll:true&player_type=ooyala&player_id={3}
-            '''.format(self.transcript_project_id, self.transcript_file_id, self.player_width, self.player_id))
-
-            fragment.add_javascript_url(transcript_js_url)
 
         fragment.initialize_js('OoyalaPlayerBlock')
 
@@ -244,7 +251,6 @@ class OoyalaPlayerBlock(XBlock):
             self.display_name = submissions['display_name']
             self.content_id = submissions['content_id'].strip()
             self.transcript_file_id = submissions['transcript_file_id'].strip()
-            self.transcript_project_id = submissions['transcript_project_id'].strip()
             self.enable_player_token = submissions['enable_player_token']
             self.partner_code = submissions['partner_code']
             self.api_key = submissions['api_key']

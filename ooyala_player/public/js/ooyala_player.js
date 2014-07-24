@@ -3,14 +3,10 @@ function OoyalaPlayerBlock(runtime, element) {
         var content_id = $('.ooyalaplayer', element).data('content-id');
         var player_id = $('.ooyalaplayer', element).data('player-id');
         var transcript_id = $('.ooyalaplayer', element).data('transcript-id');
+        var transcript_enabled = $('.ooyalaplayer', element).data('transcript-enabled');
         var dom_id = $('.ooyalaplayer', element).data('dom-id');
         var player_token = $('.ooyalaplayer', element).data('player-token');
-        var transcript_enabled = $('.ooyalaplayer', element).data('transcript-enabled');
         var overlays = $('.ooyala-overlays .ooyala-overlay', element);
-
-        // move the transcript widget into the right place in the DOM
-        // after it is injected by the 3Play JS code
-        $('#transcript_'+transcript_id).appendTo('.transcript-container-'+dom_id);
 
         var player_options = {
             onCreate: window.onCreate,
@@ -47,18 +43,27 @@ function OoyalaPlayerBlock(runtime, element) {
 
         pop.play();
 
-        if (transcript_enabled === 'True') {
-            // The 3PlayMedia transcript plugin is made to load after the window "load" event. In
-            // Studio, we load things differently, so we need something to initialize the plugin.
-            // setup a simple interval to check if we can start the initialization.
-            var interval_id = setInterval(function() {
-                if (!_.isUndefined(window['run_p3'])) {
-                    p3_already_loaded = false;
-                    p3_window_loaded = true;
-                    run_p3();
-                    clearInterval(interval_id);
-                }
-            }, 500);
-        }
+        var container = $(".transcript-container-"+dom_id);
+        var toggle_buttons = container.find(".show-hide-transcript-btn");
+        var print_buttons = container.find(".print-transcript-btn");
+        var content = container.find(".transcript-content");
+        var footer = container.find(".transcript-footer");
+
+        toggle_buttons.click(function() {
+            if (content.is(":visible")) {
+                toggle_buttons.html("Show transcript");
+            } else {
+                toggle_buttons.html("Hide transcript");
+            }
+            content.toggle("fast");
+            footer.toggle("fast");
+        });
+
+        print_buttons.click(function () {
+            w = window.open();
+            w.document.write(content.html());
+            w.print();
+            w.close();
+        });
     });
 }
