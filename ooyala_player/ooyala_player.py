@@ -100,6 +100,13 @@ class OoyalaPlayerBlock(XBlock):
         default=600
     )
 
+    fire_progress_event_on_student_view = Boolean(
+        display_name="Fire Progress Event on Student View",
+        help='Set to True if you would like to get a progress event in the event stream when the user views this xBlock.',
+        scope=Scope.content,
+        default=True
+    )
+
     xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
                         scope=Scope.content)
 
@@ -206,6 +213,12 @@ class OoyalaPlayerBlock(XBlock):
         }))
 
         fragment.initialize_js('OoyalaPlayerBlock')
+
+        if self.fire_progress_event_on_student_view:
+            # In certain cases we want to know when a student has visited a video player
+            # as an indication that they are progressing through a course
+            # Progress *does not* mean progress over viewing a video (i.e. elapsed time)
+            self.runtime.publish(self, 'progress', {})
 
         return fragment
 
