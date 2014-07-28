@@ -83,14 +83,14 @@ class OoyalaPlayerBlock(XBlock):
         display_name="Player Width",
         help='The width of the player in pixels.',
         scope=Scope.content,
-        default="740px"
+        default="760px"
     )
 
     player_height = String(
         display_name="Player Height",
         help='The height of the player in pixels.',
         scope=Scope.content,
-        default="416px"
+        default="427px"
     )
 
     expiration_time = Integer(
