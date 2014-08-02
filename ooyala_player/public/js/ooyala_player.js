@@ -8,10 +8,7 @@ function OoyalaPlayerBlock(runtime, element) {
         var player_token = $('.ooyalaplayer', element).data('player-token');
         var overlays = $('.ooyala-overlays .ooyala-overlay', element);
 
-        var player_options = {
-            onCreate: window.onCreate,
-            autoplay: true
-        };
+        var player_options = {autoplay: true};
 
         if (player_token) {
             player_options.embedToken = player_token;
@@ -22,8 +19,86 @@ function OoyalaPlayerBlock(runtime, element) {
             window[id].destroy();
         }
 
+        function publish_event(data) {
+            $.ajax({
+                type: "POST",
+                url: runtime.handlerUrl(element, 'publish_event'),
+                data: JSON.stringify(data)
+            });
+        }
+
+        function publish_open_close_event(event_type) {
+            publish_event({
+                event_type: event_type,
+                time: player.getPlayheadTime(),
+                player_state: player.getState()
+            });
+        }
+
+        function publish_play_pause_event(event_type) {
+            publish_event({
+                event_type: event_type,
+                time: player.getPlayheadTime(),
+                playback_rate: video_node.playbackRate
+            });
+        }
+
         /* we have to initialize the window[player_id], internal OO requirement? */
-        window[id] = window[player_id] = OO.Player.create(dom_id, content_id, player_options);
+        var player = window[id] = window[player_id] = OO.Player.create(dom_id, content_id, player_options);
+        var video_node = $('.ooyalaplayer', element).find('video.video')[0];
+
+        player.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'eventLogger', function(ev, payload) {
+            publish_event({event_type: 'ooyala.player.ready'});
+        });
+
+        player.mb.subscribe(OO.EVENTS.PLAYED, 'eventLogger', function(ev, payload) {
+            publish_event({event_type: 'ooyala.player.ended'});
+        });
+
+        player.mb.subscribe(OO.EVENTS.PLAYING, 'eventLogger', function(ev, payload) {
+            publish_play_pause_event('ooyala.player.playing');
+        });
+
+        player.mb.subscribe(OO.EVENTS.PAUSED, 'eventLogger', function(ev, payload) {
+            publish_play_pause_event('ooyala.player.paused');
+        });
+
+        player.mb.subscribe(OO.EVENTS.WILL_PLAY_FROM_BEGINNING, 'eventLogger', function(ev, payload) {
+            publish_event({
+                event_type: 'ooyala.player.started-from-beginning',
+                is_autoplay: player_options.autoplay,
+                playback_rate: video_node.playbackRate
+            });
+        });
+
+        player.mb.subscribe(OO.EVENTS.SEEK, 'eventLogger', function(ev, payload) {
+            publish_event({
+                event_type: 'ooyala.player.jumped-to',
+                old_time: player.getPlayheadTime(),
+                new_time: payload
+            });
+        });
+
+        player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', function(ev, payload) {
+            if (payload) {
+                publish_open_close_event('ooyala.player.full-screen.opened');
+            } else {
+                publish_open_close_event('ooyala.player.full-screen.closed');
+            };
+
+        });
+
+        var old_rate = 1;
+        video_node.onratechange = function() {
+            publish_event({
+                event_type: 'ooyala.player.speed-changed',
+                time: player.getPlayheadTime(),
+                player_state: player.getState(),
+                old_rate: old_rate,
+                new_rate: video_node.playbackRate
+            });
+            old_rate = video_node.playbackRate;
+        };
 
         var pop = Popcorn('#' + dom_id + ' .video');
 
@@ -52,8 +127,10 @@ function OoyalaPlayerBlock(runtime, element) {
         toggle_buttons.click(function() {
             if (content.is(":visible")) {
                 toggle_buttons.html("Show transcript");
+                publish_open_close_event('ooyala.transcript.closed')
             } else {
                 toggle_buttons.html("Hide transcript");
+                publish_open_close_event('ooyala.transcript.opened')
             }
             content.toggle("fast");
             footer.toggle("fast");
