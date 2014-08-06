@@ -6,7 +6,7 @@
 import logging
 import textwrap
 import json
-from urllib2 import urlopen
+from urllib2 import urlopen, URLError
 
 from lxml import etree
 from StringIO import StringIO
