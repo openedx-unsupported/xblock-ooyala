@@ -148,8 +148,14 @@ class OoyalaPlayerBlock(XBlock):
         return data.get('iserror', False)
 
     def _retrieve_transcript(self):
-        url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
+        if self.transcript_file_id:
+            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
                 self.transcript_file_id,
+                self.api_key
+            )
+        else:
+            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1&usevideoid=1".format(
+                self.content_id,
                 self.api_key
             )
         try:
