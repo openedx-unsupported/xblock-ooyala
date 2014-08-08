@@ -48,24 +48,24 @@ function OoyalaPlayerBlock(runtime, element) {
         var video_node = $('.ooyalaplayer', element).find('video.video')[0];
 
         player.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'eventLogger', function(ev, payload) {
-            publish_event({event_type: 'ooyala.player.ready'});
+            publish_event({event_type: 'xblock.ooyala.player.loaded'});
         });
 
         player.mb.subscribe(OO.EVENTS.PLAYED, 'eventLogger', function(ev, payload) {
-            publish_event({event_type: 'ooyala.player.ended'});
+            publish_event({event_type: 'xblock.ooyala.player.ended'});
         });
 
         player.mb.subscribe(OO.EVENTS.PLAYING, 'eventLogger', function(ev, payload) {
-            publish_play_pause_event('ooyala.player.playing');
+            publish_play_pause_event('xblock.ooyala.player.playing');
         });
 
         player.mb.subscribe(OO.EVENTS.PAUSED, 'eventLogger', function(ev, payload) {
-            publish_play_pause_event('ooyala.player.paused');
+            publish_play_pause_event('xblock.ooyala.player.paused');
         });
 
         player.mb.subscribe(OO.EVENTS.WILL_PLAY_FROM_BEGINNING, 'eventLogger', function(ev, payload) {
             publish_event({
-                event_type: 'ooyala.player.started-from-beginning',
+                event_type: 'xblock.ooyala.player.started-from-beginning',
                 is_autoplay: player_options.autoplay,
                 playback_rate: video_node.playbackRate
             });
@@ -73,7 +73,7 @@ function OoyalaPlayerBlock(runtime, element) {
 
         player.mb.subscribe(OO.EVENTS.SEEK, 'eventLogger', function(ev, payload) {
             publish_event({
-                event_type: 'ooyala.player.jumped-to',
+                event_type: 'xblock.ooyala.player.jumped-to',
                 old_time: player.getPlayheadTime(),
                 new_time: payload
             });
@@ -81,9 +81,9 @@ function OoyalaPlayerBlock(runtime, element) {
 
         player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', function(ev, payload) {
             if (payload) {
-                publish_open_close_event('ooyala.player.full-screen.opened');
+                publish_open_close_event('xblock.ooyala.player.full-screen.opened');
             } else {
-                publish_open_close_event('ooyala.player.full-screen.closed');
+                publish_open_close_event('xblock.ooyala.player.full-screen.closed');
             };
 
         });
@@ -91,7 +91,7 @@ function OoyalaPlayerBlock(runtime, element) {
         var old_rate = 1;
         video_node.onratechange = function() {
             publish_event({
-                event_type: 'ooyala.player.speed-changed',
+                event_type: 'xblock.ooyala.player.speed-changed',
                 time: player.getPlayheadTime(),
                 player_state: player.getState(),
                 old_rate: old_rate,
@@ -127,10 +127,10 @@ function OoyalaPlayerBlock(runtime, element) {
         toggle_buttons.click(function() {
             if (content.is(":visible")) {
                 toggle_buttons.html("Show transcript");
-                publish_open_close_event('ooyala.transcript.closed')
+                publish_open_close_event('xblock.ooyala.transcript.closed')
             } else {
                 toggle_buttons.html("Hide transcript");
-                publish_open_close_event('ooyala.transcript.opened')
+                publish_open_close_event('xblock.ooyala.transcript.opened')
             }
             content.toggle("fast");
             footer.toggle("fast");
