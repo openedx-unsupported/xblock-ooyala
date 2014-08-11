@@ -79,6 +79,13 @@ class OoyalaPlayerBlock(XBlock):
         default=''
     )
 
+    api_key_3play = String(
+        display_name="3play Api Key",
+        help='3play Api Key for transcript.',
+        scope=Scope.content,
+        default=''
+    )
+
     player_width = String(
         display_name="Player Width",
         help='The width of the player in pixels.',
@@ -148,20 +155,21 @@ class OoyalaPlayerBlock(XBlock):
         return data.get('iserror', False)
 
     @property
-    def api_key_with_default_setting(self):
-        if self.api_key:
-            return self.api_key
+    def api_key_3play_with_default_setting(self):
+        print("3play api key:", self.api_key_3play)
+        if self.api_key_3play:
+            return self.api_key_3play
 
         settings_service = self.runtime.service(self, 'settings')
         try:
             return settings_service.get('ENV_TOKENS')['XBLOCK_OOYALA_3PLAY_API']
         except (AttributeError, KeyError):
-            return self.api_key
+            return self.api_key_3play
 
     def _retrieve_transcript(self):
         url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
                 self.transcript_file_id,
-                self.api_key_with_default_setting
+                self.api_key_3play_with_default_setting
             )
         try:
             conn = urlopen(url)
@@ -289,6 +297,7 @@ class OoyalaPlayerBlock(XBlock):
             self.partner_code = submissions['partner_code']
             self.api_key = submissions['api_key']
             self.api_secret_key = submissions['api_secret_key']
+            self.api_key_3play = submissions['api_key_3play']
             self.expiration_time = submissions['expiration_time']
             self.player_width = submissions['player_width']
             self.player_height = submissions['player_height']
