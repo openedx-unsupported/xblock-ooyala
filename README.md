@@ -20,8 +20,8 @@ The following settings can be set in studio edit:
 
 * Video title: the title displayed in the unit for this xblock.
 * Content id: Ooyala content identifier
-* Transcript project id: 3Play transcript project identifier
 * Transcript file id: 3Play transcript file identifier
+* 3Play Api key: Api key to access 3Play transcript file
 * Enable player token: have to be `True` if you need the functionnality.
 * Api key: needed to generate a player token.
 * Api Secret Key: needed to generate a player token.
