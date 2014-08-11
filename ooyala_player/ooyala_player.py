@@ -4,7 +4,6 @@
 # Imports ###########################################################
 
 import logging
-import textwrap
 import json
 from urllib2 import urlopen
 
@@ -26,6 +25,7 @@ log = logging.getLogger(__name__)
 
 # Classes ###########################################################
 
+@XBlock.wants("settings")
 class OoyalaPlayerBlock(XBlock):
     """
     XBlock providing a video player for videos hosted on Brightcove
@@ -147,10 +147,21 @@ class OoyalaPlayerBlock(XBlock):
             return False
         return data.get('iserror', False)
 
+    @property
+    def api_key_with_default_setting(self):
+        if self.api_key:
+            return self.api_key
+
+        settings_service = self.runtime.service(self, 'settings')
+        try:
+            return settings_service.get('ENV_TOKENS')['XBLOCK_OOYALA_3PLAY_API']
+        except (AttributeError, KeyError):
+            return self.api_key
+
     def _retrieve_transcript(self):
         url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
                 self.transcript_file_id,
-                self.api_key
+                self.api_key_with_default_setting
             )
         try:
             conn = urlopen(url)
