@@ -39,13 +39,14 @@ function OoyalaPlayerBlock(runtime, element) {
             publish_event({
                 event_type: event_type,
                 time: player.getPlayheadTime(),
-                playback_rate: video_node.playbackRate
+                playback_rate: get_playback_rate()
             });
         }
 
         /* we have to initialize the window[player_id], internal OO requirement? */
         var player = window[id] = window[player_id] = OO.Player.create(dom_id, content_id, player_options);
         var video_node = $('.ooyalaplayer', element).find('video.video')[0];
+        var is_html5_video = Boolean(video_node);
 
         player.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'eventLogger', function(ev, payload) {
             publish_event({event_type: 'xblock.ooyala.player.loaded'});
@@ -67,7 +68,7 @@ function OoyalaPlayerBlock(runtime, element) {
             publish_event({
                 event_type: 'xblock.ooyala.player.started-from-beginning',
                 is_autoplay: player_options.autoplay,
-                playback_rate: video_node.playbackRate
+                playback_rate: get_playback_rate()
             });
         });
 
@@ -88,17 +89,26 @@ function OoyalaPlayerBlock(runtime, element) {
 
         });
 
-        var old_rate = 1;
-        video_node.onratechange = function() {
-            publish_event({
-                event_type: 'xblock.ooyala.player.speed-changed',
-                time: player.getPlayheadTime(),
-                player_state: player.getState(),
-                old_rate: old_rate,
-                new_rate: video_node.playbackRate
-            });
-            old_rate = video_node.playbackRate;
-        };
+        function get_playback_rate() {
+            if (is_html5_video) {
+                return video_node.playbackRate;
+            }
+            return null;
+        }
+
+        if (is_html5_video) {
+            var old_rate = 1;
+            video_node.onratechange = function() {
+                publish_event({
+                    event_type: 'xblock.ooyala.player.speed-changed',
+                    time: player.getPlayheadTime(),
+                    player_state: player.getState(),
+                    old_rate: old_rate,
+                    new_rate: get_playback_rate()
+                });
+                old_rate = get_playback_rate();
+            };
+        }
 
         var pop = Popcorn('#' + dom_id + ' .video');
 
