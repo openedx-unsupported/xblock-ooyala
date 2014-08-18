@@ -46,7 +46,7 @@ tab in the Studio. When you add it to a course in the studio, the
 block is set up with default content, shown in the screenshot
 below.
 
-![Studio View](https://raw.githubusercontent.com/mtyaka/xblock-ooyala/readme-doc/doc/img/studio-view.png)
+![Studio View](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/studio-view.png)
 
 ### Settings
 
@@ -75,7 +75,7 @@ The following settings can be set in studio edit:
 * _XML Configuration_: Allows you to configure advanced properties of
   the player (ie. overlays) by editing the XML.
 
-![Studio Edit](https://raw.githubusercontent.com/mtyaka/xblock-ooyala/readme-doc/doc/img/studio-edit.png)
+![Studio Edit](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/studio-edit.png)
 
 ### Overlays
 
@@ -104,7 +104,7 @@ All overlays should be grouped under an `<overlays>` tag. Example:
 
 One of the overlay displayed during video play:
 
-![Video Overlay](https://raw.githubusercontent.com/mtyaka/xblock-ooyala/readme-doc/doc/img/student-view-overlay.png)
+![Video Overlay](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/student-view-overlay.png)
 
 Custom workbench settings
 -------------------------
