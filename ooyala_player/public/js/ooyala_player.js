@@ -99,12 +99,16 @@ function OoyalaPlayerBlock(runtime, element) {
         if (is_html5_video) {
             var old_rate = 1;
             video_node.onratechange = function() {
+                new_rate = get_playback_rate();
+                if (old_rate === new_rate) {
+                    return;
+                };
                 publish_event({
                     event_type: 'xblock.ooyala.player.speed-changed',
                     time: player.getPlayheadTime(),
                     player_state: player.getState(),
                     old_rate: old_rate,
-                    new_rate: get_playback_rate()
+                    new_rate: new_rate
                 });
                 old_rate = get_playback_rate();
             };
