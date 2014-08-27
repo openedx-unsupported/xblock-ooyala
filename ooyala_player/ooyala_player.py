@@ -5,7 +5,7 @@
 
 import logging
 import json
-from urllib2 import urlopen
+from urllib2 import urlopen, URLError
 
 from lxml import etree
 from StringIO import StringIO
@@ -167,9 +167,15 @@ class OoyalaPlayerBlock(XBlock):
             return self.api_key_3play
 
     def _retrieve_transcript(self):
-        url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
+        if self.transcript_file_id:
+            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
                 self.transcript_file_id,
                 self.api_key_3play_with_default_setting
+            )
+        else:
+            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1&usevideoid=1".format(
+                self.content_id,
+                self.api_key
             )
         try:
             conn = urlopen(url)
