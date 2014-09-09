@@ -5,7 +5,7 @@
 
 import logging
 import json
-from urllib2 import urlopen
+from urllib2 import urlopen, URLError
 
 from lxml import etree
 from StringIO import StringIO
@@ -144,19 +144,8 @@ class OoyalaPlayerBlock(XBlock):
 
         return overlays
 
-    def _format_error(self, err):
-        return '<div class="transcript-error-message">Error retrieving transcript: {}</div>'.format(err)
-
-    def _is_error(self, text):
-        try:
-            data = json.loads(text)
-        except ValueError:
-            return False
-        return data.get('iserror', False)
-
     @property
     def api_key_3play_with_default_setting(self):
-        print("3play api key:", self.api_key_3play)
         if self.api_key_3play:
             return self.api_key_3play
 
@@ -167,22 +156,61 @@ class OoyalaPlayerBlock(XBlock):
             return self.api_key_3play
 
     def _retrieve_transcript(self):
-        url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
+        """
+        Fetch this video's transcript using either the content_id or 
+        self.transcript_file_id. Requires a 3play API key.
+        """
+        if not self.api_key_3play_with_default_setting:
+            # We will not attempt to fetch a transcript in vain if the 
+            # required 3Play API key is not set. This is not an error.
+            return None
+        if self.transcript_file_id:
+            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
                 self.transcript_file_id,
+                self.api_key_3play_with_default_setting
+            )
+        else:
+            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1&usevideoid=1".format(
+                self.content_id,
                 self.api_key_3play_with_default_setting
             )
         try:
             conn = urlopen(url)
             transcript = conn.read()
         except URLError as e:
-            return self._format_error(e)
+            self._transcript_error = str(e)
+            return None
         finally:
             conn.close()
 
-        if self._is_error(transcript):
-            return self._format_error(transcript)
-
+        # Check if we got back a valid transcript or an API error:
+        try:
+            data = json.loads(transcript)
+            if data.get("iserror", False):
+                self._transcript_error = "Transcript API error: {}".format(data.get("errors", transcript))
+                return None
+        except ValueError:
+            # If the response is not JSON, it is likely a valid transcript.
+            pass
         return transcript
+
+    @property
+    def transcript(self):
+        """
+        Retrieve the transcript if possible. Returns None on error, or if there
+        is no transcript, or if the 3Play API key is missing.
+        """
+        if not hasattr(self, "_transcript_cached"):
+            self._transcript_cached = self._retrieve_transcript()
+        return self._transcript_cached
+
+    @property
+    def transcript_error(self):
+        if self.transcript:  # property access will fetch the transcript
+            return None
+        elif getattr(self, "_transcript_error", None):
+            return self._transcript_error
+        return None  # There is no transcript, which is not an error.
 
     def student_view(self, context):
         """
@@ -205,7 +233,8 @@ class OoyalaPlayerBlock(XBlock):
             'overlay_fragments': overlay_fragments,
             'player_width': self.player_width,
             'player_height': self.player_height,
-            'transcript_content': self._retrieve_transcript(),
+            'transcript_content': self.transcript,
+            'transcript_error': self.transcript_error,
         }
 
         fragment = Fragment()

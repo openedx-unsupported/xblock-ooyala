@@ -17,7 +17,7 @@
       {{overlay_fragments|safe}}
     </div>
 
-    {% if transcript_file_id %}
+    {% if transcript_content %}
     <div class="transcript-container-{{dom_id}}">
         <div class="transcript-header">
             <a class="show-hide-transcript-btn" >Show transcript</a>
@@ -29,6 +29,9 @@
             <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
         </div>
     </div>
+    {% elif transcript_error %}
+        {# Include any transcript error as an HTML comment to help with debugging. #}
+        <!-- Transcript error: {{ transcript_error }} -->
     {% endif %}
 </div>
 {% endautoescape %}
