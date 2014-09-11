@@ -187,6 +187,10 @@ class OoyalaPlayerBlock(XBlock):
         try:
             data = json.loads(transcript)
             if data.get("iserror", False):
+                if "not_found" in data.get("errors", []):
+                    # There is no transcript available for this video.
+                    self._transcript_error = "No transcript was found for this video"
+                    return None
                 self._transcript_error = "Transcript API error: {}".format(data.get("errors", transcript))
                 return None
         except ValueError:
