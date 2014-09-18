@@ -91,7 +91,7 @@ function OoyalaPlayerBlock(runtime, element) {
 
         // Set the z-index super-high in fullscreen mode, but not in normal mode; solves a problem in IE only
         player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', function(ev, payload) {
-            $('.ooyala-player-container', element).css('z-index', payload ? "999999" : "auto");
+            $('.ooyala-player-container', element).css('z-index', payload ? "999999" : "");
         });
 
         function get_playback_rate() {
