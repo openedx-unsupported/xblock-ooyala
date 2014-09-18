@@ -70,8 +70,8 @@ def test_studio_submit_json_handler_valid_input():
         "api_secret_key": "exampleSecretKey",
         "api_key_3play": "example3playApiKey",
         "expiration_time": "exampleExpirationTime",
-        "player_width": "640px",
-        "player_height": "480px",
+        "width": "640px",
+        "height": "480px",
 
     }
     result = player.studio_submit(_MockRequest(request_data))
@@ -96,8 +96,8 @@ def test_studio_submit_json_handler_another_valid_input():
         "api_secret_key": "the_secret_key",
         "api_key_3play": "the_api_key_3play",
         "expiration_time": "10000",
-        "player_width": "320px",
-        "player_height": "280px",
+        "width": "320px",
+        "height": "280px",
 
     }
     result = player.studio_submit(_MockRequest(request_data))

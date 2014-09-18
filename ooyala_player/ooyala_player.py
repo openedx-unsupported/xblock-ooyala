@@ -86,18 +86,18 @@ class OoyalaPlayerBlock(XBlock):
         default=''
     )
 
-    player_width = String(
+    width = String(
         display_name="Player Width",
         help='The width of the player in pixels.',
         scope=Scope.content,
-        default="760px"
+        default="100%"
     )
 
-    player_height = String(
+    height = String(
         display_name="Player Height",
         help='The height of the player in pixels.',
         scope=Scope.content,
-        default="427px"
+        default="428px"
     )
 
     expiration_time = Integer(
@@ -203,8 +203,8 @@ class OoyalaPlayerBlock(XBlock):
             'player_token': self.player_token,
             'dom_id': dom_id,
             'overlay_fragments': overlay_fragments,
-            'player_width': self.player_width,
-            'player_height': self.player_height,
+            'width': self.width,
+            'height': self.height,
             'transcript_content': self._retrieve_transcript(),
         }
 
@@ -302,8 +302,8 @@ class OoyalaPlayerBlock(XBlock):
             self.api_secret_key = submissions['api_secret_key']
             self.api_key_3play = submissions['api_key_3play']
             self.expiration_time = submissions['expiration_time']
-            self.player_width = submissions['player_width']
-            self.player_height = submissions['player_height']
+            self.width = submissions['width']
+            self.height = submissions['height']
 
         return response
 
