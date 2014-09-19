@@ -1,1 +1,1 @@
-from .ooyala_player import OoyalaPlayerBlock
+from .ooyala_player import OoyalaPlayerBlock, OoyalaPlayerLightChildBlock

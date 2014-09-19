@@ -6,9 +6,10 @@ function OoyalaPlayerBlock(runtime, element) {
         var transcript_enabled = $('.ooyalaplayer', element).data('transcript-enabled');
         var dom_id = $('.ooyalaplayer', element).data('dom-id');
         var player_token = $('.ooyalaplayer', element).data('player-token');
+        var autoplay = $('.ooyalaplayer', element).data('autoplay');
         var overlays = $('.ooyala-overlays .ooyala-overlay', element);
 
-        var player_options = {autoplay: true};
+        var player_options = {autoplay: (autoplay === "True")};
 
         if (player_token) {
             player_options.embedToken = player_token;

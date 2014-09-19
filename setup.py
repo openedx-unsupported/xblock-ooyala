@@ -21,6 +21,14 @@ def package_data(pkg, root_list):
 
 # Main ##############################################################
 
+BLOCKS = [
+    'ooyala-player = ooyala_player:OoyalaPlayerBlock'
+]
+
+BLOCKS_CHILDREN = [
+    'ooyala-player = ooyala_player:OoyalaPlayerLightChildBlock'
+]
+
 setup(
     name='xblock-ooyala-player',
     version='0.1',
@@ -30,7 +38,8 @@ setup(
         'XBlock',
     ],
     entry_points={
-        'xblock.v1': 'ooyala-player = ooyala_player:OoyalaPlayerBlock',
+        'xblock.v1': BLOCKS,
+        'xblock.light_children': BLOCKS_CHILDREN,
     },
     package_data=package_data("ooyala_player", ["templates", "public"]),
 )

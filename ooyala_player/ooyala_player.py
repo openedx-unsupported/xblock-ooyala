@@ -7,12 +7,22 @@ import logging
 import json
 from urllib2 import urlopen, URLError
 
+from uuid import uuid4
+
 from lxml import etree
 from StringIO import StringIO
 
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
+
+from mentoring.light_children import (
+    LightChild,
+    Scope as LCScope,
+    String as LCString,
+    Integer as LCInteger,
+    Boolean as LCBoolean
+)
 
 from .utils import render_template
 from .tokens import generate_player_token
@@ -25,99 +35,17 @@ log = logging.getLogger(__name__)
 
 # Classes ###########################################################
 
-@XBlock.wants("settings")
-class OoyalaPlayerBlock(XBlock):
+class OoyalaPlayerMixin(object):
     """
-    XBlock providing a video player for videos hosted on Brightcove
+    Base functionnalities for the ooyala player.
     """
-    display_name = String(
-        display_name="Display Name",
-        help="This name appears in the horizontal navigation at the top of the page.",
-        scope=Scope.settings,
-        default="Ooyala Player"
-    )
-
-    content_id = String(
-        display_name="Content Id",
-        help="Identifier for the Content Id.",
-        scope=Scope.content,
-        default='Q1eXg5NzpKqUUzBm5WTIb6bXuiWHrRMi'
-    )
-
-    transcript_file_id = String(
-        display_name="3Play Transcript Id",
-        help="Identifier for the 3Play Transcript File",
-        scope=Scope.content,
-        default=''
-    )
-
-    enable_player_token = Boolean(
-        display_name="Enable Player Token",
-        help='Set to True if a player token is required.',
-        scope=Scope.content,
-        default=False
-    )
-
-    partner_code = String(
-        display_name="Partner Code",
-        help='Needed to generate a player token.',
-        scope=Scope.content,
-        default=''
-    )
-
-    api_key = String(
-        display_name="Api Key",
-        help='Needed to generate a player token.',
-        scope=Scope.content,
-        default=''
-    )
-
-    api_secret_key = String(
-        display_name="Api SecRet Key",
-        help='Needed to generate a player token.',
-        scope=Scope.content,
-        default=''
-    )
-
-    api_key_3play = String(
-        display_name="3play Api Key",
-        help='3play Api Key for transcript.',
-        scope=Scope.content,
-        default=''
-    )
-
-    width = String(
-        display_name="Player Width",
-        help='The width of the player in pixels.',
-        scope=Scope.content,
-        default="100%"
-    )
-
-    height = String(
-        display_name="Player Height",
-        help='The height of the player in pixels.',
-        scope=Scope.content,
-        default="428px"
-    )
-
-    expiration_time = Integer(
-        display_name="Expiration Time",
-        help='Expiration time in seconds. Needed to generate a player token.',
-        scope=Scope.content,
-        default=600
-    )
-
-    fire_progress_event_on_student_view = Boolean(
-        display_name="Fire Progress Event on Student View",
-        help='Set to True if you would like to get a progress event in the event stream when the user views this xBlock.',
-        scope=Scope.content,
-        default=True
-    )
-
-    xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
-                        scope=Scope.content)
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
+
+    @property
+    def course_id(self):
+        """Move to xblock-utils"""
+        return self.runtime.course_id
 
     @property
     def player_token(self):
@@ -143,17 +71,6 @@ class OoyalaPlayerBlock(XBlock):
                 overlays.append(overlay)
 
         return overlays
-
-    @property
-    def api_key_3play_with_default_setting(self):
-        if self.api_key_3play:
-            return self.api_key_3play
-
-        settings_service = self.runtime.service(self, 'settings')
-        try:
-            return settings_service.get('ENV_TOKENS')['XBLOCK_OOYALA_3PLAY_API']
-        except (AttributeError, KeyError):
-            return self.api_key_3play
 
     def _retrieve_transcript(self):
         """
@@ -239,24 +156,25 @@ class OoyalaPlayerBlock(XBlock):
             'height': self.height,
             'transcript_content': self.transcript,
             'transcript_error': self.transcript_error,
+            'autoplay': self.autoplay,
         }
 
         fragment = Fragment()
         fragment.add_content(render_template('/templates/html/ooyala_player.html', context))
-        fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/ooyala_player.css'))
-        fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/vendor/jquery-ui.css'))
+        fragment.add_css_url(self.local_resource_url(self, 'public/css/ooyala_player.css'))
+        fragment.add_css_url(self.local_resource_url(self, 'public/css/vendor/jquery-ui.css'))
 
         # custom plugins styles
-        fragment.add_css_url(self.runtime.local_resource_url(self, 'public/css/speedplugin.css'))
+        fragment.add_css_url(self.local_resource_url(self, 'public/css/speedplugin.css'))
 
-        fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
+        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
 
         player_url = '//player.ooyala.com/v3/{0}?platform=html5-priority'.format(self.player_id)
 
         fragment.add_javascript_url(player_url)
-        fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
-        fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/popcorn.js'))
-        fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vendor/underscore.js'))
+        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
+        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/popcorn.js'))
+        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/underscore-min.js'))
 
         fragment.add_javascript(render_template('public/js/ooyala_player.js', {
             'self': self,
@@ -274,6 +192,140 @@ class OoyalaPlayerBlock(XBlock):
 
         return fragment
 
+    def xblock_view(self):
+        """
+        Returns the JSON that represents the xblock for jquery.xblock.
+        """
+
+        usage_id = self.course_id.make_usage_key(self.scope_ids.block_type, self.location.name)
+        usage_id = usage_id.to_deprecated_string().replace('/', ';_')
+        return {
+            'courseId': self.course_id.to_deprecated_string(),
+            'usageId': usage_id
+        }
+
+@XBlock.wants("settings")
+class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
+    """
+    XBlock providing a video player for videos hosted on Brightcove
+    """
+
+    display_name = String(
+        display_name="Display Name",
+        help="This name appears in the horizontal navigation at the top of the page.",
+        scope=Scope.settings,
+        default="Ooyala Player"
+    )
+
+    content_id = String(
+        display_name="Content Id",
+        help="Identifier for the Content Id.",
+        scope=Scope.content,
+        default='Q1eXg5NzpKqUUzBm5WTIb6bXuiWHrRMi'
+    )
+
+    transcript_file_id = String(
+        display_name="3Play Transcript Id",
+        help="Identifier for the 3Play Transcript File",
+        scope=Scope.content,
+        default=''
+    )
+
+    autoplay = Boolean(
+        display_name="Enable Player Autoplay",
+        help='Set to True if you the player to automatically play.',
+        scope=Scope.content,
+        default=True
+    )
+
+    enable_player_token = Boolean(
+        display_name="Enable Player Token",
+        help='Set to True if a player token is required.',
+        scope=Scope.content,
+        default=False
+    )
+
+    partner_code = String(
+        display_name="Partner Code",
+        help='Needed to generate a player token.',
+        scope=Scope.content,
+        default=''
+    )
+
+    api_key = String(
+        display_name="Api Key",
+        help='Needed to generate a player token.',
+        scope=Scope.content,
+        default=''
+    )
+
+    api_secret_key = String(
+        display_name="Api SecRet Key",
+        help='Needed to generate a player token.',
+        scope=Scope.content,
+        default=''
+    )
+
+    api_key_3play = String(
+        display_name="3play Api Key",
+        help='3play Api Key for transcript.',
+        scope=Scope.content,
+        default=''
+    )
+
+    width = String(
+        display_name="Player Width",
+        help='The width of the player in pixels.',
+        scope=Scope.content,
+        default="100%"
+    )
+
+    height = String(
+        display_name="Player Height",
+        help='The height of the player in pixels.',
+        scope=Scope.content,
+        default="428px"
+    )
+
+    expiration_time = Integer(
+        display_name="Expiration Time",
+        help='Expiration time in seconds. Needed to generate a player token.',
+        scope=Scope.content,
+        default=600
+    )
+
+    fire_progress_event_on_student_view = Boolean(
+        display_name="Fire Progress Event on Student View",
+        help='Set to True if you would like to get a progress event in the event stream when the user views this xBlock.',
+        scope=Scope.content,
+        default=True
+    )
+
+    xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
+                        scope=Scope.content)
+
+    @property
+    def api_key_3play_with_default_setting(self):
+        if self.api_key_3play:
+            return self.api_key_3play
+
+        settings_service = self.runtime.service(self, 'settings')
+        try:
+            return settings_service.get('ENV_TOKENS')['XBLOCK_OOYALA_3PLAY_API']
+        except (AttributeError, KeyError):
+            return self.api_key_3play
+
+    def local_resource_url(self, block, uri):
+        return self.runtime.local_resource_url(block, uri)
+
+    def _get_unique_id(self):
+        try:
+            unique_id = self.location.name
+        except AttributeError:
+            # workaround for xblock workbench
+            unique_id = self.parent.replace('.',  '-') + '-' + self.content_id
+        return unique_id
+
     @XBlock.json_handler
     def publish_event(self, data, suffix=''):
         try:
@@ -287,14 +339,6 @@ class OoyalaPlayerBlock(XBlock):
         self.runtime.publish(self, event_type, data)
         return {'result':'success'}
 
-    def _get_unique_id(self):
-        try:
-            unique_id = self.location.name
-        except AttributeError:
-            # workaround for xblock workbench
-            unique_id = self.parent.replace('.',  '-') + '-' + self.content_id
-        return unique_id
-
     def studio_view(self, context):
         """
         Editing view in Studio
@@ -303,7 +347,7 @@ class OoyalaPlayerBlock(XBlock):
         fragment.add_content(render_template('/templates/html/ooyala_player_edit.html', {
             'self': self,
         }))
-        fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/ooyala_player_edit.js'))
+        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/ooyala_player_edit.js'))
 
         fragment.initialize_js('OoyalaPlayerEditBlock')
 
@@ -344,3 +388,133 @@ class OoyalaPlayerBlock(XBlock):
     def workbench_scenarios():
         """A canned scenario for display in the workbench."""
         return [("Ooyala scenario", "<vertical_demo><ooyala-player/></vertical_demo>")]
+
+
+class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
+    """
+    LightChild XBlock providing a video player for videos hosted on Brightcove.
+
+    TODO: refactor to not duplicated all field definitions.
+    """
+
+    block_type = 'ooyala-player' # used by local_resource_url
+
+    display_name = LCString(
+        display_name="Display Name",
+        help="This name appears in the horizontal navigation at the top of the page.",
+        scope=LCScope.content,
+        default="Ooyala Player"
+    )
+
+    content_id = LCString(
+        display_name="Content Id",
+        help="Identifier for the Content Id.",
+        scope=LCScope.content,
+        default='Q1eXg5NzpKqUUzBm5WTIb6bXuiWHrRMi'
+    )
+
+    transcript_file_id = LCString(
+        display_name="3Play Transcript Id",
+        help="Identifier for the 3Play Transcript File",
+        scope=LCScope.content,
+        default=''
+    )
+
+    autoplay = LCBoolean(
+        display_name="Enable Player Autoplay",
+        help='Set to True if you the player to automatically play.',
+        scope=LCScope.content,
+        default=False
+    )
+
+    enable_player_token = LCBoolean(
+        display_name="Enable Player Token",
+        help='Set to True if a player token is required.',
+        scope=LCScope.content,
+        default=False
+    )
+
+    partner_code = LCString(
+        display_name="Partner Code",
+        help='Needed to generate a player token.',
+        scope=LCScope.content,
+        default=''
+    )
+
+    api_key = LCString(
+        display_name="Api Key",
+        help='Needed to generate a player token.',
+        scope=LCScope.content,
+        default=''
+    )
+
+    api_secret_key = LCString(
+        display_name="Api SecRet Key",
+        help='Needed to generate a player token.',
+        scope=LCScope.content,
+        default=''
+    )
+
+    api_key_3play = LCString(
+        display_name="3play Api Key",
+        help='3play Api Key for transcript.',
+        scope=LCScope.content,
+        default=''
+    )
+
+    width = LCString(
+        display_name="Player Width",
+        help='The width of the player in pixels.',
+        scope=LCScope.content,
+        default="100%"
+    )
+
+    height = LCString(
+        display_name="Player Height",
+        help='The height of the player in pixels.',
+        scope=LCScope.content,
+        default="428px"
+    )
+
+    expiration_time = Integer(
+        display_name="Expiration Time",
+        help='Expiration time in seconds. Needed to generate a player token.',
+        scope=LCScope.content,
+        default=600
+    )
+
+    fire_progress_event_on_student_view = LCBoolean(
+        display_name="Fire Progress Event on Student View",
+        help='Set to True if you would like to get a progress event in the event stream when the user views this xBlock.',
+        scope=LCScope.content,
+        default=True
+    )
+
+    xml_config = LCString(help="XML Configuration", default='<ooyala>\n</ooyala>',
+                        scope=LCScope.content)
+
+    @classmethod
+    def init_block_from_node(cls, block, node, attr):
+        # hack, we remove all children from node. This is ooyala specific xml config
+        xml_config = u"<ooyala>\n"
+        for child in node:
+            xml_config += unicode(etree.tostring(child))
+            node.remove(child)
+        xml_config += u"</ooyala>"
+
+        block = super(OoyalaPlayerLightChildBlock, cls).init_block_from_node(block, node, attr)
+
+        block.xml_config = xml_config
+
+        return block
+
+    @property
+    def api_key_3play_with_default_setting(self):
+        """LightChild cannot use service"""
+        return self.api_key_3play
+
+    def _get_unique_id(self):
+        # We can have mulitple lightchild in the same block
+        unique_id = self.location.name
+        unique_id += "-{0}".format(uuid4().hex)
+        return unique_id
