@@ -197,11 +197,17 @@ class OoyalaPlayerMixin(object):
         Returns the JSON that represents the xblock for jquery.xblock.
         """
 
-        usage_id = self.course_id.make_usage_key(self.scope_ids.block_type, self.location.name)
-        usage_id = usage_id.to_deprecated_string().replace('/', ';_')
+        try:
+            course_id = self.course_id.to_deprecated_string()
+            usage_id = self.course_id.make_usage_key(self.scope_ids.block_type, self.location.name)
+            usage_id = usage_id.to_deprecated_string().replace('/', ';_')
+        except AttributeError:
+            # workaround for workbench
+            course_id = None
+            usage_id = None
         return {
-            'courseId': self.course_id.to_deprecated_string(),
-            'usageId': usage_id
+            'courseId': course_id,
+            'usageId': usage_id,
         }
 
 @XBlock.wants("settings")
