@@ -12,6 +12,9 @@ from uuid import uuid4
 from lxml import etree
 from StringIO import StringIO
 
+from django.conf import settings
+from django.core.urlresolvers import reverse
+
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
@@ -322,6 +325,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
             return self.api_key_3play
 
     def local_resource_url(self, block, uri):
+        # TODO move to xblock-utils
         return self.runtime.local_resource_url(block, uri)
 
     def _get_unique_id(self):
@@ -403,7 +407,7 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
     TODO: refactor to not duplicated all field definitions.
     """
 
-    block_type = 'ooyala-player' # used by local_resource_url
+    lightchild_block_type = 'ooyala-player' # used by LightChild.local_resource_url
 
     display_name = LCString(
         display_name="Display Name",
@@ -513,6 +517,17 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         block.xml_config = xml_config
 
         return block
+
+    # TODO move to xblock-utils
+    def local_resource_url(self, block, uri):
+        """
+        local_resource_url for xblocks, with lightchild support.
+        """
+        path = reverse('xblock_resource_url', kwargs={
+            'block_type': block.lightchild_block_type or block.scope_ids.block_type,
+            'uri': uri,
+        })
+        return '//{}{}'.format(settings.SITE_NAME, path)
 
     @property
     def api_key_3play_with_default_setting(self):
