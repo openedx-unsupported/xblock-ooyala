@@ -29,6 +29,7 @@ def test_enabled_player_token_is_not_empty():
 class _MockRequest:
     def __init__(self, body):
         self.body = json.dumps(body)
+        self.method = "POST"
 
 
 class _NotEmpty:
