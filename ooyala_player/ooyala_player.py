@@ -27,7 +27,7 @@ from mentoring.light_children import (
     Boolean as LCBoolean
 )
 
-from .utils import render_template
+from .utils import loader
 from .tokens import generate_player_token
 from .overlay import OoyalaOverlay
 
@@ -163,7 +163,7 @@ class OoyalaPlayerMixin(object):
         }
 
         fragment = Fragment()
-        fragment.add_content(render_template('/templates/html/ooyala_player.html', context))
+        fragment.add_content(loader.render_template('/templates/html/ooyala_player.html', context))
         fragment.add_css_url(self.local_resource_url(self, 'public/css/ooyala_player.css'))
         fragment.add_css_url(self.local_resource_url(self, 'public/css/vendor/jquery-ui.css'))
 
@@ -179,7 +179,7 @@ class OoyalaPlayerMixin(object):
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/popcorn.js'))
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/underscore-min.js'))
 
-        fragment.add_javascript(render_template('public/js/ooyala_player.js', {
+        fragment.add_javascript(loader.render_template('public/js/ooyala_player.js', {
             'self': self,
             'overlay_fragments': overlay_fragments,
             'dom_id': dom_id
@@ -354,7 +354,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         Editing view in Studio
         """
         fragment = Fragment()
-        fragment.add_content(render_template('/templates/html/ooyala_player_edit.html', {
+        fragment.add_content(loader.render_template('/templates/html/ooyala_player_edit.html', {
             'self': self,
         }))
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/ooyala_player_edit.js'))
