@@ -3,7 +3,7 @@
 
 from lxml import etree
 
-from .utils import render_template
+from .utils import loader
 
 
 class OoyalaOverlay(object):
@@ -52,6 +52,6 @@ class OoyalaOverlay(object):
         Returns a fragment containing the formatted overlay.
         """
 
-        return render_template('templates/html/ooyala_overlay.html', {
+        return loader.render_template('templates/html/ooyala_overlay.html', {
             'self': self
         })
