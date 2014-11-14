@@ -174,7 +174,6 @@ class OoyalaPlayerMixin(object):
         fragment.add_javascript_url(player_url)
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/popcorn.js'))
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/underscore-min.js'))
 
         fragment.add_javascript(render_template('public/js/ooyala_player.js', {
             'self': self,
