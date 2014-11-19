@@ -16,7 +16,7 @@ function OoyalaPlayerBlock(runtime, element) {
         }
 
         var id = 'ooyala-player-'+ dom_id;
-        if (!_.isUndefined(window[id])) {
+        if (window[id]) {
             window[id].destroy();
         }
 

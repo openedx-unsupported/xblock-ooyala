@@ -165,19 +165,15 @@ class OoyalaPlayerMixin(object):
         fragment = Fragment()
         fragment.add_content(render_template('/templates/html/ooyala_player.html', context))
         fragment.add_css_url(self.local_resource_url(self, 'public/css/ooyala_player.css'))
-        fragment.add_css_url(self.local_resource_url(self, 'public/css/vendor/jquery-ui.css'))
 
         # custom plugins styles
         fragment.add_css_url(self.local_resource_url(self, 'public/css/speedplugin.css'))
-
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/jquery-ui.js'))
 
         player_url = '//player.ooyala.com/v3/{0}?platform=html5-priority'.format(self.player_id)
 
         fragment.add_javascript_url(player_url)
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
         fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/popcorn.js'))
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/underscore-min.js'))
 
         fragment.add_javascript(render_template('public/js/ooyala_player.js', {
             'self': self,
