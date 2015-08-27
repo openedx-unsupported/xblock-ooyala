@@ -316,7 +316,6 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
         settings_service = self.runtime.service(self, 'settings')
         if settings_service:
-            print settings_service.get_settings_bucket(self).get('3PLAY_API_KEY')
             return settings_service.get_settings_bucket(self).get('3PLAY_API_KEY')
         return None
 
