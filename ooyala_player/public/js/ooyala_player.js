@@ -159,6 +159,8 @@ function OoyalaPlayerBlock(runtime, element) {
         print_buttons.click(function () {
             w = window.open();
             w.document.write(content.html());
+            w.document.close();
+            w.focus();
             w.print();
             w.close();
         });
