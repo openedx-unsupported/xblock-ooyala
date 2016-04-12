@@ -226,7 +226,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name="Content Id",
         help="Identifier for the Content Id.",
         scope=Scope.content,
-        default='Q1eXg5NzpKqUUzBm5WTIb6bXuiWHrRMi'
+        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
     transcript_file_id = String(
@@ -415,7 +415,7 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         display_name="Content Id",
         help="Identifier for the Content Id.",
         scope=LCScope.content,
-        default='Q1eXg5NzpKqUUzBm5WTIb6bXuiWHrRMi'
+        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
     transcript_file_id = LCString(
