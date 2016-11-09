@@ -1,168 +1,225 @@
 function OoyalaPlayerBlock(runtime, element) {
-    OO.ready(function() {
-        var content_id = $('.ooyalaplayer', element).data('content-id');
-        var player_id = $('.ooyalaplayer', element).data('player-id');
-        var transcript_id = $('.ooyalaplayer', element).data('transcript-id');
-        var transcript_enabled = $('.ooyalaplayer', element).data('transcript-enabled');
-        var dom_id = $('.ooyalaplayer', element).data('dom-id');
-        var player_token = $('.ooyalaplayer', element).data('player-token');
-        var autoplay = $('.ooyalaplayer', element).data('autoplay');
-        var overlays = $('.ooyala-overlays .ooyala-overlay', element);
+    var Player = {
+        init: function(){
+            this.data = this.getPlayerData();
+            this.identifier = 'ooyala-player-'+ this.data.domId;
+            this.playbackSpeed = 1;
+            this.ccLang = 'en'; //ToDo: make it dynamic
 
-        var player_options = {autoplay: (autoplay === "True")};
-
-        if (player_token) {
-            player_options.embedToken = player_token;
-        }
-
-        var id = 'ooyala-player-'+ dom_id;
-        if (window[id]) {
-            window[id].destroy();
-        }
-
-        function publish_event(data) {
-            $.ajax({
-                type: "POST",
-                url: runtime.handlerUrl(element, 'publish_event'),
-                data: JSON.stringify(data)
-            });
-        }
-
-        function publish_open_close_event(event_type) {
-            publish_event({
-                event_type: event_type,
-                time: player.getPlayheadTime(),
-                player_state: player.getState()
-            });
-        }
-
-        function publish_play_pause_event(event_type) {
-            publish_event({
-                event_type: event_type,
-                time: player.getPlayheadTime(),
-                playback_rate: get_playback_rate()
-            });
-        }
-
-        /* we have to initialize the window[player_id], internal OO requirement? */
-        var player = window[id] = window[player_id] = OO.Player.create(dom_id, content_id, player_options);
-        var video_node = $('.ooyalaplayer', element).find('video.video')[0];
-        var is_html5_video = Boolean(video_node);
-
-        player.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'eventLogger', function(ev, payload) {
-            publish_event({event_type: 'xblock.ooyala.player.loaded'});
-        });
-
-        player.mb.subscribe(OO.EVENTS.PLAYED, 'eventLogger', function(ev, payload) {
-            publish_event({event_type: 'xblock.ooyala.player.ended'});
-        });
-
-        player.mb.subscribe(OO.EVENTS.PLAYING, 'eventLogger', function(ev, payload) {
-            publish_play_pause_event('xblock.ooyala.player.playing');
-        });
-
-        player.mb.subscribe(OO.EVENTS.PAUSED, 'eventLogger', function(ev, payload) {
-            publish_play_pause_event('xblock.ooyala.player.paused');
-        });
-
-        player.mb.subscribe(OO.EVENTS.WILL_PLAY_FROM_BEGINNING, 'eventLogger', function(ev, payload) {
-            publish_event({
-                event_type: 'xblock.ooyala.player.started-from-beginning',
-                is_autoplay: player_options.autoplay,
-                playback_rate: get_playback_rate()
-            });
-        });
-
-        player.mb.subscribe(OO.EVENTS.SEEK, 'eventLogger', function(ev, payload) {
-            publish_event({
-                event_type: 'xblock.ooyala.player.jumped-to',
-                old_time: player.getPlayheadTime(),
-                new_time: payload
-            });
-        });
-
-        player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', function(ev, payload) {
-            if (payload) {
-                publish_open_close_event('xblock.ooyala.player.full-screen.opened');
-            } else {
-                publish_open_close_event('xblock.ooyala.player.full-screen.closed');
+            this.cleanUp();
+            this.createPlayer();
+            this.subscribePlayerEvents();
+        },
+        createPlayer: function(){
+            var playerParam = {
+                "pcode": this.data.pcode,
+                "playerBrandingId": this.data.playerId,
+                "autoplay": (this.data.autoplay === "True"),
+                "skin": {
+                    "config": this.data.configUrl
+                }
             };
 
-        });
-
-        // Set the z-index super-high in fullscreen mode, but not in normal mode; solves a problem in IE only
-        player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', function(ev, payload) {
-            $('.ooyala-player-container', element).css('z-index', payload ? "999999" : "");
-        });
-
-        function get_playback_rate() {
-            if (is_html5_video) {
-                return video_node.playbackRate;
+            window[this.identifier] = this.player = OO.Player
+                .create(this.data.domId, this.data.contentId, playerParam);
+        },
+        getPlayerData: function (){
+            return {
+                contentId: $('.ooyalaplayer', element).data('content-id'),
+                pcode: $('.ooyalaplayer', element).data('pcode'),
+                playerId: $('.ooyalaplayer', element).data('player-id'),
+                transcriptId: $('.ooyalaplayer', element).data('transcript-id'),
+                transcriptEnabled: $('.ooyalaplayer', element).data('transcript-enabled'),
+                domId: $('.ooyalaplayer', element).data('dom-id'),
+                playerToken: $('.ooyalaplayer', element).data('player-token'),
+                autoplay: $('.ooyalaplayer', element).data('autoplay'),
+                overlays: $('.ooyala-overlays .ooyala-overlay', element),
+                configUrl: $('.ooyalaplayer', element).data('config-url')
             }
-            return null;
-        }
+        },
+        cleanUp: function(){
+            if (window[this.identifier]){
+                window[this.identifier].destroy();
+            }
+        },
+        subscribePlayerEvents: function(){
+            this.player.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'eventLogger', this.eventHandlers.playbackReady.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.PLAYED, 'eventLogger', this.eventHandlers.played.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.PAUSED, 'eventLogger', this.eventHandlers.paused.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.WILL_PLAY_FROM_BEGINNING, 'eventLogger', this.eventHandlers.startedFromBeginning.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.SEEK, 'eventLogger', this.eventHandlers.seek.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', this.eventHandlers.fullScreenChanged.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
+            this.player.mb.subscribe(OO.EVENTS.SET_CLOSED_CAPTIONS_LANGUAGE, 'eventLogger', this.eventHandlers.closedCaptionsLangChanged.bind(this));
+        },
+        eventHandlers: {
+            playbackReady: function(ev, payload){
+                publishEvent({event_type: 'xblock.ooyala.player.loaded'});
 
-        if (is_html5_video) {
-            var old_rate = 1;
-            video_node.onratechange = function() {
-                new_rate = get_playback_rate();
-                if (old_rate === new_rate) {
-                    return;
-                };
-                publish_event({
-                    event_type: 'xblock.ooyala.player.speed-changed',
-                    time: player.getPlayheadTime(),
-                    player_state: player.getState(),
-                    old_rate: old_rate,
-                    new_rate: new_rate
+                // operations which needs <video> element are also placed here
+                this.applyOverlays();
+                if(isHtml5Video()){
+                    var videoElement = getVideoNode();
+                    videoElement.addEventListener("ratechange", this.eventHandlers.speedChanged.bind(this))
+                }
+            },
+            played: function(ev, payload){
+                publishEvent({event_type: 'xblock.ooyala.player.ended'});
+            },
+            playing: function(ev, payload){
+                publishEvent({
+                    event_type: 'xblock.ooyala.player.playing',
+                    time: this.player.getPlayheadTime(),
+                    playback_rate: getPlaybackRate()
                 });
-                old_rate = get_playback_rate();
-            };
-        }
+            },
+            paused: function(ev, payload){
+                publishEvent({
+                    event_type: 'xblock.ooyala.player.paused',
+                    time: this.player.getPlayheadTime(),
+                    playback_rate: getPlaybackRate()
+                });
+            },
+            startedFromBeginning: function(ev, payload){
+                 publishEvent({
+                    event_type: 'xblock.ooyala.player.started-from-beginning',
+                    is_autoplay: this.data.autoplay,
+                    playback_rate: getPlaybackRate()
+                });
+            },
+            seek: function(ev, payload){
+                publishEvent({
+                    event_type: 'xblock.ooyala.player.jumped-to',
+                    old_time: this.player.getPlayheadTime(),
+                    new_time: payload
+                });
+            },
+            fullScreenChanged: function(ev, payload){
+                var eventType;
+                $('.ooyala-player-container', element).css('z-index', payload ? "999999" : "");
 
-        var pop = Popcorn('#' + dom_id + ' .video');
+                if (payload) {
+                    eventType = 'xblock.ooyala.player.full-screen.opened';
+                }else {
+                    eventType = 'xblock.ooyala.player.full-screen.closed';
+                }
+                publishEvent({
+                    event_type: eventType,
+                    time: this.player.getPlayheadTime(),
+                    player_state: this.player.getState()
+                });
+            },
+            speedChanged: function(){
+                var newRate = getPlaybackRate();
+                if (this.playbackSpeed === newRate){
+                    return;
+                }
+                publishEvent({
+                    event_type: 'xblock.ooyala.player.speed-changed',
+                    time: this.player.getPlayheadTime(),
+                    player_state: this.player.getState(),
+                    old_rate: this.playbackSpeed,
+                    new_rate: newRate
+                });
+                this.playbackRate = newRate;
+            },
+            closedCaptionsLangChanged: function (ev, payload) {
+                log('now:' + payload);
+                log('ccLang:' + this.ccLang);
+            },
+            playerSettingsSaved: function (ev, payload) {
+                log('saved:' + payload.closedCaptionOptions.language);
 
-        overlays.each(function(i, overlay) {
-            var start = $(overlay).data('start');
-            var end = $(overlay).data('end');
-            var text = $(overlay).data('text');
-            var target = $(overlay).data('target');
+                this.ccLang = payload.closedCaptionOptions.language;
 
-            pop.footnote({
-                start: start,
-                end: end,
-                text: text,
-                target: target
-            });
-        });
+                var ccLang = this.ccLang;
+                var currentSelected = $('.p3sdk-interactive-transcript-track.selected', element);
 
-        pop.play();
+                if(currentSelected.length){
+                    var langCode = currentSelected.data('lang-code');
+                    var langName = currentSelected.data('lang-name');
 
-        var container = $(".transcript-container-"+dom_id);
-        var toggle_buttons = container.find(".show-hide-transcript-btn");
-        var print_buttons = container.find(".print-transcript-btn");
-        var content = container.find(".transcript-content");
-        var footer = container.find(".transcript-footer");
+                    // change transcript language if it's different from CC language
+                    if(ccLang != langCode && ccLang != langName){
+                        currentSelected.removeClass('selected');
 
-        toggle_buttons.click(function() {
-            if (content.is(":visible")) {
-                toggle_buttons.html("Show transcript");
-                publish_open_close_event('xblock.ooyala.transcript.closed')
-            } else {
-                toggle_buttons.html("Hide transcript");
-                publish_open_close_event('xblock.ooyala.transcript.opened')
+                        var langElement = $('.p3sdk-interactive-transcript-track').filter(
+                            '[data-lang-code=' + ccLang + '], [data-lang-name=' + ccLang + ']'
+                        );
+
+                        langElement.addClass('selected');
+                        langElement.trigger('click');
+                    }
+                }
             }
-            content.toggle("fast");
-            footer.toggle("fast");
-        });
+        },
+        applyOverlays: function(){
+            var pop = Popcorn('#' + this.data.domId + ' .video');
 
-        print_buttons.click(function () {
-            w = window.open();
-            w.document.write(content.html());
-            w.document.close();
-            w.focus();
-            w.print();
-            w.close();
+            this.data.overlays.each(function(i, overlay) {
+                var start = $(overlay).data('start');
+                var end = $(overlay).data('end');
+                var text = $(overlay).data('text');
+                var target = $(overlay).data('target');
+
+                pop.footnote({
+                    start: start,
+                    end: end,
+                    text: text,
+                    target: target
+                });
+            });
+        }
+    };
+
+    function log(msg){
+        console.log(msg);
+    }
+
+    function getVideoNode(){
+        return $('.ooyalaplayer', element).find('video.video')[0];
+    }
+
+    function isHtml5Video(){
+        return Boolean(getVideoNode);
+    }
+
+    function getPlaybackRate(){
+        if (isHtml5Video()) {
+            return getVideoNode().playbackRate;
+        }
+        return null;
+    }
+
+    function publishEvent(data){
+        $.ajax({
+            type: "POST",
+            url: runtime.handlerUrl(element, 'publish_event'),
+            data: JSON.stringify(data)
         });
+    }
+
+    function p3sdk_ready(playerObj){
+      p3$(p3sdk.get(0)).bind("transcript:track_selected", function(name, atts){
+          $('.p3sdk-interactive-transcript-track.selected', element).removeClass('selected');
+          $(atts.target_element).addClass('selected');
+
+          var newLang = $(atts.target_element).data('lang-code');
+
+          newLang = newLang == 'ar'? 'Arabic': newLang;
+
+          // if CC language is different from transcript language
+          if(playerObj.ccLang != newLang){
+              log('setting: ' + newLang);
+              if(window['changeCCLanguage']){
+                  window.changeCCLanguage(newLang);
+              }
+          }
+      });
+    }
+
+    OO.ready(function () {
+        Player.init();
+        p3sdk_ready(Player);
     });
 }
