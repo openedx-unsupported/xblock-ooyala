@@ -1,38 +1,50 @@
-{% autoescape off %}
 <div class="ooyala-player-xblock-wrapper">
-    <div class="ooyala-player-container" style='width: {{width}}; height: {{height}};'>
-        <div id='{{dom_id}}' class='ooyalaplayer'
+    <div class="ooyala-player-container">
+        <div id='{{dom_id}}' class='ooyalaplayer' style='width: {{width}}; height: {{height}};'
+             data-pcode='{{pcode}}'
              data-content-id='{{content_id}}'
              data-dom-id='{{dom_id}}'
              data-player-id='{{player_id}}'
              data-transcript-id='{{transcript_file_id}}'
              data-player-token='{{player_token}}'
              data-autoplay='{{autoplay}}'
+             data-config-url='{{config_url}}'
              >
         </div>
         <div id="ooyala-overlay-container-{{dom_id}}" class="ooyala-overlay"></div>
     </div>
-
+    <div class="p3sdk-container p3sdk-debug-not" player_id="ooyala-player-{{dom_id}}" player_type="ooyala_v4">
+        {% if transcript_content %}
+        <div class="p3sdk-interactive-transcript" file_id="{{content_id}}" use_video_id="1" project_id="{{project_id}}">
+            <div class="p3sdk-interactive-transcript-collapse-visible">
+                 <a href="javascript:void(0);" class="p3sdk-interactive-transcript-collapse p3sdk-collapse-onload icon-expand" label_when_expanded = "&nbsp;<span class='fa fa-chevron-circle-up' aria-hidden='true'> Hide Transcript</span>" label_when_collapsed = "&nbsp;<span class='fa fa-chevron-circle-down' aria-hidden='true'> Show Transcript</span>">
+                    Hide Transcript
+                </a>
+            </div>
+            <div class="transcript-header">
+                <input type="text" class="p3sdk-interactive-transcript-searchbox" placeholder="Search Video"/>
+                <div class="op-div">
+                    <ul class="language-tracks">
+                        {% for link in translation_links %}
+                            <li data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" class="p3sdk-interactive-transcript-track {% if link.selected %}selected{% endif %}" remote-src="{{link.url}}">{{link.language}}</li>
+                        {% endfor %}
+                    </ul>
+                    <ul>
+                         <li><a class="print-transcript-btn" title="Print Transcript"><span class="fa fa-print"></span></a></li>
+                        <li><a href="javascript:void(0);" class="p3sdk-interactive-transcript-download" title="Download Transcript" download_format="pdf"><i class="fa fa-download" aria-hidden="true"></i>
+</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="transcript-content p3sdk-interactive-transcript-content"></div>
+        </div>
+        {% elif transcript_error %}
+            {# Include any transcript error as an HTML comment to help with debugging. #}
+            <!-- Transcript error: {{ transcript_error }} -->
+        {% endif %}
+    </div>
     <!-- Overlays template. These elements are only read from JS (non-visual). -->
     <div class="ooyala-overlays hide">
       {{overlay_fragments|safe}}
     </div>
-
-    {% if transcript_content %}
-    <div class="transcript-container-{{dom_id}}">
-        <div class="transcript-header">
-            <a class="show-hide-transcript-btn" >Show transcript</a>
-            <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
-        </div>
-        <div class="transcript-content" style="display: none">{{ transcript_content }}</div>
-        <div class="transcript-footer" style="display: none">
-            <a class="show-hide-transcript-btn" >Show transcript</a>
-            <a class="print-transcript-btn"><span class="fa fa-print"></span></a>
-        </div>
-    </div>
-    {% elif transcript_error %}
-        {# Include any transcript error as an HTML comment to help with debugging. #}
-        <!-- Transcript error: {{ transcript_error }} -->
-    {% endif %}
 </div>
-{% endautoescape %}
