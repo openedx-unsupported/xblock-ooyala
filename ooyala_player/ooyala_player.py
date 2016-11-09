@@ -34,9 +34,10 @@ from .overlay import OoyalaOverlay
 # Globals ###########################################################
 
 log = logging.getLogger(__name__)
-
+OOYALA_PLAYER_VERSION = '4.8.5'
 
 # Classes ###########################################################
+
 
 class OoyalaPlayerMixin(object):
     """
@@ -44,6 +45,7 @@ class OoyalaPlayerMixin(object):
     """
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
+    project_id_3play = 12901  # Required for integration with 3play interactive plugin
 
     @property
     def course_id(self):
@@ -74,6 +76,36 @@ class OoyalaPlayerMixin(object):
                 overlays.append(overlay)
 
         return overlays
+
+    def _retrieve_transcript_translations(self):
+        """
+        Fetch the list of available translations of transcript using
+        either transcript_file_id or content_id. Requires 3play API key.
+        """
+        if not self.api_key_3play_with_default_setting:
+            return []
+
+        if self.transcript_file_id:
+            url = "http://static.3playmedia.com/files/{file_id}/translations?apikey={api_key_3play}".format(
+                file_id=self.transcript_file_id,
+                api_key_3play=self.api_key_3play_with_default_setting
+            )
+        else:
+            url = "http://static.3playmedia.com/files/{video_id}/translations?apikey={api_key_3play}&usevideoid=1".format(
+                video_id=self.content_id,
+                api_key_3play=self.api_key_3play_with_default_setting
+            )
+        try:
+            conn = urlopen(url)
+            translations_list = conn.read()
+            translations_list = json.loads(translations_list)
+        except Exception as e:
+            self._transcript_error = str(e.message)
+            return []
+        finally:
+            conn.close()
+
+        return translations_list
 
     def _retrieve_transcript(self):
         """
@@ -129,6 +161,45 @@ class OoyalaPlayerMixin(object):
         return self._transcript_cached
 
     @property
+    def transcript_translations(self):
+        """
+        Retrieve details of translated files of transcript. Returns [] in case
+        of no translations or if 3Play API key is missing.
+        """
+        if not hasattr(self, "_transcript_languages_cached"):
+            self._transcript_translations_cached = self._retrieve_transcript_translations()
+
+        # ToDo: Get selected_lang from stored user selection
+        selected_lang = 'en'
+        translations_url = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
+                           "/translations/{translation_id}/transcript.html"
+
+        translation_links = [{
+             'language': translation.get('target_language_name'),
+             'url': translations_url.format(
+                 project_id=self.project_id_3play, transcript_file_id=self.transcript_file_id,
+                 translation_id=translation.get('id')),
+             'selected': True if translation.get(
+                 'target_language_iso_639_1_code') == selected_lang else False,
+             'lang_code': translation.get('target_language_iso_639_1_code')
+            }
+            for translation in self._transcript_translations_cached
+            if translation.get('state') == 'complete'
+        ]
+
+        if translation_links:
+            translation_links.append({
+                'language': 'English',
+                'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}"
+                       "/transcript.html".format(project_id=self.project_id_3play,
+                                                 transcript_file_id=self.transcript_file_id),
+                'selected': True if 'en' == selected_lang else False,
+                'lang_code': 'en'
+            })
+
+        return translation_links
+
+    @property
     def transcript_error(self):
         if self.transcript:  # property access will fetch the transcript
             return None
@@ -149,6 +220,8 @@ class OoyalaPlayerMixin(object):
 
         context = {
             'title': self.display_name,
+            'project_id': self.project_id_3play,
+            'pcode': self.partner_code,
             'content_id': self.content_id,
             'transcript_file_id': self.transcript_file_id,
             'player_id': self.player_id,
@@ -158,28 +231,35 @@ class OoyalaPlayerMixin(object):
             'width': self.width,
             'height': self.height,
             'transcript_content': self.transcript,
+            'translation_links': self.transcript_translations,
             'transcript_error': self.transcript_error,
             'autoplay': self.autoplay,
+            'config_url': self.local_resource_url(self, 'public/skin/skin.json')
         }
+
+        JS_URLS = [
+            '//player.ooyala.com/static/v4/stable/{PLAYER_VERSION}/core.min.js'
+                .format(PLAYER_VERSION=OOYALA_PLAYER_VERSION),
+            '//player.ooyala.com/static/v4/stable/{PLAYER_VERSION}/video-plugin/main_html5.min.js'
+                .format(PLAYER_VERSION=OOYALA_PLAYER_VERSION),
+            '//p3.3playmedia.com/p3sdk.current.js',
+            self.local_resource_url(self, 'public/skin/html5-skin.min.js'),
+            self.local_resource_url(self, 'public/js/vendor/popcorn.js'),
+            self.local_resource_url(self, 'public/js/ooyala_player.js')
+        ]
+        CSS_URLS = [
+            self.local_resource_url(self, 'public/skin/html5-skin.min.css'),
+            self.local_resource_url(self, 'public/css/ooyala_player.css')
+        ]
 
         fragment = Fragment()
         fragment.add_content(render_template('/templates/html/ooyala_player.html', context))
-        fragment.add_css_url(self.local_resource_url(self, 'public/css/ooyala_player.css'))
 
-        # custom plugins styles
-        fragment.add_css_url(self.local_resource_url(self, 'public/css/speedplugin.css'))
+        for url in JS_URLS:
+            fragment.add_javascript_url(url)
 
-        player_url = '//player.ooyala.com/v3/{0}?platform=html5-priority'.format(self.player_id)
-
-        fragment.add_javascript_url(player_url)
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/popcorn.js'))
-
-        fragment.add_javascript(render_template('public/js/ooyala_player.js', {
-            'self': self,
-            'overlay_fragments': overlay_fragments,
-            'dom_id': dom_id
-        }))
+        for url in CSS_URLS:
+            fragment.add_css_url(url)
 
         fragment.initialize_js('OoyalaPlayerBlock')
 
@@ -226,7 +306,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name="Content Id",
         help="Identifier for the Content Id.",
         scope=Scope.content,
-        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
+        default='xrczhmNTE65r4onRcJm9KjS0k1yuuVw8'
     )
 
     transcript_file_id = String(
@@ -234,6 +314,13 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         help="Identifier for the 3Play Transcript File",
         scope=Scope.content,
         default=''
+    )
+
+    cc_language_preference = String(
+        display_name="Closed Captions Language",
+        help="User's preference for closed captions language",
+        scope=Scope.user_info,
+        default='en'
     )
 
     autoplay = Boolean(
@@ -252,7 +339,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
     partner_code = String(
         display_name="Partner Code",
-        help='Needed to generate a player token.',
+        help='Required for V4 Player. Also needed to generate a player token.',
         scope=Scope.content,
         default=''
     )
