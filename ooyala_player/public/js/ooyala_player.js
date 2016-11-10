@@ -4,7 +4,7 @@ function OoyalaPlayerBlock(runtime, element) {
             this.data = this.getPlayerData();
             this.identifier = 'ooyala-player-'+ this.data.domId;
             this.playbackSpeed = 1;
-            this.ccLang = 'en'; //ToDo: make it dynamic
+            this.ccLang = this.data.ccLang;
 
             this.cleanUp();
             this.createPlayer();
@@ -34,7 +34,8 @@ function OoyalaPlayerBlock(runtime, element) {
                 playerToken: $('.ooyalaplayer', element).data('player-token'),
                 autoplay: $('.ooyalaplayer', element).data('autoplay'),
                 overlays: $('.ooyala-overlays .ooyala-overlay', element),
-                configUrl: $('.ooyalaplayer', element).data('config-url')
+                configUrl: $('.ooyalaplayer', element).data('config-url'),
+                ccLang: $('.ooyalaplayer', element).data('cc-lang')
             }
         },
         cleanUp: function(){
@@ -61,6 +62,13 @@ function OoyalaPlayerBlock(runtime, element) {
                 if(isHtml5Video()){
                     var videoElement = getVideoNode();
                     videoElement.addEventListener("ratechange", this.eventHandlers.speedChanged.bind(this))
+                }
+
+                // Set CC and transcript to user language preference
+                if(window['changeCCLanguage']){
+                    window.changeCCLanguage(this.ccLang);
+                    var currentSelected = $('.p3sdk-interactive-transcript-track.selected', element);
+                    currentSelected.trigger('click');
                 }
             },
             played: function(ev, payload){
@@ -150,6 +158,22 @@ function OoyalaPlayerBlock(runtime, element) {
                         langElement.addClass('selected');
                         langElement.trigger('click');
                     }
+                }
+
+                // Update stored language preference
+                if (this.ccLang != this.data.ccLang) {
+                    var updateUrl = runtime.handlerUrl(element, 'store_language_preference');
+                    
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({'lang': this.ccLang}),
+                        url: updateUrl,
+                        context: this,
+                        success: function (data) {
+                            log('updated: ' + this.ccLang);
+                            this.data.ccLang = this.ccLang;
+                        }
+                    });
                 }
             }
         },
