@@ -52,6 +52,7 @@ function OoyalaPlayerBlock(runtime, element) {
             this.player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', this.eventHandlers.fullScreenChanged.bind(this));
             this.player.mb.subscribe(OO.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
             this.player.mb.subscribe(OO.EVENTS.SET_CLOSED_CAPTIONS_LANGUAGE, 'eventLogger', this.eventHandlers.closedCaptionsLangChanged.bind(this));
+            $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
         },
         eventHandlers: {
             playbackReady: function(ev, payload){
@@ -175,6 +176,15 @@ function OoyalaPlayerBlock(runtime, element) {
                         }
                     });
                 }
+            },
+            printTranscript: function () {
+                var w = window.open();
+                var content = $('.transcript-content', element);
+                w.document.write(content.html());
+                w.document.close();
+                w.focus();
+                w.print();
+                w.close();
             }
         },
         applyOverlays: function(){
@@ -230,6 +240,7 @@ function OoyalaPlayerBlock(runtime, element) {
 
           var newLang = $(atts.target_element).data('lang-code');
 
+          // "Arabic" is code for Arabic language in Ooyala Player
           newLang = newLang == 'ar'? 'Arabic': newLang;
 
           // if CC language is different from transcript language
