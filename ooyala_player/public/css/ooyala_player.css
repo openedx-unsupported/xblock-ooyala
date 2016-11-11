@@ -35,6 +35,7 @@
 .p3sdk-interactive-transcript-content{
     clear: both;
     width: 100%;
+    margin-top: 10px;
 }
 
 .p3sdk-interactive-transcript-search-hit {
@@ -57,34 +58,76 @@
     display: inline;
     font-size: 12px;
     height: 30px;
-    width: 20%;
+    margin: 0;
 }
 
-select.p3sdk-interactive-transcript-track-select {
-    width: 30%;
+.p3sdk-interactive-transcript-track  {
+    color: #818a91;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-.op-div {
-    width: 70%;
+.p3sdk-interactive-transcript-track.selected{
+    color: #448aff;
+}
+
+.p3sdk-interactive-transcript-download {
+    background: rgba(0, 0, 0, 0) url("../images/download.png") repeat scroll 0 0;
+    display: inline-block;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    width: 22px;
+}
+
+.print-transcript-btn{
+    background-image: url("../images/print.png");
+    display: inline-block;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    width: 22px;
+}
+
+.transcript-header{
+    border-bottom: 2px solid #ccc;
+    border-top: 2px solid #ccc;
+    padding: 10px 0;
+    float: left;
+    width: 100%;
+}
+
+.transcript-header > ul{
+    float: left;
+    width: 100%;
+}
+
+.transcript-header ul {
+    margin: 0;
+    padding: 0;
+}
+
+.transcript-header li {
+    list-style: outside none none;
+}
+
+.transcript-header li.search {
+    float: left;
+}
+
+.transcript-header li > ul > li {
     float: right;
-    text-align: right;
+    padding: 0;
+    margin: 0 15px 0 0;
 }
 
-.op-div ul{
-    float: right;
+.p3sdk-interactive-transcript-collapse span{
+    color: #448aff;
+    font-size: 16px;
 }
 
-.op-div ul li{
-    float: right;
-    margin-right: 15px;
-    list-style: none;
+.language-tracks a{
+    cursor: pointer;
 }
 
-.print-transcript-btn, .p3sdk-interactive-transcript-download{
-    margin: 10px;
-}
 
-/*.print-transcript-btn{*/
-    /*cursor: pointer;*/
-    /*margin: 0.3em !important;*/
-/*}*/
