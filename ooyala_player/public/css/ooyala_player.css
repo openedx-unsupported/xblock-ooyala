@@ -54,13 +54,6 @@
     font-size: 18px;
 }
 
-.p3sdk-container .p3sdk-interactive-transcript-searchbox {
-    display: inline;
-    font-size: 12px;
-    height: 30px;
-    margin: 0;
-}
-
 .p3sdk-interactive-transcript-track  {
     color: #818a91;
     font-weight: 600;
@@ -71,7 +64,7 @@
     color: #448aff;
 }
 
-.p3sdk-interactive-transcript-download {
+.transcript-download-btn {
     background: rgba(0, 0, 0, 0) url("../images/download.png") repeat scroll 0 0;
     display: inline-block;
     height: 20px;
