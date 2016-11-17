@@ -51,7 +51,6 @@ function OoyalaPlayerBlock(runtime, element) {
             this.player.mb.subscribe(OOV4.EVENTS.SEEK, 'eventLogger', this.eventHandlers.seek.bind(this));
             this.player.mb.subscribe(OOV4.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', this.eventHandlers.fullScreenChanged.bind(this));
             this.player.mb.subscribe(OOV4.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
-            this.player.mb.subscribe(OOV4.EVENTS.SET_CLOSED_CAPTIONS_LANGUAGE, 'eventLogger', this.eventHandlers.closedCaptionsLangChanged.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
         },
