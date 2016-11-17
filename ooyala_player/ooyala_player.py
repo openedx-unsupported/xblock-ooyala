@@ -34,7 +34,6 @@ from .overlay import OoyalaOverlay
 # Globals ###########################################################
 
 log = logging.getLogger(__name__)
-OOYALA_PLAYER_VERSION = '4.8.5'
 
 # Classes ###########################################################
 
@@ -209,10 +208,8 @@ class OoyalaPlayerMixin(object):
         }
 
         JS_URLS = [
-            '//player.ooyala.com/static/v4/stable/{PLAYER_VERSION}/core.min.js'
-                .format(PLAYER_VERSION=OOYALA_PLAYER_VERSION),
-            '//player.ooyala.com/static/v4/stable/{PLAYER_VERSION}/video-plugin/main_html5.min.js'
-                .format(PLAYER_VERSION=OOYALA_PLAYER_VERSION),
+            self.local_resource_url(self, 'public/js/vendor/ooyala/core.js'),
+            self.local_resource_url(self, 'public/js/vendor/ooyala/main_html5.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/skin/html5-skin.min.js'),
             self.local_resource_url(self, 'public/js/vendor/popcorn.js'),

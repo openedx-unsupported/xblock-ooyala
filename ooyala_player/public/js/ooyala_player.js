@@ -20,7 +20,7 @@ function OoyalaPlayerBlock(runtime, element) {
                 }
             };
 
-            window[this.identifier] = this.player = OO.Player
+            window[this.identifier] = this.player = OOV4.Player
                 .create(this.data.domId, this.data.contentId, playerParam);
         },
         getPlayerData: function (){
@@ -44,14 +44,14 @@ function OoyalaPlayerBlock(runtime, element) {
             }
         },
         subscribePlayerEvents: function(){
-            this.player.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'eventLogger', this.eventHandlers.playbackReady.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.PLAYED, 'eventLogger', this.eventHandlers.played.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.PAUSED, 'eventLogger', this.eventHandlers.paused.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.WILL_PLAY_FROM_BEGINNING, 'eventLogger', this.eventHandlers.startedFromBeginning.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.SEEK, 'eventLogger', this.eventHandlers.seek.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', this.eventHandlers.fullScreenChanged.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
-            this.player.mb.subscribe(OO.EVENTS.SET_CLOSED_CAPTIONS_LANGUAGE, 'eventLogger', this.eventHandlers.closedCaptionsLangChanged.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.PLAYBACK_READY, 'eventLogger', this.eventHandlers.playbackReady.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.PLAYED, 'eventLogger', this.eventHandlers.played.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.PAUSED, 'eventLogger', this.eventHandlers.paused.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.WILL_PLAY_FROM_BEGINNING, 'eventLogger', this.eventHandlers.startedFromBeginning.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.SEEK, 'eventLogger', this.eventHandlers.seek.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', this.eventHandlers.fullScreenChanged.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.SET_CLOSED_CAPTIONS_LANGUAGE, 'eventLogger', this.eventHandlers.closedCaptionsLangChanged.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
         },
@@ -267,7 +267,7 @@ function OoyalaPlayerBlock(runtime, element) {
         });
     }
 
-    OO.ready(function () {
+    OOV4.ready(function () {
         Player.init();
     });
 }
