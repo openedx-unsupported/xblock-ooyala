@@ -155,15 +155,15 @@ class OoyalaPlayerMixin(object):
             if translation.get('state') == 'complete'
         ]
 
-        if translation_links:
-            translation_links.append({
-                'language': 'English',
-                'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}"
-                       "/transcript.html".format(project_id=self.project_id,
-                                                 transcript_file_id=self.transcript_id),
-                'selected': True if 'en' == selected_lang else False,
-                'lang_code': 'en'
-            })
+        # Add source language in all cases
+        translation_links.append({
+            'language': 'English',
+            'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}"
+                   "/transcript.html".format(project_id=self.project_id,
+                                             transcript_file_id=self.transcript_id),
+            'selected': True if 'en' == selected_lang else False,
+            'lang_code': 'en'
+        })
 
         return translation_links
 
