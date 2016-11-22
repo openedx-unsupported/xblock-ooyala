@@ -148,7 +148,7 @@ try {
     if (window[namespace].REV != OO.publicApi.REV) {
       OO.log("there is a different VERSION loaded:", window[namespace].REV, OO.publicApi.REV);
     }
-    throw "PlayerV3 already defined!!";
+    // throw "PlayerV3 already defined!!";
   }
 
   //we want to maintain a subset of the namespace so that OO.ready is available

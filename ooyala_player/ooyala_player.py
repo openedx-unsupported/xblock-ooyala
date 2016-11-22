@@ -257,6 +257,7 @@ class OoyalaPlayerMixin(object):
             'usageId': usage_id,
         }
 
+
 @XBlock.wants("settings")
 class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
     """
@@ -274,7 +275,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name="Content Id",
         help="Identifier for the Content Id.",
         scope=Scope.content,
-        default='xrczhmNTE65r4onRcJm9KjS0k1yuuVw8'
+        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
     transcript_file_id = String(
@@ -489,6 +490,13 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         help="Identifier for the 3Play Transcript File",
         scope=LCScope.content,
         default=''
+    )
+
+    cc_language_preference = LCString(
+        display_name="Closed Captions Language",
+        help="User's preference for closed captions language",
+        scope=LCScope.user_state,
+        default='en'
     )
 
     autoplay = LCBoolean(
