@@ -64,8 +64,8 @@
     color: #448aff;
 }
 
-.transcript-download-btn {
-    background: rgba(0, 0, 0, 0) url("../images/download.png") repeat scroll 0 0;
+.transcript-download-btn, .print-transcript-btn{
+    background: url("assets/images/sprites.png") no-repeat;
     display: inline-block;
     height: 20px;
     margin: 0;
@@ -73,13 +73,12 @@
     width: 22px;
 }
 
+.transcript-download-btn {
+    background-position: -312px -13px;
+}
+
 .print-transcript-btn{
-    background-image: url("../images/print.png");
-    display: inline-block;
-    height: 20px;
-    margin: 0;
-    padding: 0;
-    width: 22px;
+   background-position: -355px -15px;
 }
 
 .transcript-header{

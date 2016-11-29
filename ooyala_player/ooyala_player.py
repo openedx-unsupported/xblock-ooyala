@@ -208,16 +208,11 @@ class OoyalaPlayerMixin(object):
         }
 
         JS_URLS = [
-            self.local_resource_url(self, 'public/js/vendor/ooyala/core.js'),
-            self.local_resource_url(self, 'public/js/vendor/ooyala/main_html5.js'),
-            '//p3.3playmedia.com/p3sdk.current.js',
-            self.local_resource_url(self, 'public/skin/html5-skin.min.js'),
-            self.local_resource_url(self, 'public/js/vendor/popcorn.js'),
-            self.local_resource_url(self, 'public/js/ooyala_player.js')
+            self.local_resource_url(self, 'public/build/player_all.min.js'),
+            '//p3.3playmedia.com/p3sdk.current.js'
         ]
         CSS_URLS = [
-            self.local_resource_url(self, 'public/skin/html5-skin.min.css'),
-            self.local_resource_url(self, 'public/css/ooyala_player.css')
+            self.local_resource_url(self, 'public/build/player_all.min.css')
         ]
 
         fragment = Fragment()

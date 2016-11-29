@@ -42,6 +42,9 @@ function OoyalaPlayerBlock(runtime, element) {
             if (window[this.identifier]){
                 window[this.identifier].destroy();
             }
+            
+            // ToDo: (APROS Specific) Remove after fixing APROS JS
+            $('#course-lessons').off('mouseup');
         },
         subscribePlayerEvents: function(){
             this.player.mb.subscribe(OOV4.EVENTS.PLAYBACK_READY, 'eventLogger', this.eventHandlers.playbackReady.bind(this));
@@ -74,6 +77,9 @@ function OoyalaPlayerBlock(runtime, element) {
                   var currentSelected = $('.p3sdk-interactive-transcript-track.selected', element);
                   currentSelected.trigger('click');
                 }
+                
+                // show transcript container
+                $('.p3sdk-container', element).toggleClass('hide');
             },
             played: function(ev, payload){
                 publishEvent({event_type: 'xblock.ooyala.player.ended'});
