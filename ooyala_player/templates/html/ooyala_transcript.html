@@ -1,0 +1,32 @@
+{% if self.transcript_id %}
+<div class="p3sdk-interactive-transcript">
+    <div class="p3sdk-interactive-transcript-collapse-visible">
+         <a href="javascript:void(0);" class="p3sdk-interactive-transcript-collapse p3sdk-collapse-onload icon-expand" label_when_expanded = "&nbsp;<span class='fa fa-chevron-circle-up' aria-hidden='true'> Hide Transcript</span>" label_when_collapsed = "&nbsp;<span class='fa fa-chevron-circle-down' aria-hidden='true'> Show Transcript</span>">
+            Hide Transcript
+        </a>
+    </div>
+    <div class="transcript-header">
+        <ul>
+            <li class="language-tracks">
+                <ul>
+                {% for link in self.translations %}
+                    <li data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" class="transcript-track p3sdk-interactive-transcript-track {% if link.selected %}selected{% endif %}" remote-src="{{link.url}}">{{link.language}}</li>
+                {% endfor %}
+                {% for link in self.imported_transcripts %}
+                    <li data-3play-id="{{link.threeplay_id}}" data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" class="transcript-track imported-transcript {% if link.selected %}selected{% endif %}">{{link.language}}</li>
+                {% endfor %}
+                </ul>
+                <ul>
+                    <li><a class="print-transcript-btn" title="Print Transcript"></a></li>
+                    <li><a href="javascript:void(0);" class="transcript-download-btn" title="Download Transcript" download_format="pdf"></i>
+</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <div class="transcript-content p3sdk-interactive-transcript-content"></div>
+</div>
+{% elif self.error %}
+    {# Include any transcript error as an HTML comment to help with debugging. #}
+    {{ self.error }}
+{% endif %}

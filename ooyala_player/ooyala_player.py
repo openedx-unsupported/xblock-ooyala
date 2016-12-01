@@ -30,6 +30,7 @@ from mentoring.light_children import (
 from .utils import render_template
 from .tokens import generate_player_token
 from .overlay import OoyalaOverlay
+from .transcript import Transcript
 
 # Globals ###########################################################
 
@@ -45,9 +46,6 @@ class OoyalaPlayerMixin(object):
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
     pcode = '5zdHcxOlM7fQJOMrCdwnnu16WP-d'
-    transcript_available = False
-    transcript_id = None
-    project_id = None
 
     @property
     def course_id(self):
@@ -79,101 +77,13 @@ class OoyalaPlayerMixin(object):
 
         return overlays
 
-    def _set_transcript_details(self):
-        """
-        Uses content id to retrieve and set transcript details
-        """
-        if not self.api_key_3play_with_default_setting:
-            return
-
-        api_endpoint = "http://api.3playmedia.com/files?apikey={api_key}&q=video_id={video_id}".format(
-            api_key=self.api_key_3play_with_default_setting,
-            video_id=self.content_id
-        )
-
-        try:
-            response = urlopen(api_endpoint)
-            data = response.read()
-            transcript_details = json.loads(data)
-        except Exception as e:
-            self._transcript_error = str(e.message)
-            return []
-        else:
-            files = transcript_details.get('files', [])
-            if files:
-                transcript = files[0]
-                self.transcript_available = True
-                self.transcript_id = transcript.get('id')
-                self.project_id = transcript.get('project_id')
-
-    def _retrieve_translations_list(self):
-        """
-        Fetch the list of available translations using transcript_file_id
-        """
-        translations_list = []
-
-        if self.transcript_available and self.transcript_id:
-            api_endpoint = "http://static.3playmedia.com/files/{file_id}/translations?apikey={api_key_3play}".format(
-                file_id=self.transcript_id,
-                api_key_3play=self.api_key_3play_with_default_setting
-            )
-
-            try:
-                response = urlopen(api_endpoint)
-                data = response.read()
-                translations_list = json.loads(data)
-            except Exception as e:
-                self._transcript_error = str(e.message)
-
-        return translations_list
-
-    def get_translations_urls(self):
-        """
-        Get translations urls which are to be used by interactive plugin
-        """
-        if not (self.transcript_available and self.transcript_id):
-            return []
-
-        if not hasattr(self, "_transcript_languages_cached"):
-            self._translations_list_cached = self._retrieve_translations_list()
-
-        selected_lang = self.cc_language_preference
-
-        translations_url = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
-                           "/translations/{translation_id}/transcript.html"
-
-        translation_links = [{
-             'language': translation.get('target_language_name'),
-             'url': translations_url.format(
-                 project_id=self.project_id, transcript_file_id=self.transcript_id,
-                 translation_id=translation.get('id')),
-             'selected': True if selected_lang in [translation.get(
-                 'target_language_iso_639_1_code'), translation.get('target_language_name')] else False,
-             'lang_code': translation.get('target_language_iso_639_1_code')
-            }
-            for translation in self._translations_list_cached
-            if translation.get('state') == 'complete'
-        ]
-
-        # Add source language in all cases
-        translation_links.append({
-            'language': 'English',
-            'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}"
-                   "/transcript.html".format(project_id=self.project_id,
-                                             transcript_file_id=self.transcript_id),
-            'selected': True if 'en' == selected_lang else False,
-            'lang_code': 'en'
-        })
-
-        return translation_links
-
     @property
-    def transcript_error(self):
-        if self.transcript_available:  # property access will fetch the transcript
-            return None
-        elif getattr(self, "_transcript_error", None):
-            return self._transcript_error
-        return None  # There is no transcript, which is not an error.
+    def transcript(self):
+        return Transcript(
+            threeplay_api_key=self.api_key_3play_with_default_setting,
+            content_id=self.content_id,
+            user_lang=self.cc_language_preference
+        )
 
     def student_view(self, context):
         """
@@ -186,11 +96,10 @@ class OoyalaPlayerMixin(object):
         for overlay in self.overlays:
             overlay_fragments += overlay.render()
 
-        self._set_transcript_details()
+        transcript = self.transcript.render()
 
         context = {
             'title': self.display_name,
-            'project_id': self.project_id,
             'cc_lang': self.cc_language_preference,
             'pcode': self.pcode,
             'content_id': self.content_id,
@@ -198,11 +107,9 @@ class OoyalaPlayerMixin(object):
             'player_token': self.player_token,
             'dom_id': dom_id,
             'overlay_fragments': overlay_fragments,
+            'transcript': transcript,
             'width': self.width,
             'height': self.height,
-            'transcript_content': self.transcript_available,
-            'translation_links': self.get_translations_urls(),
-            'transcript_error': self.transcript_error,
             'autoplay': self.autoplay,
             'config_url': self.local_resource_url(self, 'public/skin/skin.json')
         }
@@ -419,6 +326,22 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
             self.cc_language_preference = lang
 
         return {'result': 'success'}
+
+    @XBlock.json_handler
+    def load_transcript(self, data, suffix=''):
+        """
+        Store user's cc language selection
+        """
+        threeplay_id = data.get('threeplay_id', None)
+        content = ''
+
+        if threeplay_id:
+            content = Transcript.get_transcript_by_threeplay_id(
+                api_key=self.api_key_3play_with_default_setting,
+                threeplay_id=threeplay_id
+            )
+
+        return {'content': content}
 
     @XBlock.json_handler
     def studio_submit(self, submissions, suffix=''):

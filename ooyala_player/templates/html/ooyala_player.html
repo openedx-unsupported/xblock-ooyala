@@ -15,35 +15,7 @@
         <div id="ooyala-overlay-container-{{dom_id}}" class="ooyala-overlay"></div>
     </div>
     <div class="p3sdk-container p3sdk-debug-not hide" player_id="ooyala-player-{{dom_id}}" player_type="ooyala_v4">
-        {% if transcript_content %}
-        <div class="p3sdk-interactive-transcript" file_id="{{content_id}}" use_video_id="1" project_id="{{project_id}}">
-            <div class="p3sdk-interactive-transcript-collapse-visible">
-                 <a href="javascript:void(0);" class="p3sdk-interactive-transcript-collapse p3sdk-collapse-onload icon-expand" label_when_expanded = "&nbsp;<span class='fa fa-chevron-circle-up' aria-hidden='true'> Hide Transcript</span>" label_when_collapsed = "&nbsp;<span class='fa fa-chevron-circle-down' aria-hidden='true'> Show Transcript</span>">
-                    Hide Transcript
-                </a>
-            </div>
-            <div class="transcript-header">
-                <ul>
-                    <li class="language-tracks">
-                        <ul>
-                        {% for link in translation_links %}
-                            <li data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" class="p3sdk-interactive-transcript-track {% if link.selected %}selected{% endif %}" remote-src="{{link.url}}">{{link.language}}</li>
-                        {% endfor %}
-                        </ul>
-                        <ul>
-                            <li><a class="print-transcript-btn" title="Print Transcript"></a></li>
-                            <li><a href="javascript:void(0);" class="transcript-download-btn" title="Download Transcript" download_format="pdf"></i>
-</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <div class="transcript-content p3sdk-interactive-transcript-content"></div>
-        </div>
-        {% elif transcript_error %}
-            {# Include any transcript error as an HTML comment to help with debugging. #}
-            <!-- Transcript error: {{ transcript_error }} -->
-        {% endif %}
+        {{ transcript|safe }}
     </div>
     <!-- Overlays template. These elements are only read from JS (non-visual). -->
     <div class="ooyala-overlays hide">

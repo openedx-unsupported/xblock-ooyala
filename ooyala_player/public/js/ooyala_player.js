@@ -5,6 +5,7 @@ function OoyalaPlayerBlock(runtime, element) {
             this.identifier = 'ooyala-player-'+ this.data.domId;
             this.playbackSpeed = 1;
             this.ccLang = this.data.ccLang;
+            this.transcriptLang = this.data.ccLang;
 
             this.cleanUp();
             this.createPlayer();
@@ -56,6 +57,9 @@ function OoyalaPlayerBlock(runtime, element) {
             this.player.mb.subscribe(OOV4.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
+            $('.transcript-track', element).on('click', this.eventHandlers.getTranscript.bind(this));
+            $(element).on('CC:changed', this.eventHandlers.CcChanged.bind(this));
+            $(element).on('Transcript:changed', this.eventHandlers.TranscriptChanged.bind(this));
         },
         eventHandlers: {
             playbackReady: function(ev, payload){
@@ -68,14 +72,19 @@ function OoyalaPlayerBlock(runtime, element) {
                     videoElement.addEventListener("ratechange", this.eventHandlers.speedChanged.bind(this))
                 }
 
-                // subscribe to p3sdk events
-                p3sdk_ready(this);
-
-                // Set CC and transcript to user language preference
+                // Set CC to user language preference
                 if(window['changeCCLanguage_' + this.data.domId]){
-                  window['changeCCLanguage_' + this.data.domId](this.ccLang);
-                  var currentSelected = $('.p3sdk-interactive-transcript-track.selected', element);
-                  currentSelected.trigger('click');
+                    window['changeCCLanguage_' + this.data.domId](this.ccLang);
+                    // load transcript
+                    var selected = $('.transcript-track.selected', element);
+                    if(selected.length){
+                        selected.trigger('click');
+                    }else{
+                        var transcripts = $('.transcript-track', element);
+                        if(transcripts.length) {
+                            $(transcripts[0]).trigger('click');
+                        }
+                    }
                 }
                 
                 // show transcript container
@@ -141,28 +150,32 @@ function OoyalaPlayerBlock(runtime, element) {
                 });
                 this.playbackRate = newRate;
             },
+            CcChanged: function(){
+                if(this.transcriptLang == this.ccLang)
+                    return;
+
+                var currentSelected = $('.transcript-track.selected', element);
+
+                if(currentSelected.length)
+                    currentSelected.removeClass('selected');
+
+                var langElement = $('.transcript-track[data-lang-code=' + this.ccLang + ']', element);
+
+                langElement.addClass('selected');
+                langElement.trigger('click');
+            },
+            TranscriptChanged: function(){
+                if(this.ccLang == this.transcriptLang)
+                    return;
+
+                if(window['changeCCLanguage_' + this.data.domId]) {
+                    window['changeCCLanguage_' + this.data.domId](this.transcriptLang);
+                }
+            },
             playerSettingsSaved: function (ev, payload) {
                 this.ccLang = payload.closedCaptionOptions.language;
 
-                var ccLang = this.ccLang;
-                var currentSelected = $('.p3sdk-interactive-transcript-track.selected', element);
-
-                if(currentSelected.length){
-                    var langCode = currentSelected.data('lang-code');
-                    var langName = currentSelected.data('lang-name');
-
-                    // change transcript language if it's different from CC language
-                    if(ccLang != langCode && ccLang != langName){
-                        currentSelected.removeClass('selected');
-
-                        var langElement = $('.p3sdk-interactive-transcript-track', element).filter(
-                            '[data-lang-code=' + ccLang + '], [data-lang-name=' + ccLang + ']'
-                        );
-
-                        langElement.addClass('selected');
-                        langElement.trigger('click');
-                    }
-                }
+                $(element).trigger('CC:changed');
 
                 // Update stored language preference
                 if (this.ccLang != this.data.ccLang) {
@@ -189,9 +202,12 @@ function OoyalaPlayerBlock(runtime, element) {
                 w.close();
             },
             downloadTranscript: function () {
-                var currentSelected = $('.p3sdk-interactive-transcript-track.selected', element);
+                var currentSelected = $('.transcript-track.selected', element);
                 var downloadUrl = currentSelected.attr('remote-src');
                 var lang = currentSelected.attr('data-lang-code');
+
+                if(currentSelected.hasClass('imported-transcript'))
+                    return download('transcript-' + lang, $('.transcript-content', element).text());
 
                 // Only English language is supported in PDF format by 3play
                 // for other languages, use .txt format
@@ -202,6 +218,40 @@ function OoyalaPlayerBlock(runtime, element) {
                 }
 
                 location.href = downloadUrl + '?dl=1';
+            },
+            getTranscript: function (evt) {
+                var langElement = $(evt.currentTarget);
+                var currentSelected = $('.transcript-track.selected', element);
+
+                currentSelected.removeClass('selected');
+                langElement.addClass('selected');
+
+                this.transcriptLang = langElement.data('lang-code');
+
+                 // trigger transcript change event
+                $(element).trigger('Transcript:changed');
+
+                if(langElement.hasClass('imported-transcript')){
+                    // need to load transcript ourselves
+                    var threeplayId = langElement.data('3play-id');
+                    var transcriptUrl = runtime.handlerUrl(element, 'load_transcript');
+
+                    $.ajax({
+                        type: "POST",
+                        data: JSON.stringify({'threeplay_id': threeplayId}),
+                        url: transcriptUrl,
+                        context: this,
+                        success: function (data) {
+                            var transcript = data.content;
+                            if(transcript){
+                                var p3Instance = p3sdk.get(this.identifier);
+
+                                if(p3Instance && p3Instance.interactive_transcripts)
+                                    p3Instance.interactive_transcripts[0].set_transcript(transcript);
+                            }
+                        }
+                    });
+                }
             }
         },
         applyOverlays: function(){
@@ -242,33 +292,23 @@ function OoyalaPlayerBlock(runtime, element) {
         return null;
     }
 
+    function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+        document.body.removeChild(element);
+    }
+
     function publishEvent(data){
         $.ajax({
             type: "POST",
             url: runtime.handlerUrl(element, 'publish_event'),
             data: JSON.stringify(data)
-        });
-    }
-
-    function p3sdk_ready(playerObj){
-        // Get current instance of p3sdk
-        var p3instance = p3sdk.get(playerObj.identifier);
-
-        p3$(p3instance).bind("transcript:track_selected", function(name, atts){
-          $('.p3sdk-interactive-transcript-track.selected', element).removeClass('selected');
-          $(atts.target_element).addClass('selected');
-
-          var newLang = $(atts.target_element).data('lang-code');
-
-          // "Arabic" is code for Arabic language in Ooyala Player
-          newLang = newLang == 'ar'? 'Arabic': newLang;
-
-          // if CC language is different from transcript language
-          if(playerObj.ccLang != newLang){
-              if(window['changeCCLanguage_' + playerObj.data.domId]){
-                  window['changeCCLanguage_' + playerObj.data.domId](newLang);
-              }
-          }
         });
     }
 
