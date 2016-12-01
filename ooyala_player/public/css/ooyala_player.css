@@ -54,14 +54,15 @@
     font-size: 18px;
 }
 
-.p3sdk-interactive-transcript-track  {
+.transcript-track  {
     color: #818a91;
     font-weight: 600;
     cursor: pointer;
 }
 
-.p3sdk-interactive-transcript-track.selected{
+.transcript-track.selected{
     color: #448aff;
+    pointer-events: none;
 }
 
 .transcript-download-btn, .print-transcript-btn{
