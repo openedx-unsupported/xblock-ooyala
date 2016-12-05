@@ -17,8 +17,7 @@ gulp.task('compress_js', ['clean_js'], function() {
       'ooyala_player/public/js/vendor/ooyala/core.js',
       'ooyala_player/public/js/vendor/ooyala/main_html5.js',
       'ooyala_player/public/js/vendor/popcorn.js',
-      'ooyala_player/public/skin/html5-skin.js',
-      'ooyala_player/public/js/ooyala_player.js'
+      'ooyala_player/public/skin/html5-skin.js'
     ])
     .pipe(concat('player_all.js'))
     .pipe(minify({
@@ -32,8 +31,7 @@ gulp.task('compress_js', ['clean_js'], function() {
 
 gulp.task('compress_css', ['clean_css'], function(){
    gulp.src([
-       'ooyala_player/public/skin/html5-skin.css',
-       'ooyala_player/public/css/ooyala_player.css'
+       'ooyala_player/public/skin/html5-skin.css'
    ])
    .pipe(concat('player_all.min.css'))
    .pipe(minifyCSS())

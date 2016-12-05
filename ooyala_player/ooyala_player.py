@@ -116,10 +116,12 @@ class OoyalaPlayerMixin(object):
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
-            '//p3.3playmedia.com/p3sdk.current.js'
+            '//p3.3playmedia.com/p3sdk.current.js',
+            self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
         CSS_URLS = [
-            self.local_resource_url(self, 'public/build/player_all.min.css')
+            self.local_resource_url(self, 'public/build/player_all.min.css'),
+            self.local_resource_url(self, 'public/css/ooyala_player.css'),
         ]
 
         fragment = Fragment()

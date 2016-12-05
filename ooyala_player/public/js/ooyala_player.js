@@ -5,7 +5,7 @@ function OoyalaPlayerBlock(runtime, element) {
             this.identifier = 'ooyala-player-'+ this.data.domId;
             this.playbackSpeed = 1;
             this.ccLang = this.data.ccLang;
-            this.transcriptLang = this.data.ccLang;
+            this.transcriptLang = null;
 
             this.cleanUp();
             this.createPlayer();
@@ -72,17 +72,20 @@ function OoyalaPlayerBlock(runtime, element) {
                     videoElement.addEventListener("ratechange", this.eventHandlers.speedChanged.bind(this))
                 }
 
-                // Set CC to user language preference
+                // Set CC & Transcript to user language preference
                 if(window['changeCCLanguage_' + this.data.domId]){
-                    window['changeCCLanguage_' + this.data.domId](this.ccLang);
-                    // load transcript
                     var selected = $('.transcript-track.selected', element);
+
+                    // if user's saved lang exists select it
+                    // otherwise select first lang from available languages
                     if(selected.length){
-                        selected.trigger('click');
+                        window['changeCCLanguage_' + this.data.domId](this.ccLang);
                     }else{
                         var transcripts = $('.transcript-track', element);
                         if(transcripts.length) {
-                            $(transcripts[0]).trigger('click');
+                            selected = $(transcripts[0]);
+                            var lang = selected.data('lang-code');
+                            window['changeCCLanguage_' + this.data.domId](lang);
                         }
                     }
                 }
@@ -223,7 +226,9 @@ function OoyalaPlayerBlock(runtime, element) {
                 var langElement = $(evt.currentTarget);
                 var currentSelected = $('.transcript-track.selected', element);
 
-                currentSelected.removeClass('selected');
+                if(currentSelected.length)
+                    currentSelected.removeClass('selected');
+
                 langElement.addClass('selected');
 
                 this.transcriptLang = langElement.data('lang-code');
