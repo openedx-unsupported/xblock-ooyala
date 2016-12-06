@@ -1460,7 +1460,7 @@ var ControlBar = React.createClass({displayName: "ControlBar",
           React.createElement("div", {className: "oo-volume oo-control-bar-item", key: "volume"}, 
               React.createElement("span", {className: volumeIconClass, 
           onClick: this.handleCustomVolumeIconClick, 
-          onMouseOver: this.volumeHighlight, onMouseOut: this.volumeRemoveHighlight})
+          onMouseOver: this.highlight, onMouseOut: this.removeHighlight})
       )),
 
       "share": React.createElement("a", {className: "oo-share oo-control-bar-item", 
@@ -4478,7 +4478,7 @@ OO.plugin("Html5Skin", function (OO, _, $, W) {
 
   if (OO.publicApi && OO.publicApi.VERSION) {
     // This variable gets filled in by the build script
-    OO.publicApi.VERSION.skin = {"releaseVersion": "4.8.5", "rev": "9da80d00e34d44b897bd8a9851c745d40a4ccdf1"};
+    OO.publicApi.VERSION.skin = {"releaseVersion": "4.8.5", "rev": "11a679691f95f7efa73eaf971d462fbb51144052"};
   }
 
   var Html5Skin = function (mb, id) {
@@ -6138,15 +6138,34 @@ var Skin = React.createClass({displayName: "Skin",
 
   componentDidMount: function () {
     window.addEventListener('mouseup', this.handleClickOutsidePlayer);
+
     /* Make CC change possible from outside the skin code
      The player's javascript api method does not update the skin state
      https://github.com/ooyala/html5-skin/issues/676
-    */ 
-    window['changeCCLanguage_' + this.props.controller.state.elementId] = this.handleCCchange;
+    */
+    var self = this;
+
+    window[this.props.controller.state.elementId] = {
+      changeCCLanguage: self.handleCCchange,
+      hideCCButton: self.handleHideCC
+    }
   },
 
   handleCCchange: function(lang){
     this.props.controller.onClosedCaptionChange('language', lang);
+  },
+  handleHideCC: function(){
+    var buttons = this.props.skinConfig.buttons.desktopContent;
+    var ccIndex = null;
+
+    for(var i=0; i < buttons.length; i++){
+        if(buttons[i].name == 'closedCaption'){
+            ccIndex = i;
+        }
+    }
+
+    if(ccIndex)
+        buttons.splice(ccIndex, 1);
   },
 
   componentWillUnmount: function () {

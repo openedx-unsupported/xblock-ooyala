@@ -15,6 +15,7 @@ function OoyalaPlayerEditBlock(runtime, element) {
             'width': $('.edit-width', element).val(),
             'height': $('.edit-height', element).val(),
             'expiration_time': $('.edit-expiration-time', element).val(),
+            'cc_disable': $('.edit-disable-cc', element).is(':checked'),
             'xml_config': xmlEditor.getValue()
         };
 
