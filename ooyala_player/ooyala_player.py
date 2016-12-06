@@ -82,7 +82,8 @@ class OoyalaPlayerMixin(object):
         return Transcript(
             threeplay_api_key=self.api_key_3play_with_default_setting,
             content_id=self.content_id,
-            user_lang=self.cc_language_preference
+            user_lang=self.cc_language_preference,
+            cc_disabled=self.disable_cc_and_translations
         )
 
     def student_view(self, context):
@@ -101,6 +102,7 @@ class OoyalaPlayerMixin(object):
         context = {
             'title': self.display_name,
             'cc_lang': self.cc_language_preference,
+            'cc_disabled': self.disable_cc_and_translations,
             'pcode': self.pcode,
             'content_id': self.content_id,
             'player_id': self.player_id,
@@ -194,6 +196,13 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         help="User's preference for closed captions language",
         scope=Scope.user_info,
         default='en'
+    )
+
+    disable_cc_and_translations = Boolean(
+        display_name="Turn Off Closed Captions and Translated transcripts",
+        help="Hides the CC button and transcript languages selection for this video",
+        scope=Scope.settings,
+        default=False
     )
 
     autoplay = Boolean(
@@ -373,6 +382,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
             self.expiration_time = submissions['expiration_time']
             self.width = submissions['width']
             self.height = submissions['height']
+            self.disable_cc_and_translations = submissions['cc_disable']
 
         return response
 
@@ -417,6 +427,13 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         help="User's preference for closed captions language",
         scope=LCScope.user_state,
         default='en'
+    )
+
+    disable_cc_and_translations = Boolean(
+        display_name="Turn Off Closed Captions and Translated transcripts",
+        help="Hides the CC button and transcript languages selection for this video",
+        scope=Scope.settings,
+        default=False
     )
 
     autoplay = LCBoolean(

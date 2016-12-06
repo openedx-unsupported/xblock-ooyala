@@ -14,6 +14,10 @@ TRANSLATION_ALIAS = {
     'ar': 'Arabic'
 }
 
+# Translated & Imported transcripts are
+# get via different APIs
+INCLUDE_IMPORTED_TRANSCRIPTS = True
+
 
 class Transcript(object):
     """
@@ -26,14 +30,26 @@ class Transcript(object):
     translations = []
     imported_transcripts = []
 
-    def __init__(self, threeplay_api_key, content_id, user_lang):
+    def __init__(self, threeplay_api_key, content_id, user_lang, cc_disabled):
         if threeplay_api_key and content_id:
             self.api_key = threeplay_api_key
             self._set_transcript_details(content_id)
 
         if self.transcript_id:
-            self._set_translations(selected_lang=user_lang)
-            self._set_imported_transcripts(selected_lang=user_lang)
+            self.translations = [{
+                'language': 'English',
+                'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}/transcript.html".format(
+                    project_id=self.project_id, transcript_file_id=self.transcript_id
+                ),
+                'selected': True if 'en' == user_lang else False,
+                'lang_code': 'en'
+            }]
+
+            if not cc_disabled:
+                self._set_translations(selected_lang=user_lang)
+
+            if INCLUDE_IMPORTED_TRANSCRIPTS and not cc_disabled:
+                self._set_imported_transcripts(selected_lang=user_lang)
 
     def _set_transcript_details(self, content_id):
         """
@@ -73,7 +89,7 @@ class Transcript(object):
         except Exception as e:
             self.error = str(e.message)
         else:
-            self.translations = [{
+            translations = [{
                 'language': translation.get('target_language_name'),
                 'lang_code': TRANSLATION_ALIAS.get(translation.get(
                     'target_language_iso_639_1_code'), translation.get('target_language_iso_639_1_code')
@@ -88,23 +104,12 @@ class Transcript(object):
                 if translation.get('state') == 'complete'
             ]
 
-            # Add source language in all cases
-            self.translations.append({
-                'language': 'English',
-                'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}/transcript.html".format(
-                    project_id=self.project_id, transcript_file_id=self.transcript_id
-                ),
-                'selected': True if 'en' == selected_lang else False,
-                'lang_code': 'en'
-            })
+            self.translations.extend(translations)
 
     def _set_imported_transcripts(self, selected_lang):
         """
         Retrieve imported transcripts.
-
-        *   Imported transcripts are not listed in translation api.
-        **  This feature can be removed if we are sure that all
-        *** transcripts will be translated ones?
+        *Imported transcripts are not listed in translation api.
         """
         api_endpoint = "http://api.3playmedia.com/caption_imports?apikey={api_key_3play}".format(
             api_key_3play=self.api_key
