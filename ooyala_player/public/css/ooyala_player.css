@@ -50,18 +50,20 @@
     text-align: right;
 }
 
-.p3sdk-interactive-transcript-collapse.p3sdk-collapse-onload.icon-expand {
-    font-size: 18px;
+.transcript-toggle{
+    margin: 5px;
+    font-family: sans-serif;
 }
 
 .transcript-track  {
-    color: #818a91;
+    color: #3384ca;
     font-weight: 600;
     cursor: pointer;
+    font-family: sans-serif;
 }
 
 .transcript-track.selected{
-    color: #448aff;
+    color: #868685;
     pointer-events: none;
 }
 
@@ -91,17 +93,20 @@
 }
 
 .transcript-header > ul{
-    float: left;
+    float: right;
     width: 100%;
 }
 
 .transcript-header ul {
     margin: 0;
     padding: 0;
+    float: right;
 }
 
 .transcript-header li {
     list-style: outside none none;
+    float: right;
+    margin-bottom: 0 !important;
 }
 
 .transcript-header li.search {
@@ -109,18 +114,25 @@
 }
 
 .transcript-header li > ul > li {
-    float: right;
+    float: left;
     padding: 0;
     margin: 0 15px 0 0;
-}
-
-.p3sdk-interactive-transcript-collapse span{
-    color: #448aff;
-    font-size: 16px;
 }
 
 .language-tracks a{
     cursor: pointer;
 }
 
+.fa-2{
+    font-size: 2em;
+    vertical-align: middle;
+}
+
+.fa.transcript-hide{
+    padding-top: 12px;
+}
+
+.fa.transcript-show{
+    padding-bottom: 12px;
+}
 
