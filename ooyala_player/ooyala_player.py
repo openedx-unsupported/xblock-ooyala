@@ -429,10 +429,10 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         default='en'
     )
 
-    disable_cc_and_translations = Boolean(
+    disable_cc_and_translations = LCBoolean(
         display_name="Turn Off Closed Captions and Translated transcripts",
         help="Hides the CC button and transcript languages selection for this video",
-        scope=Scope.settings,
+        scope=LCScope.content,
         default=False
     )
 
