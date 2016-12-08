@@ -167,7 +167,7 @@ class OoyalaPlayerMixin(object):
 @XBlock.wants("settings")
 class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
     """
-    XBlock providing a video player for videos hosted on Brightcove
+    XBlock providing a video player for videos hosted on Ooyala
     """
 
     display_name = String(
@@ -258,7 +258,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name="Player Height",
         help='The height of the player in pixels.',
         scope=Scope.content,
-        default="428px"
+        default="100%"
     )
 
     expiration_time = Integer(
@@ -332,7 +332,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         """
         Store user's cc language selection
         """
-        lang = data.get('lang', None)
+        lang = data.get('lang')
         if lang:
             self.cc_language_preference = lang
 
@@ -343,7 +343,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         """
         Store user's cc language selection
         """
-        threeplay_id = data.get('threeplay_id', None)
+        threeplay_id = data.get('threeplay_id')
         content = ''
 
         if threeplay_id:
