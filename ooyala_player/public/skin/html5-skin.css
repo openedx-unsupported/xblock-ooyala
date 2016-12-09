@@ -3393,6 +3393,9 @@
   font-weight: bold;
   text-align: center; }
 
+.oo-player-container .custom-control-bar-item span {
+  color: #fff !important; }
+
 .oo-player-container .oo-playback-speed {
   height: 24px;
   line-height: 24px;
@@ -3402,7 +3405,8 @@
   display: inline-block;
   font-size: 12px;
   font-family: "Open Sans", sans-serif;
-  position: absolute; }
+  position: absolute;
+  color: #ffffff !important; }
 
 .oo-player-container .custom-oo-content-time.total-time {
   right: 0;

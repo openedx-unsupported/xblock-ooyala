@@ -46,20 +46,25 @@
 .p3sdk-interactive-transcript-collapse-visible {
     font-size: 18px;
     height: 30px;
-    margin: 5px;
     text-align: right;
+    position: relative;
+    margin: 5px 0 5px 5px;
 }
 
 .transcript-toggle{
-    margin: 5px;
-    font-family: sans-serif;
+    color: #3384ca;
+    font-family: "Open Sans",sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 5px 20px 5px 5px;
 }
 
 .transcript-track  {
     color: #3384ca;
-    font-weight: 600;
     cursor: pointer;
-    font-family: sans-serif;
+    font-family: "Open Sans", sans-serif;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .transcript-track.selected{
@@ -124,15 +129,17 @@
 }
 
 .fa-2{
-    font-size: 2em;
-    vertical-align: middle;
+    color: #3384ca;
+    font-size: 1.5em;
+    position: absolute;
+    right: 0;
 }
 
 .fa.transcript-hide{
-    padding-top: 12px;
+   top: 6px;
 }
 
 .fa.transcript-show{
-    padding-bottom: 12px;
+    bottom: 8px;
 }
 
