@@ -56,7 +56,8 @@
     font-family: "Open Sans",sans-serif;
     font-size: 14px;
     font-weight: bold;
-    margin: 5px 20px 5px 5px;
+    margin: 3px;
+    line-height: 24px;
 }
 
 .transcript-track  {
@@ -130,16 +131,15 @@
 
 .fa-2{
     color: #3384ca;
-    font-size: 1.5em;
-    position: absolute;
-    right: 0;
+    font-size: 24px;
+    line-height: 10px;
 }
 
 .fa.transcript-hide{
-   top: 6px;
+   vertical-align: bottom;
 }
 
 .fa.transcript-show{
-    bottom: 8px;
+    vertical-align: 1px;
 }
 
