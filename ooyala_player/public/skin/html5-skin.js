@@ -938,6 +938,9 @@ var OnOffSwitch = React.createClass({displayName: "OnOffSwitch",
 
     var offString = Utils.getLocalizedString(this.props.language, CONSTANTS.SKIN_TEXT.OFF, this.props.localizableStrings);
     var onString = Utils.getLocalizedString(this.props.language, CONSTANTS.SKIN_TEXT.ON, this.props.localizableStrings);
+    
+    offString = CONSTANTS.SKIN_TEXT.OFF;
+    onString = CONSTANTS.SKIN_TEXT.ON;
 
     return (
       React.createElement("div", {className: "oo-switch-container"}, 
@@ -4478,7 +4481,7 @@ OO.plugin("Html5Skin", function (OO, _, $, W) {
 
   if (OO.publicApi && OO.publicApi.VERSION) {
     // This variable gets filled in by the build script
-    OO.publicApi.VERSION.skin = {"releaseVersion": "4.8.5", "rev": "11a679691f95f7efa73eaf971d462fbb51144052"};
+    OO.publicApi.VERSION.skin = {"releaseVersion": "4.8.5", "rev": "6cb9c68410bb885ee7124befaee432a115f25ba2"};
   }
 
   var Html5Skin = function (mb, id) {
