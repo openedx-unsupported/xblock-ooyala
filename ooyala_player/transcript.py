@@ -10,12 +10,6 @@ TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/transl
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
                    "/translations/{translation_id}/transcript.html"
 
-# 'ar' is 'Arabic' in Ooyala player.
-# Transform it before sending to Player
-OOYALA_LANGUAGE_ALIAS = {
-    'ar': 'Arabic'
-}
-
 # Translated & Imported transcripts are
 # get via different APIs
 INCLUDE_IMPORTED_TRANSCRIPTS = True
@@ -97,7 +91,6 @@ class Transcript(object):
                 if translation.get('state') == 'complete':
                     lang_name = translation.get('target_language_name')
                     lang_code = translation.get('target_language_iso_639_1_code')
-                    ooyala_lang_code = OOYALA_LANGUAGE_ALIAS.get(lang_code, lang_code)
 
                     try:
                         lang_info = get_language_info(lang_code)
@@ -107,7 +100,7 @@ class Transcript(object):
 
                     self.translations.append({
                         'language': lang_name,
-                        'lang_code': ooyala_lang_code,
+                        'lang_code': lang_code,
                         'localized_name': localized_name,
                         'selected': True if selected_lang in [lang_code, lang_name] else False,
                         'url': TRANSLATION_DOWNLOAD_URL.format(
@@ -155,8 +148,6 @@ class Transcript(object):
                         lang_code = lang_ids.get(lang_id).get('code')
                         threeplay_id = caption_import.get('threeplay_transcript_id')
 
-                        ooyala_lang_code = OOYALA_LANGUAGE_ALIAS.get(lang_code, lang_code)
-
                         try:
                             lang_info = get_language_info(lang_code)
                             localized_name = lang_info.get('name_local')
@@ -167,7 +158,7 @@ class Transcript(object):
                             self.imported_translations.append({
                                 'threeplay_id': threeplay_id,
                                 'language': language,
-                                'lang_code': ooyala_lang_code,
+                                'lang_code': lang_code,
                                 'selected': True if selected_lang in [language, lang_code] else False,
                                 'localized_name': localized_name,
                             })

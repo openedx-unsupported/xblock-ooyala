@@ -273,7 +273,7 @@
   font-family: 'Roboto Condensed';
   font-style: normal;
   font-weight: 400;
-  src: local("Roboto Condensed"), local("RobotoCondensed-Regular"), url("assets/fonts/RobotoCondensed-Regular.woff2") format("woff2"), url("assets/fonts/RobotoCondensed-Regular.woff") format("woff"), url("assets/fonts/RobotoCondensed-Regular.ttf") format("truetype");
+  src: local("Roboto Condensed"), local("RobotoCondensed-Regular"), url("assets/fonts/RobotoCondensed-Regular.woff") format("woff"), url("assets/fonts/RobotoCondensed-Regular.ttf") format("truetype");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000; }
 
 /* roboto condensed bold */
@@ -281,7 +281,7 @@
   font-family: 'Roboto Condensed Bold';
   font-style: normal;
   font-weight: 700;
-  src: local("Roboto Condensed Bold"), local("RobotoCondensed-Bold"), url("assets/fonts/RobotoCondensed-Bold.woff2") format("woff2"), url("assets/fonts/RobotoCondensed-Bold.woff") format("woff"), url("assets/fonts/RobotoCondensed-Bold.ttf") format("truetype");
+  src: local("Roboto Condensed Bold"), local("RobotoCondensed-Bold"), url("assets/fonts/RobotoCondensed-Bold.woff") format("woff"), url("assets/fonts/RobotoCondensed-Bold.ttf") format("truetype");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000; }
 
 /* roboto regular */
@@ -289,7 +289,7 @@
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: local("Roboto"), local("Roboto-Regular"), url("assets/fonts/Roboto-Regular.woff2") format("woff2"), url("assets/fonts/Roboto-Regular.ttf") format("truetype"), url("assets/fonts/Roboto-Regular.woff") format("woff");
+  src: local("Roboto"), local("Roboto-Regular"), url("assets/fonts/Roboto-Regular.ttf") format("truetype"), url("assets/fonts/Roboto-Regular.woff") format("woff");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000; }
 
 /* roboto bold */
@@ -297,7 +297,7 @@
   font-family: 'Roboto Bold';
   font-style: normal;
   font-weight: 700;
-  src: local("Roboto Bold"), local("Roboto-Bold"), url("assets/fonts/Roboto-Bold.woff2") format("woff2"), url("assets/fonts/Roboto-Bold.ttf") format("truetype"), url("assets/fonts/Roboto-Bold.woff") format("woff");
+  src: local("Roboto Bold"), local("Roboto-Bold"), url("assets/fonts/Roboto-Bold.ttf") format("truetype"), url("assets/fonts/Roboto-Bold.woff") format("woff");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000; }
 
 /* Open Sans regular */
@@ -305,7 +305,7 @@
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 400;
-  src: local("Open Sans"), local("OpenSans"), url("assets/fonts/OpenSans.woff2") format("woff2"), url("assets/fonts/OpenSans.woff") format("woff"), url("assets/fonts/OpenSans.ttf") format("truetype");
+  src: local("Open Sans"), local("OpenSans"), url("assets/fonts/OpenSans.woff") format("woff"), url("assets/fonts/OpenSans.ttf") format("truetype");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000; }
 
 /* Open Sans regular */
@@ -313,7 +313,7 @@
   font-family: 'Open Sans';
   font-style: normal;
   font-weight: 400;
-  src: local("Open Sans"), local("OpenSans"), url("assets/fonts/OpenSans.woff2") format("woff2"), url("assets/fonts/OpenSans.woff") format("woff"), url("assets/fonts/OpenSans.ttf") format("truetype");
+  src: local("Open Sans"), local("OpenSans"), url("assets/fonts/OpenSans.woff") format("woff"), url("assets/fonts/OpenSans.ttf") format("truetype");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000; }
 
 .oo-player-container [data-icon] {
@@ -3347,6 +3347,9 @@
   text-align: center;
   width: 57px; }
 
+.oo-player-container .oo-switch-container .oo-switch-element {
+  margin-left: 0; }
+
 .oo-player-container .oo-closed-caption {
   height: 24px;
   line-height: 24px;
@@ -3406,15 +3409,14 @@
   font-size: 12px;
   font-family: "Open Sans", sans-serif;
   position: absolute;
-  color: #ffffff !important; }
+  color: #ffffff !important;
+  top: 5px; }
 
 .oo-player-container .custom-oo-content-time.total-time {
-  right: 0;
-  top: 5px; }
+  right: 5px; }
 
 .oo-player-container .custom-oo-content-time.current-time {
-  left: 0;
-  top: 5px; }
+  left: 5px; }
 
 .oo-player-container .oo-scrubber-bar-container {
   background: #000000 none repeat scroll 0 0;
@@ -3424,12 +3426,14 @@
   margin-right: 8px; }
 
 .oo-player-container .oo-scrubber-bar-container .oo-scrubber-bar-padding {
-  left: 35px;
-  right: 35px; }
+  left: 45px;
+  right: 40px; }
 
 .oo-player-container .oo-scrubber-bar-container .oo-scrubber-bar-padding .oo-scrubber-bar {
   background-color: rgba(175, 175, 175, 0.5);
-  height: 10px; }
+  height: 10px;
+  top: 2px;
+  left: 2px; }
 
 .oo-player-container .oo-scrubber-bar-container .oo-scrubber-bar-padding .oo-playhead-padding .oo-playhead {
   background: #e17331 none repeat scroll 0 0;
@@ -3451,17 +3455,20 @@
 .oo-player-container .oo-icon.oo-icon-compress-slick, .oo-player-container .oo-icon.oo-icon-volume, .oo-player-container .oo-icon.oo-icon-volumeOff {
   background: url("assets/images/sprites.png") no-repeat; }
 
+.oo-player-container .oo-play-pause.oo-control-bar-item {
+  padding: 0 10px 0 10px !important; }
+
 .oo-player-container .oo-icon.oo-icon-play-slick {
-  background-position: -15px -10px;
+  background-position: -15px -9px;
   display: inline-block;
   height: 24px;
-  width: 24px; }
+  width: 22px; }
 
 .oo-player-container .oo-icon.oo-icon-pause-slick {
-  background-position: -67px -10px;
+  background-position: -67px -9px;
   display: inline-block;
   height: 24px;
-  width: 24px; }
+  width: 22px; }
 
 .oo-player-container .oo-icon.oo-icon.oo-icon-expand-slick {
   background-position: -104px -11px;
