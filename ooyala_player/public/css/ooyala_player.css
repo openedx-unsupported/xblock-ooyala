@@ -74,7 +74,7 @@
 }
 
 .transcript-download-btn, .print-transcript-btn{
-    background: url("../images/sprites.png") no-repeat;
+    background: url("../build/assets/images/sprites.png") no-repeat;
     display: inline-block;
     height: 20px;
     margin: 0;

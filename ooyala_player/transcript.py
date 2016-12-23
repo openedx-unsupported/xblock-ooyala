@@ -10,6 +10,8 @@ TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/transl
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
                    "/translations/{translation_id}/transcript.html"
 
+RTL_LANGUAGES = ['Arabic']
+
 # Translated & Imported transcripts are
 # get via different APIs
 INCLUDE_IMPORTED_TRANSCRIPTS = True
@@ -40,7 +42,8 @@ class Transcript(object):
                 ),
                 'selected': True if 'en' == user_lang else False,
                 'lang_code': 'en',
-                'localized_name': 'English'
+                'localized_name': 'English',
+                'dir': 'ltr'
             }]
 
             if not cc_disabled:
@@ -106,7 +109,8 @@ class Transcript(object):
                         'url': TRANSLATION_DOWNLOAD_URL.format(
                             project_id=self.project_id, transcript_file_id=self.transcript_id,
                             translation_id=translation.get('id')
-                        )
+                        ),
+                        'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
                     })
 
     def _get_imported_transcripts(self, selected_lang):
@@ -161,6 +165,7 @@ class Transcript(object):
                                 'lang_code': lang_code,
                                 'selected': True if selected_lang in [language, lang_code] else False,
                                 'localized_name': localized_name,
+                                'dir': 'rtl' if language in RTL_LANGUAGES else 'ltr'
                             })
 
     @staticmethod
