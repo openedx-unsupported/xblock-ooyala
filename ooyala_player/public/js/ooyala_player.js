@@ -6,7 +6,7 @@ function OoyalaPlayerBlock(runtime, element) {
             this.playbackSpeed = 1;
             this.ccLang = this.data.ccLang;
             this.transcriptLang = null;
-            this.disableCC = true ? this.data.ccDisabled == 'True':false;
+            this.disableCC = this.data.ccDisabled == 'True';
 
             this.cleanUp();
             this.createPlayer();
@@ -171,12 +171,16 @@ function OoyalaPlayerBlock(runtime, element) {
                 if(currentSelected.length)
                     currentSelected.removeClass('selected');
 
-                var langElement = $('.transcript-track[data-lang-code=' + this.ccLang + ']', element);
+                var langElement = $('.transcript-track', element).filter(
+                    '[data-lang-code=' + this.ccLang + '], [data-lang-name=' + this.ccLang + ']'
+                );
 
                 langElement.addClass('selected');
                 langElement.trigger('click');
             },
             TranscriptChanged: function(){
+                setTranscriptDirection();
+
                 if(this.ccLang == this.transcriptLang)
                     return;
 
@@ -286,6 +290,16 @@ function OoyalaPlayerBlock(runtime, element) {
             });
         }
     };
+
+    function setTranscriptDirection() {
+        var currentSelected = $('.transcript-track.selected', element);
+        var langDir = currentSelected.data('lang-dir');
+
+        if(langDir == 'rtl')
+            $('.transcript-content', element).css('textAlign', 'right');
+        else
+            $('.transcript-content', element).css('textAlign', 'left');
+    }
 
     function log(msg){
         console.log(msg);

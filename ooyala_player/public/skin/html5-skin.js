@@ -1174,16 +1174,18 @@ var ControlBar = React.createClass({displayName: "ControlBar",
     this.props.controller.seek(this.props.duration);
   },
 
-  handleCustomVolumeIconClick: function (evt) {
-    this.props.controller.startHideControlBarTimer();
-      evt.stopPropagation(); // W3C
-      evt.cancelBubble = true; // IE
-      if (!this.props.controller.state.volumeState.volumeSliderVisible){
-        this.props.controller.showVolumeSliderBar();
-      }
-      else {
-        this.props.controller.hideVolumeSliderBar();
-      }
+  handleCustomVolumeMouseOver: function (evt) {
+    this.props.controller.cancelTimer();
+    this.props.controller.showVolumeSliderBar();
+  },
+  handleCustomVolumeMouseOut: function (evt) {
+      this.props.controller.startHideVolumeSliderTimer();
+  },
+  volumePopoverMouseOver: function (evt) {
+    this.props.controller.cancelTimer();
+  },
+  volumePopoverMouseOut: function (evt) {
+    this.props.controller.hideVolumeSliderBar();
   },
 
   handleVolumeIconClick: function(evt) {
@@ -1350,7 +1352,7 @@ var ControlBar = React.createClass({displayName: "ControlBar",
         onClick: this.handleVolumeClick}));
     }
 
-    var volumeSlider = React.createElement("div", {className: "oo-volume-slider"}, React.createElement(Slider, {value: parseFloat(this.props.controller.state.volumeState.volume), 
+    var volumeSlider = React.createElement("div", {onMouseOver: this.volumePopoverMouseOver, onMouseOut: this.volumePopoverMouseOut, className: "oo-volume-slider"}, React.createElement(Slider, {value: parseFloat(this.props.controller.state.volumeState.volume), 
                         onChange: this.changeVolumeSlider, 
                         className: "oo-slider oo-slider-volume", 
                         itemRef: "volumeSlider", 
@@ -1462,8 +1464,8 @@ var ControlBar = React.createClass({displayName: "ControlBar",
         volumeSliderPopover, 
           React.createElement("div", {className: "oo-volume oo-control-bar-item", key: "volume"}, 
               React.createElement("span", {className: volumeIconClass, 
-          onClick: this.handleCustomVolumeIconClick, 
-          onMouseOver: this.highlight, onMouseOut: this.removeHighlight})
+          onClick: this.handleVolumeIconClick, 
+          onMouseOver: this.handleCustomVolumeMouseOver, onMouseOut: this.handleCustomVolumeMouseOut})
       )),
 
       "share": React.createElement("a", {className: "oo-share oo-control-bar-item", 
@@ -4481,7 +4483,7 @@ OO.plugin("Html5Skin", function (OO, _, $, W) {
 
   if (OO.publicApi && OO.publicApi.VERSION) {
     // This variable gets filled in by the build script
-    OO.publicApi.VERSION.skin = {"releaseVersion": "4.8.5", "rev": "6cb9c68410bb885ee7124befaee432a115f25ba2"};
+    OO.publicApi.VERSION.skin = {"releaseVersion": "4.8.5", "rev": "704593ee070acbafa78d82479a1fb6ab5f5d1339"};
   }
 
   var Html5Skin = function (mb, id) {
@@ -5896,7 +5898,7 @@ OO.plugin("Html5Skin", function (OO, _, $, W) {
           if(this.state.volumeState.volumeSliderVisible === true){
             this.hideVolumeSliderBar();
           }
-        }.bind(this), 3000);
+        }.bind(this), 1000);
         this.state.timer = timer;
     },
 
