@@ -76,29 +76,34 @@ function OoyalaPlayerBlock(runtime, element) {
 
                 // Hide CC button
                 if(this.disableCC){
-                    if(window[this.data.domId] && window[this.data.domId].hideCCButton){
-                        window[this.data.domId].hideCCButton();
-                    }
+                    // This event will be captured by the hide-CC functionality
+                    // implemented in Skin code
+                    this.player.mb.publish('CcHide');
+                }
+
+                // transcript direction control
+                var p3Instance = p3sdk.get(this.identifier);
+                if(p3Instance){
+                    p3$(p3Instance).bind("transcript:track_loaded", function (name, atts){
+                        setTranscriptDirection();
+                    });
                 }
 
                 // Set CC & Transcript to user language preference
-                if(window[this.data.domId] && window[this.data.domId].changeCCLanguage){
-                    var selected = $('.transcript-track.selected', element);
-
-                    // if user's saved lang exists select it
-                    // otherwise select first lang from available languages
-                    if(selected.length){
-                        window[this.data.domId].changeCCLanguage(this.ccLang);
-                    }else{
-                        var transcripts = $('.transcript-track', element);
-                        if(transcripts.length) {
-                            selected = $(transcripts[0]);
-                            var lang = selected.data('lang-code');
-                            window[this.data.domId].changeCCLanguage(lang);
-                        }
+                var selected = $('.transcript-track.selected', element);
+                // if user's saved lang exists select it
+                // otherwise select first lang from available languages
+                if(selected.length){
+                    this.player.mb.publish('CcLanguageChanged', this.ccLang);
+                }else{
+                    var transcripts = $('.transcript-track', element);
+                    if(transcripts.length) {
+                        selected = $(transcripts[0]);
+                        var lang = selected.data('lang-code');
+                        this.player.mb.publish('CcLanguageChanged', lang);
                     }
                 }
-                
+
                 // show transcript container
                 $('.p3sdk-container', element).toggleClass('hide');
             },
@@ -179,14 +184,10 @@ function OoyalaPlayerBlock(runtime, element) {
                 langElement.trigger('click');
             },
             TranscriptChanged: function(){
-                setTranscriptDirection();
-
                 if(this.ccLang == this.transcriptLang)
                     return;
-
-                if(window[this.data.domId] && window[this.data.domId].changeCCLanguage){
-                    window[this.data.domId].changeCCLanguage(this.transcriptLang);
-                }
+                
+                this.player.mb.publish('CcLanguageChanged', this.transcriptLang);
             },
             playerSettingsSaved: function (ev, payload) {
                 this.ccLang = payload.closedCaptionOptions.language;
@@ -294,11 +295,9 @@ function OoyalaPlayerBlock(runtime, element) {
     function setTranscriptDirection() {
         var currentSelected = $('.transcript-track.selected', element);
         var langDir = currentSelected.data('lang-dir');
+        var dir = langDir == 'rtl' ? 'right' : 'left';
 
-        if(langDir == 'rtl')
-            $('.transcript-content', element).css('textAlign', 'right');
-        else
-            $('.transcript-content', element).css('textAlign', 'left');
+        $('.transcript-content > p', element).css('textAlign', dir);
     }
 
     function log(msg){
