@@ -225,15 +225,9 @@ function OoyalaPlayerBlock(runtime, element) {
 
                 if(currentSelected.hasClass('imported-transcript'))
                     return download('transcript-' + lang, $('.transcript-content', element).text());
-
-                // Only English language is supported in PDF format by 3play
-                // for other languages, use .txt format
-                if(lang == 'en'){
-                    downloadUrl = downloadUrl.replace('.html', '.pdf');
-                }else{
-                    downloadUrl = downloadUrl.replace('.html', '.txt');
-                }
-
+                
+                // download transcript in pdf format
+                downloadUrl = downloadUrl.replace('.html', '.pdf');
                 location.href = downloadUrl + '?dl=1';
             },
             getTranscript: function (evt) {
