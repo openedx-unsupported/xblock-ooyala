@@ -333,7 +333,22 @@ function OoyalaPlayerBlock(runtime, element) {
         });
     }
 
-    OOV4.ready(function () {
-        Player.init();
-    });
+    function isIE9() {
+        return !!window.navigator.userAgent.match(/MSIE 9.0/);
+    }
+    
+    if(isIE9()){
+        // fallback to Player V3 for IE9
+        OO.ready(function () {
+            var playerData = Player.getPlayerData();
+            var identifier = 'ooyala-player-'+ playerData.domId;
+            window[identifier] = OO.Player.create(playerData.domId, playerData.contentId, {
+                autoplay: playerData.autoplay
+            });
+        });
+    }else{
+        OOV4.ready(function () {
+            Player.init();
+        });
+    }
 }
