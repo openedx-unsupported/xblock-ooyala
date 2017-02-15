@@ -338,6 +338,11 @@ function OoyalaPlayerBlock(runtime, element) {
     }
     
     if(isIE9()){
+        $('.ooyala-player-container').css({
+            width: 'auto', height: '428px',
+            position: 'relative', 'z-index': 10
+        });
+        
         // fallback to Player V3 for IE9
         OO.ready(function () {
             var playerData = Player.getPlayerData();
