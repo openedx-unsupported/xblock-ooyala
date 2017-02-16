@@ -344,7 +344,7 @@ function OoyalaPlayerBlock(runtime, element) {
             var playerData = Player.getPlayerData();
             var identifier = 'ooyala-player-'+ playerData.domId;
             window[identifier] = OO.Player.create(playerData.domId, playerData.contentId, {
-                autoplay: playerData.autoplay
+                autoplay: (playerData.autoplay === "True")
             });
         });
     }else{
