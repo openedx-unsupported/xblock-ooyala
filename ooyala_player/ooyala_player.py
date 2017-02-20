@@ -113,7 +113,7 @@ class OoyalaPlayerMixin(object):
             'width': self.width,
             'height': self.height,
             'autoplay': self.autoplay,
-            'config_url': self.local_resource_url(self, 'public/skin/skin.json')
+            'config_url': self.local_resource_url(self, 'public/skin/skin.js')
         }
 
         JS_URLS = [
