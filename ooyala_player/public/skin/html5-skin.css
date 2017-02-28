@@ -3464,6 +3464,9 @@
   height: 24px;
   width: 22px; }
 
+.oo-player-container div.oo-start-screen .oo-icon.oo-icon-play-slick {
+  background: none; }
+
 .oo-player-container .oo-icon.oo-icon-pause-slick {
   background-position: -67px -9px;
   display: inline-block;
