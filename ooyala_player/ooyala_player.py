@@ -19,8 +19,6 @@ from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
 
-from openedx.core.lib.xblock_utils import xblock_local_resource_url
-
 from mentoring.light_children import (
     LightChild,
     Scope as LCScope,
@@ -115,13 +113,14 @@ class OoyalaPlayerMixin(object):
             'width': self.width,
             'height': self.height,
             'autoplay': self.autoplay,
-            'config_url': xblock_local_resource_url(self, 'public/skin/skin.js')
+            'config_url': self.local_resource_url(self, 'public/skin/skin.js')
         }
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/js/ooyala_player.js'),
+            self.local_resource_url(self, 'public/skin/skin.js'),
         ]
         CSS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.css'),
