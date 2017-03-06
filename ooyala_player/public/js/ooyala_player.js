@@ -36,7 +36,7 @@ function OoyalaPlayerBlock(runtime, element) {
                 playerToken: $('.ooyalaplayer', element).data('player-token'),
                 autoplay: $('.ooyalaplayer', element).data('autoplay'),
                 overlays: $('.ooyala-overlays .ooyala-overlay', element),
-                configUrl: $('.ooyalaplayer', element).data('config-url'),
+                configUrl: $('script[src*="ooyala-skin"]').attr('src'),
                 ccLang: $('.ooyalaplayer', element).data('cc-lang'),
                 ccDisabled: $('.ooyalaplayer', element).data('cc-disabled')
             }
