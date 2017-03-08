@@ -19,6 +19,8 @@ from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
 
+from webob import Response
+
 from mentoring.light_children import (
     LightChild,
     Scope as LCScope,
@@ -35,6 +37,7 @@ from .transcript import Transcript
 # Globals ###########################################################
 
 log = logging.getLogger(__name__)
+SKIN_FILE_PATH = 'public/skin/skin.js'
 
 # Classes ###########################################################
 
@@ -86,6 +89,32 @@ class OoyalaPlayerMixin(object):
             cc_disabled=self.disable_cc_and_translations
         )
 
+    @XBlock.handler
+    def get_config_json(self, request, suffix=''):
+        """
+        Return Player Skin file's JSON contents
+        """
+        config_resource_url = reverse('xblock_resource_url', kwargs={
+            'block_type': self.scope_ids.block_type,
+            'uri': SKIN_FILE_PATH,
+        })
+
+        # create fully qualified url
+        scheme = "https" if settings.HTTPS == "on" else "http"
+        url = '{scheme}://{host}{path}'.format(
+           scheme=scheme,
+           host=settings.SITE_NAME,
+           path=config_resource_url
+        )
+
+        try:
+            resource = urlopen(url=url)
+            data = resource.read()
+        except URLError:
+            data = json.dumps({})
+
+        return Response(data, content_type='application/json')
+
     def student_view(self, context):
         """
         Player view, displayed to the student
@@ -112,15 +141,13 @@ class OoyalaPlayerMixin(object):
             'transcript': transcript,
             'width': self.width,
             'height': self.height,
-            'autoplay': self.autoplay,
-            'config_url': self.local_resource_url(self, 'public/skin/ooyala-skin.js')
+            'autoplay': self.autoplay
         }
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/js/ooyala_player.js'),
-            self.local_resource_url(self, 'public/skin/ooyala-skin.js'),
         ]
         CSS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.css'),
