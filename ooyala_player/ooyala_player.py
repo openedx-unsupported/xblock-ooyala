@@ -120,6 +120,15 @@ class OoyalaPlayerMixin(object):
         Player view, displayed to the student
         """
 
+        # For lightchild xblock, pass skin resource URL, otherwise use our custom handler method
+        if hasattr(self, 'lightchild_block_type'):
+            json_config_url = reverse('xblock_resource_url', kwargs={
+                'block_type': OoyalaPlayerLightChildBlock.lightchild_block_type,
+                'uri': SKIN_FILE_PATH,
+            })
+        else:
+            json_config_url = self.runtime.handler_url(self, 'get_config_json')
+
         dom_id = 'ooyala-' + self._get_unique_id()
 
         overlay_fragments = ""
@@ -141,7 +150,8 @@ class OoyalaPlayerMixin(object):
             'transcript': transcript,
             'width': self.width,
             'height': self.height,
-            'autoplay': self.autoplay
+            'autoplay': self.autoplay,
+            'config_url': json_config_url
         }
 
         JS_URLS = [
