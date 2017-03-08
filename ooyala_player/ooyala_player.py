@@ -100,12 +100,7 @@ class OoyalaPlayerMixin(object):
         })
 
         # create fully qualified url
-        scheme = "https" if settings.HTTPS == "on" else "http"
-        url = '{scheme}://{host}{path}'.format(
-           scheme=scheme,
-           host=settings.SITE_NAME,
-           path=config_resource_url
-        )
+        url = '{host}{path}'.format(host=request.host_url, path=config_resource_url)
 
         try:
             resource = urlopen(url=url)
