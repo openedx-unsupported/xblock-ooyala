@@ -18,7 +18,7 @@ function OoyalaPlayerBlock(runtime, element) {
                 "playerBrandingId": this.data.playerId,
                 "autoplay": (this.data.autoplay === "True"),
                 "skin": {
-                    "config": this.data.configUrl
+                    "config": runtime.handlerUrl(element, 'get_config_json')
                 }
             };
 
@@ -36,7 +36,6 @@ function OoyalaPlayerBlock(runtime, element) {
                 playerToken: $('.ooyalaplayer', element).data('player-token'),
                 autoplay: $('.ooyalaplayer', element).data('autoplay'),
                 overlays: $('.ooyala-overlays .ooyala-overlay', element),
-                configUrl: $('script[src*="ooyala-skin"]').attr('src') || $('.ooyalaplayer', element).data('config-url'),
                 ccLang: $('.ooyalaplayer', element).data('cc-lang'),
                 ccDisabled: $('.ooyalaplayer', element).data('cc-disabled')
             }
