@@ -30,6 +30,7 @@ from mentoring.light_children import (
 from .utils import render_template
 from .tokens import generate_player_token
 from .overlay import OoyalaOverlay
+from .api import OoyalaApi
 
 # Globals ###########################################################
 
@@ -118,6 +119,19 @@ class OoyalaPlayerMixin(object):
             pass
         return transcript
 
+    def _get_download_url(self):
+        """
+        Fetches the video's download URL from the backlot API.
+        """
+        client = OoyalaApi(self.api_key, self.secret_key)
+        path = 'assets/{content_id}/streams'.format(content_id=self.content_id)
+       
+        response = client.get(path)
+
+        if response:
+            return response['url']
+        return None
+
     @property
     def transcript(self):
         """
@@ -135,6 +149,14 @@ class OoyalaPlayerMixin(object):
         elif getattr(self, "_transcript_error", None):
             return self._transcript_error
         return None  # There is no transcript, which is not an error.
+
+    def student_view_data(self):
+        """
+        Fetches and returns dict with the block's student view data.
+        """
+        return {
+            'download_url': self._get_download_url(),
+        }
 
     def student_view(self, context):
         """
@@ -160,6 +182,7 @@ class OoyalaPlayerMixin(object):
             'transcript_content': self.transcript,
             'transcript_error': self.transcript_error,
             'autoplay': self.autoplay,
+            'download_url': self._get_download_url(),
         }
 
         fragment = Fragment()
