@@ -5,11 +5,10 @@ import json
 from xblock.field_data import DictFieldData
 
 from ooyala_player import OoyalaPlayerBlock
-from xblock.runtime import DictKeyValueStore, KvsFieldData
-from xblock.test.tools import TestRuntime
+from .utils import MockNow, MockRuntime
 
 
-runtime = TestRuntime(field_data=KvsFieldData(DictKeyValueStore()))
+runtime = MockRuntime()
 
 
 def test_player_token_is_disabled_by_default():
@@ -21,19 +20,65 @@ def test_player_token_is_disabled_by_default():
 def test_disabled_player_token_is_empty():
     field_data = DictFieldData({"enable_player_token": False})
     player = OoyalaPlayerBlock(runtime, field_data, None)
-    assert_equal(player.player_token, '')
+    token_data = player.player_token()
+    assert_equal(token_data['player_token'], '')
+    assert_equal(token_data['player_token_expires'], None)
 
 
+@mock.patch("datetime.datetime", new=MockNow(10**10))
 def test_enabled_player_token_is_not_empty():
-    field_data = DictFieldData({"enable_player_token": True})
+    field_data = DictFieldData({"enable_player_token": True, "expiration_time": 1234})
     player = OoyalaPlayerBlock(runtime, field_data, None)
-    assert_not_equal(player.player_token, '')
+    token_data = player.player_token()
+    assert_not_equal(token_data['player_token'], '')
+    assert_equal(token_data['player_token_expires'], 10**10 + 1234)
+
+
+def test_student_view_data_disable_player_token():
+    """
+    Test the student_view_data() results when enable_player_token=False.
+    """
+    field_data_dict = dict(
+        partner_code='PARTNER-CODE',
+        content_id='CONTENT-ID',
+    )
+    expected_data = dict(
+        player_token="",
+        player_token_expires=None,
+        **field_data_dict
+    )
+    field_data = DictFieldData(dict(enable_player_token=False, **field_data_dict))
+    player = OoyalaPlayerBlock(runtime, field_data, None)
+    student_view_data = player.student_view_data()
+    assert_equal(student_view_data, expected_data)
+
+
+@mock.patch("ooyala_player.ooyala_player.generate_player_token", return_value=("http://player_token.url", 12345))
+def test_student_view_data_enable_player_token(mock_generate_player_token):
+    """
+    Test the student_view_data() results when enable_player_token=True.
+    """
+    field_data_dict = dict(
+        partner_code='PARTNER-CODE',
+        content_id='CONTENT-ID',
+    )
+    expected_data = dict(
+        player_token="http://player_token.url",
+        player_token_expires=12345,
+        **field_data_dict
+    )
+    field_data = DictFieldData(dict(enable_player_token=True, **field_data_dict))
+    player = OoyalaPlayerBlock(runtime, field_data, None)
+    student_view_data = player.student_view_data()
+    mock_generate_player_token.assert_called_once()
+    assert_equal(student_view_data, expected_data)
 
 
 class _MockRequest:
     def __init__(self, body):
         self.body = json.dumps(body)
         self.method = "POST"
+        self.host_url = 'http://example.com'
 
 
 class _NotEmpty:
@@ -44,7 +89,7 @@ class _NotEmpty:
         return True
 
 
-def _assert_studio_submit(result, expected):
+def _assert_json_result(result, expected):
     assert_equal(result.status, "200 OK")
     assert_equal(result.content_type, "application/json")
     assert_equal(json.loads(result.body), expected)
@@ -56,7 +101,7 @@ def test_studio_submit_json_handler_invalid_xml_config():
         "xml_config": "this is clearly invalid xml"
     })
     result = player.studio_submit(request)
-    _assert_studio_submit(result, {
+    _assert_json_result(result, {
         "result": "error",
         "message": _NotEmpty()
     })
@@ -80,7 +125,7 @@ def test_studio_submit_json_handler_valid_input():
 
     }
     result = player.studio_submit(_MockRequest(request_data))
-    _assert_studio_submit(result, {"result": "success"})
+    _assert_json_result(result, {"result": "success"})
     for key in request_data:
         assert_equal(getattr(player, key), request_data[key])
 
@@ -106,7 +151,7 @@ def test_studio_submit_json_handler_another_valid_input():
 
     }
     result = player.studio_submit(_MockRequest(request_data))
-    _assert_studio_submit(result, {"result": "success"})
+    _assert_json_result(result, {"result": "success"})
     for key in request_data:
         assert_equal(getattr(player, key), request_data[key])
 

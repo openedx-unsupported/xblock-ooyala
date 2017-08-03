@@ -18,6 +18,8 @@ from django.core.urlresolvers import reverse
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
+from xblock.exceptions import JsonHandlerError
+from webob import Response
 
 from webob import Response
 
@@ -54,14 +56,6 @@ class OoyalaPlayerMixin(object):
     def course_id(self):
         """Move to xblock-utils"""
         return self.runtime.course_id
-
-    @property
-    def player_token(self):
-        if not self.enable_player_token:
-            return ''
-
-        return generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
-                                     self.content_id, self.expiration_time)
 
     @property
     def overlays(self):
@@ -110,6 +104,22 @@ class OoyalaPlayerMixin(object):
 
         return Response(data, content_type='application/json')
 
+    def player_token(self):
+        """
+        Return a player token URL and its expiry datetime.
+        """
+        if self.enable_player_token:
+            player_token, expiry = generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
+                                                         self.content_id, self.expiration_time)
+        else:
+            player_token = ''
+            expiry = None
+
+        return {
+            'player_token': player_token,
+            'player_token_expires': expiry,
+        }
+
     def student_view(self, context):
         """
         Player view, displayed to the student
@@ -132,22 +142,22 @@ class OoyalaPlayerMixin(object):
 
         transcript = self.transcript.render()
 
-        context = {
+        context = self.player_token()
+        context.update({
             'title': self.display_name,
             'cc_lang': self.cc_language_preference,
             'cc_disabled': self.disable_cc_and_translations,
             'pcode': self.pcode,
             'content_id': self.content_id,
             'player_id': self.player_id,
-            'player_token': self.player_token,
             'dom_id': dom_id,
             'overlay_fragments': overlay_fragments,
             'transcript': transcript,
             'width': self.width,
             'height': self.height,
             'autoplay': self.autoplay,
-            'config_url': json_config_url
-        }
+            'config_url': json_config_url,
+        })
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
@@ -195,6 +205,17 @@ class OoyalaPlayerMixin(object):
             'courseId': course_id,
             'usageId': usage_id,
         }
+
+    def student_view_data(self, context=None):
+        """
+        Returns a dict containing the settings for the student view.
+        """
+        data = self.player_token()
+        data.update({
+            'partner_code': self.partner_code,
+            'content_id': self.content_id,
+        })
+        return data
 
 
 @XBlock.wants("settings")
@@ -247,7 +268,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
     enable_player_token = Boolean(
         display_name="Enable Player Token",
-        help='Set to True if a player token is required.',
+        help='Set to True if a player token is required, e.g. if streaming videos to the mobile app.',
         scope=Scope.content,
         default=False
     )
@@ -478,7 +499,7 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
 
     enable_player_token = LCBoolean(
         display_name="Enable Player Token",
-        help='Set to True if a player token is required.',
+        help='Set to True if a player token is required, e.g. if streaming videos to the mobile app.',
         scope=LCScope.content,
         default=False
     )

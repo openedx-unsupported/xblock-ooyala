@@ -11,7 +11,7 @@ def generate_player_token(partner_code, api_key, api_secret_key, video_code, exp
     expiry = _expiration_timestamp_from_delta(expiration_time)
     signature = _generate_signature(partner_code, api_key, api_secret_key, video_code, expiry)
 
-    return OOYALA_TOKEN_URL.format(partner_code, video_code, api_key, expiry, signature)
+    return OOYALA_TOKEN_URL.format(partner_code, video_code, api_key, expiry, signature), int(expiry)
 
 
 def _expiration_timestamp_from_delta(seconds):
