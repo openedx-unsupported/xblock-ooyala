@@ -4,3 +4,4 @@ coverage
 rednose
 
 -e .
+-e git://github.com/edx/xblock-sdk.git@v0.1.4#egg=xblock-sdk

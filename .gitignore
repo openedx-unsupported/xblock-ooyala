@@ -1,8 +1,11 @@
 xblock_image_explorer.egg-info
 *.pyc
+*.swp
 *~
-/.coverage
 /dist
 /xblock_ooyala_player.egg-info
 /node_modules
 .idea
+/var
+/.coverage
+/htmlcov

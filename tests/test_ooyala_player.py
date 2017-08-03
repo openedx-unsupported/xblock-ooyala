@@ -5,24 +5,28 @@ import json
 from xblock.field_data import DictFieldData
 
 from ooyala_player import OoyalaPlayerBlock
-import ooyala_player
+from xblock.runtime import DictKeyValueStore, KvsFieldData
+from xblock.test.tools import TestRuntime
+
+
+runtime = TestRuntime(field_data=KvsFieldData(DictKeyValueStore()))
 
 
 def test_player_token_is_disabled_by_default():
     field_data = DictFieldData({})
-    player = OoyalaPlayerBlock(None, field_data, None)
+    player = OoyalaPlayerBlock(runtime, field_data, None)
     assert_false(player.enable_player_token)
 
 
 def test_disabled_player_token_is_empty():
     field_data = DictFieldData({"enable_player_token": False})
-    player = OoyalaPlayerBlock(None, field_data, None)
+    player = OoyalaPlayerBlock(runtime, field_data, None)
     assert_equal(player.player_token, '')
 
 
 def test_enabled_player_token_is_not_empty():
     field_data = DictFieldData({"enable_player_token": True})
-    player = OoyalaPlayerBlock(None, field_data, None)
+    player = OoyalaPlayerBlock(runtime, field_data, None)
     assert_not_equal(player.player_token, '')
 
 
@@ -47,7 +51,7 @@ def _assert_studio_submit(result, expected):
 
 
 def test_studio_submit_json_handler_invalid_xml_config():
-    player = OoyalaPlayerBlock(None, None, None)
+    player = OoyalaPlayerBlock(runtime, None, None)
     request = _MockRequest({
         "xml_config": "this is clearly invalid xml"
     })
@@ -59,7 +63,7 @@ def test_studio_submit_json_handler_invalid_xml_config():
 
 
 def test_studio_submit_json_handler_valid_input():
-    player = OoyalaPlayerBlock(None, None, None)
+    player = OoyalaPlayerBlock(runtime, None, None)
     request_data = {
         "xml_config": "<tag>this is a valid xml</tag>",
         "display_name": "exampleDisplayName",
@@ -82,7 +86,7 @@ def test_studio_submit_json_handler_valid_input():
 
 
 def test_studio_submit_json_handler_another_valid_input():
-    player = OoyalaPlayerBlock(None, None, None)
+    player = OoyalaPlayerBlock(runtime, None, None)
     request_data = {
         "xml_config": (
             '<ooyala-player>'
@@ -120,7 +124,7 @@ class _MockOverlay:
 
 @mock.patch("ooyala_player.overlay.OoyalaOverlay", new=_MockOverlay)
 def test_parse_overlays():
-    player = OoyalaPlayerBlock(None, None, None)
+    player = OoyalaPlayerBlock(runtime, None, None)
     player.parent = "the_parent"
     player.content_id = "the_parent"
     player.xml_config = (
