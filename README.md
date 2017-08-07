@@ -122,23 +122,14 @@ Running tests
 1. In a virtualenv, run
 
 ```bash
-$ (cd ../xblock-sdk/; pip install -r requirements.txt)
-$ (cd ../xblock-ooyala/; pip install -r tests/requirements.txt)
+$ pip install -r tests/requirements.txt
+$ pushd $VIRTUAL_ENV/src/xblock-sdk/; make install; popd
 ```
 
-2. In the xblock-sdk repository, create the following configuration
-   file in `workbench/settings_ooyala.py`
-
-```python
-from settings import *
-
-INSTALLED_APPS += ('ooyala_player',)
-```
-
-3. To run the tests, from the xblock-ooyala repository root:
+2. To run the tests, from the xblock-ooyala repository root:
 
 ```bash
-$ DJANGO_SETTINGS_MODULE="workbench.settings_ooyala" nosetests --rednose --verbose --with-cover --cover-package=ooyala_player
+$ python run_tests.py --with-cover --cover-package=ooyala_player
 ```
 
 License

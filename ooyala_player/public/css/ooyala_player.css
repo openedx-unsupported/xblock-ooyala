@@ -7,12 +7,11 @@
 }
 
 .ooyala-player-xblock-wrapper .ooyalaplayer {
-    position: absolute;
+    /*position: absolute;*/
 }
 
 .ooyala-player-xblock-wrapper .ooyala-player-container {
     position: relative;
-    width: 640px;
     height:auto;
     z-index:10;
 }
@@ -32,118 +31,115 @@
     font-size:14px;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_playhead_progress {
-    background-color:#4A4A4A !important;
-}
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_fullscreen_on {
-    cursor: pointer !important;
-    background-size:45px 46px !important;
-    background-image: url('../images/maximize_button.png') !important;
-    left: 561 !important;
-}
-
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_fullscreen_off {
-    cursor: pointer !important;
-    background-size: 45px 46px !important;
-    background-image: url('../images/minimize.png') !important;
-}
-
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_playhead {
-    cursor: pointer !important;
-    background-image: url('../images/scrubber.png') !important;
-    background-size: 57px 57px !important;
-    background-position: center;
-}
-
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_play {
-    cursor:pointer !important;
-    background-size:45px 46px !important;
-    background-image: url('../images/play.png') !important;
-}
-
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_pause {
-    cursor: pointer !important;
-    background-size: 45px 46px !important;
-    background-image: url('../images/pause.png') !important;
-}
-
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error .oo_error_image {
-    position: absolute;
+.p3sdk-interactive-transcript-content{
+    clear: both;
     width: 100%;
-    height: 30%;
-    top: 20%;
-    background-image: url('../images/error.png') !important;
+    margin-top: 10px;
 }
 
-
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_replay {
-    content: url('../images/replay.png');
+.p3sdk-interactive-transcript-search-hit {
+  background: #000000;
+  color: #ffffff;
 }
 
+.p3sdk-interactive-transcript-collapse-visible {
+    font-size: 18px;
+    height: 30px;
+    text-align: right;
+    position: relative;
+    margin: 5px 0 5px 5px;
+}
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error .oo_error_message .oo_error_message_text {
+.transcript-toggle{
+    color: #3384ca;
+    font-family: "Open Sans",sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 3px;
+    line-height: 24px;
+}
+
+.transcript-track  {
+    color: #3384ca;
+    cursor: pointer;
     font-family: "Open Sans", sans-serif;
-    font-size:14px;
+    font-size: 14px;
+    font-weight: bold;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_full_controls .oo_playhead {
-    cursor: pointer !important;
-    height: 28px !important;
-    width: 29px !important;
-    margin: -4px !important;
-    padding: 4px !important;
+.transcript-track.selected{
+    color: #868685;
+    pointer-events: none;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_controls .oo_label {
-    font-family: "Open Sans", sans-serif !important;
-    color: #D1D1D1 !important;
+.transcript-download-btn, .print-transcript-btn{
+    background: url("../build/assets/images/sprites.png") no-repeat;
+    display: inline-block;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    width: 22px;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_full_controls .vod .oo_scrubber {
-    left: 73px !important;
-    right: 60px !important;
-    top: 9px !important;
-    bottom: 10px !important;
+.transcript-download-btn {
+    background-position: -312px -13px;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .innerWrapper {
-    z-index: 10;
+.print-transcript-btn{
+   background-position: -355px -15px;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error_image {
-    background-origin: none;
+.transcript-header{
+    border-bottom: 2px solid #ccc;
+    border-top: 2px solid #ccc;
+    padding: 10px 0;
+    float: left;
+    width: 100%;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_error_message {
-    top:60%
+.transcript-header > ul{
+    float: right;
+    width: 100%;
 }
 
-.ooyala-player-xblock-wrapper .ooyalaplayer .oo_spinner {
-    z-index: 8;
-}
-
-.ooyala-player-xblock-wrapper .transcript-header,
-.ooyala-player-xblock-wrapper .transcript-content,
-.ooyala-player-xblock-wrapper .transcript-footer {
-    border-bottom: 1px solid lightgrey;
-}
-
-.ooyala-player-xblock-wrapper .transcript-header,
-.ooyala-player-xblock-wrapper .transcript-footer {
-    overflow: auto;
-}
-
-.ooyala-player-xblock-wrapper .print-transcript-btn,
-.ooyala-player-xblock-wrapper .show-hide-transcript-btn {
-    margin: 0.7em;
+.transcript-header ul {
+    margin: 0;
+    padding: 0;
     float: right;
 }
 
-.ooyala-player-xblock-wrapper .transcript-content {
-    padding: 1em;
+.transcript-header li {
+    list-style: outside none none;
+    float: right;
+    margin-bottom: 0 !important;
 }
 
-.ooyala-player-xblock-wrapper .transcript-error-message {
-    color: red;
+.transcript-header li.search {
+    float: left;
 }
+
+.transcript-header li > ul > li {
+    float: left;
+    padding: 0;
+    margin: 0 15px 0 0;
+}
+
+.language-tracks a{
+    cursor: pointer;
+}
+
+.fa-2{
+    color: #3384ca;
+    font-size: 24px;
+    line-height: 10px;
+}
+
+.fa.transcript-hide{
+   vertical-align: bottom;
+}
+
+.fa.transcript-show{
+    vertical-align: 1px;
+}
+

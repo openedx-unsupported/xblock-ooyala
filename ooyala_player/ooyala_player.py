@@ -18,6 +18,10 @@ from django.core.urlresolvers import reverse
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
+from xblock.exceptions import JsonHandlerError
+from webob import Response
+
+from webob import Response
 
 from mentoring.light_children import (
     LightChild,
@@ -30,33 +34,28 @@ from mentoring.light_children import (
 from .utils import render_template
 from .tokens import generate_player_token
 from .overlay import OoyalaOverlay
+from .transcript import Transcript
 
 # Globals ###########################################################
 
 log = logging.getLogger(__name__)
-
+SKIN_FILE_PATH = 'public/skin/skin.js'
 
 # Classes ###########################################################
 
+
 class OoyalaPlayerMixin(object):
     """
-    Base functionnalities for the ooyala player.
+    Base functionality for the ooyala player.
     """
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
+    pcode = '5zdHcxOlM7fQJOMrCdwnnu16WP-d'
 
     @property
     def course_id(self):
         """Move to xblock-utils"""
         return self.runtime.course_id
-
-    @property
-    def player_token(self):
-        if not self.enable_player_token:
-            return ''
-
-        return generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
-                                     self.content_id, self.expiration_time)
 
     @property
     def overlays(self):
@@ -75,71 +74,65 @@ class OoyalaPlayerMixin(object):
 
         return overlays
 
-    def _retrieve_transcript(self):
-        """
-        Fetch this video's transcript using either the content_id or 
-        self.transcript_file_id. Requires a 3play API key.
-        """
-        if not self.api_key_3play_with_default_setting:
-            # We will not attempt to fetch a transcript in vain if the 
-            # required 3Play API key is not set. This is not an error.
-            return None
-        if self.transcript_file_id:
-            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1".format(
-                self.transcript_file_id,
-                self.api_key_3play_with_default_setting
-            )
-        else:
-            url = "http://static.3playmedia.com/files/{}/transcript.txt?apikey={}&pre=1&usevideoid=1".format(
-                self.content_id,
-                self.api_key_3play_with_default_setting
-            )
-        try:
-            conn = urlopen(url)
-            transcript = conn.read()
-        except URLError as e:
-            self._transcript_error = str(e)
-            return None
-        finally:
-            conn.close()
-
-        # Check if we got back a valid transcript or an API error:
-        try:
-            data = json.loads(transcript)
-            if data.get("iserror", False):
-                if "not_found" in data.get("errors", []):
-                    # There is no transcript available for this video.
-                    self._transcript_error = "No transcript was found for this video"
-                    return None
-                self._transcript_error = "Transcript API error: {}".format(data.get("errors", transcript))
-                return None
-        except ValueError:
-            # If the response is not JSON, it is likely a valid transcript.
-            pass
-        return transcript
-
     @property
     def transcript(self):
-        """
-        Retrieve the transcript if possible. Returns None on error, or if there
-        is no transcript, or if the 3Play API key is missing.
-        """
-        if not hasattr(self, "_transcript_cached"):
-            self._transcript_cached = self._retrieve_transcript()
-        return self._transcript_cached
+        return Transcript(
+            threeplay_api_key=self.api_key_3play_with_default_setting,
+            content_id=self.content_id,
+            user_lang=self.cc_language_preference,
+            cc_disabled=self.disable_cc_and_translations
+        )
 
-    @property
-    def transcript_error(self):
-        if self.transcript:  # property access will fetch the transcript
-            return None
-        elif getattr(self, "_transcript_error", None):
-            return self._transcript_error
-        return None  # There is no transcript, which is not an error.
+    @XBlock.handler
+    def get_config_json(self, request, suffix=''):
+        """
+        Return Player Skin file's JSON contents
+        """
+        config_resource_url = reverse('xblock_resource_url', kwargs={
+            'block_type': self.scope_ids.block_type,
+            'uri': SKIN_FILE_PATH,
+        })
+
+        # create fully qualified url
+        url = '{host}{path}'.format(host=request.host_url, path=config_resource_url)
+
+        try:
+            resource = urlopen(url=url)
+            data = resource.read()
+        except URLError:
+            data = json.dumps({})
+
+        return Response(data, content_type='application/json')
+
+    def player_token(self):
+        """
+        Return a player token URL and its expiry datetime.
+        """
+        if self.enable_player_token:
+            player_token, expiry = generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
+                                                         self.content_id, self.expiration_time)
+        else:
+            player_token = ''
+            expiry = None
+
+        return {
+            'player_token': player_token,
+            'player_token_expires': expiry,
+        }
 
     def student_view(self, context):
         """
         Player view, displayed to the student
         """
+
+        # For lightchild xblock, pass skin resource URL, otherwise use our custom handler method
+        if hasattr(self, 'lightchild_block_type'):
+            json_config_url = reverse('xblock_resource_url', kwargs={
+                'block_type': OoyalaPlayerLightChildBlock.lightchild_block_type,
+                'uri': SKIN_FILE_PATH,
+            })
+        else:
+            json_config_url = self.runtime.handler_url(self, 'get_config_json')
 
         dom_id = 'ooyala-' + self._get_unique_id()
 
@@ -147,39 +140,43 @@ class OoyalaPlayerMixin(object):
         for overlay in self.overlays:
             overlay_fragments += overlay.render()
 
-        context = {
+        transcript = self.transcript.render()
+
+        context = self.player_token()
+        context.update({
             'title': self.display_name,
+            'cc_lang': self.cc_language_preference,
+            'cc_disabled': self.disable_cc_and_translations,
+            'pcode': self.pcode,
             'content_id': self.content_id,
-            'transcript_file_id': self.transcript_file_id,
             'player_id': self.player_id,
-            'player_token': self.player_token,
             'dom_id': dom_id,
             'overlay_fragments': overlay_fragments,
+            'transcript': transcript,
             'width': self.width,
             'height': self.height,
-            'transcript_content': self.transcript,
-            'transcript_error': self.transcript_error,
             'autoplay': self.autoplay,
-        }
+            'config_url': json_config_url,
+        })
+
+        JS_URLS = [
+            self.local_resource_url(self, 'public/build/player_all.min.js'),
+            '//p3.3playmedia.com/p3sdk.current.js',
+            self.local_resource_url(self, 'public/js/ooyala_player.js'),
+        ]
+        CSS_URLS = [
+            self.local_resource_url(self, 'public/build/player_all.min.css'),
+            self.local_resource_url(self, 'public/css/ooyala_player.css'),
+        ]
 
         fragment = Fragment()
         fragment.add_content(render_template('/templates/html/ooyala_player.html', context))
-        fragment.add_css_url(self.local_resource_url(self, 'public/css/ooyala_player.css'))
 
-        # custom plugins styles
-        fragment.add_css_url(self.local_resource_url(self, 'public/css/speedplugin.css'))
+        for url in JS_URLS:
+            fragment.add_javascript_url(url)
 
-        player_url = '//player.ooyala.com/v3/{0}?platform=html5-priority'.format(self.player_id)
-
-        fragment.add_javascript_url(player_url)
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/speed_plugin.js'))
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/vendor/popcorn.js'))
-
-        fragment.add_javascript(render_template('public/js/ooyala_player.js', {
-            'self': self,
-            'overlay_fragments': overlay_fragments,
-            'dom_id': dom_id
-        }))
+        for url in CSS_URLS:
+            fragment.add_css_url(url)
 
         fragment.initialize_js('OoyalaPlayerBlock')
 
@@ -209,10 +206,22 @@ class OoyalaPlayerMixin(object):
             'usageId': usage_id,
         }
 
+    def student_view_data(self, context=None):
+        """
+        Returns a dict containing the settings for the student view.
+        """
+        data = self.player_token()
+        data.update({
+            'partner_code': self.partner_code,
+            'content_id': self.content_id,
+        })
+        return data
+
+
 @XBlock.wants("settings")
 class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
     """
-    XBlock providing a video player for videos hosted on Brightcove
+    XBlock providing a video player for videos hosted on Ooyala
     """
 
     display_name = String(
@@ -236,6 +245,20 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         default=''
     )
 
+    cc_language_preference = String(
+        display_name="Closed Captions Language",
+        help="User's preference for closed captions language",
+        scope=Scope.user_info,
+        default='en'
+    )
+
+    disable_cc_and_translations = Boolean(
+        display_name="Turn Off Closed Captions and Translated transcripts",
+        help="Hides the CC button and transcript languages selection for this video",
+        scope=Scope.settings,
+        default=False
+    )
+
     autoplay = Boolean(
         display_name="Enable Player Autoplay",
         help='Set to True if you the player to automatically play.',
@@ -245,14 +268,14 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
     enable_player_token = Boolean(
         display_name="Enable Player Token",
-        help='Set to True if a player token is required.',
+        help='Set to True if a player token is required, e.g. if streaming videos to the mobile app.',
         scope=Scope.content,
         default=False
     )
 
     partner_code = String(
         display_name="Partner Code",
-        help='Needed to generate a player token.',
+        help='Required for V4 Player. Also needed to generate a player token.',
         scope=Scope.content,
         default=''
     )
@@ -289,7 +312,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name="Player Height",
         help='The height of the player in pixels.',
         scope=Scope.content,
-        default="428px"
+        default="100%"
     )
 
     expiration_time = Integer(
@@ -359,6 +382,33 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         return fragment
 
     @XBlock.json_handler
+    def store_language_preference(self, data, suffix=''):
+        """
+        Store user's cc language selection
+        """
+        lang = data.get('lang')
+        if lang:
+            self.cc_language_preference = lang
+
+        return {'result': 'success'}
+
+    @XBlock.json_handler
+    def load_transcript(self, data, suffix=''):
+        """
+        Store user's cc language selection
+        """
+        threeplay_id = data.get('threeplay_id')
+        content = ''
+
+        if threeplay_id:
+            content = Transcript.get_transcript_by_threeplay_id(
+                api_key=self.api_key_3play_with_default_setting,
+                threeplay_id=threeplay_id
+            )
+
+        return {'content': content}
+
+    @XBlock.json_handler
     def studio_submit(self, submissions, suffix=''):
 
         xml_config = submissions['xml_config']
@@ -386,6 +436,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
             self.expiration_time = submissions['expiration_time']
             self.width = submissions['width']
             self.height = submissions['height']
+            self.disable_cc_and_translations = submissions['cc_disable']
 
         return response
 
@@ -425,6 +476,20 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         default=''
     )
 
+    cc_language_preference = LCString(
+        display_name="Closed Captions Language",
+        help="User's preference for closed captions language",
+        scope=LCScope.user_state,
+        default='en'
+    )
+
+    disable_cc_and_translations = LCBoolean(
+        display_name="Turn Off Closed Captions and Translated transcripts",
+        help="Hides the CC button and transcript languages selection for this video",
+        scope=LCScope.content,
+        default=False
+    )
+
     autoplay = LCBoolean(
         display_name="Enable Player Autoplay",
         help='Set to True if you the player to automatically play.',
@@ -434,7 +499,7 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
 
     enable_player_token = LCBoolean(
         display_name="Enable Player Token",
-        help='Set to True if a player token is required.',
+        help='Set to True if a player token is required, e.g. if streaming videos to the mobile app.',
         scope=LCScope.content,
         default=False
     )
