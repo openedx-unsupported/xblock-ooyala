@@ -107,6 +107,21 @@ class OoyalaPlayerMixin(object):
     def player_token(self):
         """
         Return a player token URL and its expiry datetime.
+
+        Returns:
+            If the player token is enabled, returns e.g.:
+
+                {
+                  "player_token": "http://player.ooyala.com/sas/embed_token/53YWsyOszKOsfS1...",
+                  "player_token_expires: 1501812713,
+                }
+
+            If the player token is disabled, returns:
+
+                {
+                  "player_token": "",
+                  "player_token_expires: None,
+                }
         """
         if self.enable_player_token:
             player_token, expiry = generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
@@ -209,6 +224,17 @@ class OoyalaPlayerMixin(object):
     def student_view_data(self, context=None):
         """
         Returns a dict containing the settings for the student view.
+
+        Returns:
+            E.g.,
+                {
+                  "player_token": "http://player.ooyala.com/sas/embed_token/53YWsyOszKOsfS1...",
+                  "player_token_expires": 1501812713,
+                  "partner_code: "53YWsyOszKOsfS1IvcQoKn8YhWYk",
+                  "content_id": "5sMHA1YzE6KHI-dFSKgDz-pcMOx37_f9",
+                }
+
+            See player_token() for more information on the player_token_* fields.
         """
         data = self.player_token()
         data.update({
