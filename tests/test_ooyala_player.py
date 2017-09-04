@@ -1,14 +1,64 @@
-from nose.tools import assert_false, assert_equal, assert_not_equal
-import mock
-
 import json
+
+import mock
+from django.test import TestCase
+from mock import Mock
+from nose.tools import assert_equal, assert_not_equal
 from xblock.field_data import DictFieldData
+from xblock.fields import ScopeIds
+from xblock.runtime import (
+    DictKeyValueStore,
+    KvsFieldData,
+)
+from xblock.test.tools import (
+    assert_false, TestRuntime
+)
 
 from ooyala_player import OoyalaPlayerBlock
 from .utils import MockNow, MockRuntime
 
-
 runtime = MockRuntime()
+
+
+class MockService(object):
+    def __init__(self, block, settings_dict):
+        self.block = block
+        self.settings_dict = settings_dict
+
+    def get_settings_bucket(self, block):
+        return self.settings_dict[block.__class__.__name__]
+
+
+class OoyalaPlayerTestCaseDefaultSettings(TestCase):
+    DEFAULT_SETTING_NAME = 'EXAMPLE_SETTING'
+    DEFAULT_SETTING_VALUE = 'xxx'
+    REAL_ATTRIBUTE = 'api_secret_key'
+    XBLOCK_SETTINGS = {
+        'OoyalaPlayerBlock': {
+            DEFAULT_SETTING_NAME: 'xxx'
+        }
+    }
+
+    def setUp(self):
+        field_data = KvsFieldData(DictKeyValueStore())
+        runtime = TestRuntime(services={'settings': MockService(OoyalaPlayerBlock, self.XBLOCK_SETTINGS)})
+        self.player = OoyalaPlayerBlock(runtime, field_data, scope_ids=Mock(spec=ScopeIds))
+        self.player.unmixed_class = OoyalaPlayerBlock
+        self.player.DEFAULT_ATTRIBUTE_SETTINGS = {
+            self.REAL_ATTRIBUTE: self.DEFAULT_SETTING_NAME
+        }
+
+    def test_nonexistant_attribute(self):
+        with self.assertRaises(AttributeError):
+            self.player.get_attribute_or_default('wrong')
+
+    def test_default_value(self):
+        with self.settings(XBLOCK_SETTINGS=self.XBLOCK_SETTINGS):
+            self.assertEqual(self.player.get_attribute_or_default(self.REAL_ATTRIBUTE), self.DEFAULT_SETTING_VALUE)
+
+            instance_value = 'something new'
+            setattr(self.player, self.REAL_ATTRIBUTE, instance_value)
+            self.assertEqual(self.player.get_attribute_or_default(self.REAL_ATTRIBUTE), instance_value)
 
 
 def test_player_token_is_disabled_by_default():
@@ -83,6 +133,7 @@ class _MockRequest:
 
 class _NotEmpty:
     """Placeholder for a value that must not be Null, 0, False or an empty sequence."""
+
     def __eq__(self, other):
         if not other:
             return False

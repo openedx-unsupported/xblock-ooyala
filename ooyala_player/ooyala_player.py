@@ -6,7 +6,6 @@
 import logging
 import json
 from urllib2 import urlopen, URLError
-
 from uuid import uuid4
 
 from lxml import etree
@@ -15,26 +14,22 @@ from StringIO import StringIO
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
+from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
-from xblock.exceptions import JsonHandlerError
-from webob import Response
-
-from webob import Response
 
 from mentoring.light_children import (
     LightChild,
     Scope as LCScope,
     String as LCString,
-    Integer as LCInteger,
     Boolean as LCBoolean
 )
 
-from .utils import render_template
-from .tokens import generate_player_token
 from .overlay import OoyalaOverlay
+from .tokens import generate_player_token
 from .transcript import Transcript
+from .utils import render_template
 
 # Globals ###########################################################
 
@@ -48,6 +43,13 @@ class OoyalaPlayerMixin(object):
     """
     Base functionality for the ooyala player.
     """
+    DEFAULT_ATTRIBUTE_SETTINGS = {
+        'api_key_3play': '3PLAY_API_KEY',
+        'enable_player_token': 'ENABLE_PLAYER_TOKEN',
+        'partner_code': 'PARTNER_CODE',
+        'api_key': 'API_KEY',
+        'api_secret_key': 'API_SECRET_KEY',
+    }
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
     pcode = '5zdHcxOlM7fQJOMrCdwnnu16WP-d'
@@ -56,6 +58,23 @@ class OoyalaPlayerMixin(object):
     def course_id(self):
         """Move to xblock-utils"""
         return self.runtime.course_id
+
+    def get_attribute_or_default(self, attribute_name):
+        """
+        If the given attribute is set on the instance, return it immediately.
+        Otherwise check if it has a default in the settings service.
+        If neither are available, return None
+        """
+        available_attr = getattr(self, attribute_name)
+        if available_attr:
+            return available_attr
+
+        if getattr(self.runtime, 'service'):
+            settings_service = self.runtime.service(self, 'settings')
+            if settings_service:
+                setting_name = self.DEFAULT_ATTRIBUTE_SETTINGS[attribute_name]
+                return settings_service.get_settings_bucket(self).get(setting_name)
+        return available_attr  # Ensures that the field's default type is preserved
 
     @property
     def overlays(self):
@@ -77,7 +96,7 @@ class OoyalaPlayerMixin(object):
     @property
     def transcript(self):
         return Transcript(
-            threeplay_api_key=self.api_key_3play_with_default_setting,
+            threeplay_api_key=self.get_attribute_or_default('api_key_3play'),
             content_id=self.content_id,
             user_lang=self.cc_language_preference,
             cc_disabled=self.disable_cc_and_translations
@@ -123,9 +142,14 @@ class OoyalaPlayerMixin(object):
                   "player_token_expires: None,
                 }
         """
-        if self.enable_player_token:
-            player_token, expiry = generate_player_token(self.partner_code, self.api_key, self.api_secret_key,
-                                                         self.content_id, self.expiration_time)
+        if self.get_attribute_or_default('enable_player_token'):
+            player_token, expiry = generate_player_token(
+                self.get_attribute_or_default('partner_code'),
+                self.get_attribute_or_default('api_key'),
+                self.get_attribute_or_default('api_secret_key'),
+                self.content_id,
+                self.expiration_time,
+            )
         else:
             player_token = ''
             expiry = None
@@ -238,7 +262,7 @@ class OoyalaPlayerMixin(object):
         """
         data = self.player_token()
         data.update({
-            'partner_code': self.partner_code,
+            'partner_code': self.get_attribute_or_default('partner_code'),
             'content_id': self.content_id,
         })
         return data
@@ -358,16 +382,6 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
     xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
                         scope=Scope.content)
 
-    @property
-    def api_key_3play_with_default_setting(self):
-        if self.api_key_3play:
-            return self.api_key_3play
-
-        settings_service = self.runtime.service(self, 'settings')
-        if settings_service:
-            return settings_service.get_settings_bucket(self).get('3PLAY_API_KEY')
-        return None
-
     def local_resource_url(self, block, uri):
         # TODO move to xblock-utils
         return self.runtime.local_resource_url(block, uri)
@@ -428,7 +442,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
         if threeplay_id:
             content = Transcript.get_transcript_by_threeplay_id(
-                api_key=self.api_key_3play_with_default_setting,
+                api_key=self.get_attribute_or_default('api_key_3play'),
                 threeplay_id=threeplay_id
             )
 
@@ -614,11 +628,6 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
             'uri': uri,
         })
         return '//{}{}'.format(settings.SITE_NAME, path)
-
-    @property
-    def api_key_3play_with_default_setting(self):
-        """LightChild cannot use service"""
-        return self.api_key_3play
 
     def _get_unique_id(self):
         # We can have mulitple lightchild in the same block
