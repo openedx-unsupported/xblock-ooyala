@@ -173,10 +173,11 @@ def test_studio_submit_json_handler_valid_input():
         "expiration_time": "exampleExpirationTime",
         "width": "640px",
         "height": "480px",
-
+        "cc_disable": False,
     }
     result = player.studio_submit(_MockRequest(request_data))
     _assert_json_result(result, {"result": "success"})
+    assert_equal(player.disable_cc_and_translations, request_data.pop("cc_disable"))
     for key in request_data:
         assert_equal(getattr(player, key), request_data[key])
 
@@ -199,10 +200,11 @@ def test_studio_submit_json_handler_another_valid_input():
         "expiration_time": "10000",
         "width": "320px",
         "height": "280px",
-
+        "cc_disable": True,
     }
     result = player.studio_submit(_MockRequest(request_data))
     _assert_json_result(result, {"result": "success"})
+    assert_equal(player.disable_cc_and_translations, request_data.pop("cc_disable"))
     for key in request_data:
         assert_equal(getattr(player, key), request_data[key])
 

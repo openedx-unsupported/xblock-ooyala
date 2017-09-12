@@ -23,8 +23,8 @@ def _generate_signature(partner_code, api_key, api_secret_key, video_code, expir
     slug = "/sas/embed_token/"
 
     # Request string with parameters
-    request_path = slug + partner_code + "/" + video_code
-    request_string = api_secret_key + http_method + request_path + api_key + expiry
+    request_path = slug + str(partner_code) + "/" + str(video_code)
+    request_string = str(api_secret_key) + http_method + request_path + str(api_key) + str(expiry)
 
     # Generate a SHA-256 digest in base64 for request string
     m = hashlib.sha256()
