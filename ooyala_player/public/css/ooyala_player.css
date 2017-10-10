@@ -36,6 +36,8 @@
     clear: both;
     width: 100%;
     margin-top: 10px;
+    padding-top: 10px;
+    line-height: 2;
 }
 
 .p3sdk-interactive-transcript-search-hit {
