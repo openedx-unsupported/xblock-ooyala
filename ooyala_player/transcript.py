@@ -8,7 +8,7 @@ from .utils import render_template
 FILES_API_ENDPOINT = "http://api.3playmedia.com/files?apikey={api_key}&q=video_id={video_id}"
 TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/translations?apikey={api_key_3play}"
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
-                   "/translations/{translation_id}/transcript.txt"
+                   "/translations/{translation_id}/transcript.html"
 
 RTL_LANGUAGES = ['Arabic']
 
@@ -37,7 +37,7 @@ class Transcript(object):
             # add source language in all cases
             self.translations = [{
                 'language': 'English',
-                'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}/transcript.txt".format(
+                'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}/transcript.html".format(
                     project_id=self.project_id, transcript_file_id=self.transcript_id
                 ),
                 'selected': True if 'en' == user_lang else False,
