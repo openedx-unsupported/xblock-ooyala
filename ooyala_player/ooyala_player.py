@@ -69,7 +69,7 @@ class OoyalaPlayerMixin(object):
         if available_attr:
             return available_attr
 
-        if getattr(self.runtime, 'service'):
+        if getattr(self.runtime, 'service') and hasattr(self, 'service_declaration'):
             settings_service = self.runtime.service(self, 'settings')
             if settings_service:
                 setting_name = self.DEFAULT_ATTRIBUTE_SETTINGS[attribute_name]
