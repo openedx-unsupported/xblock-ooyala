@@ -122,8 +122,10 @@ Running tests
 1. In a virtualenv, run
 
 ```bash
+$ pip install -r requirements.txt
 $ pip install -r tests/requirements.txt
 $ pushd $VIRTUAL_ENV/src/xblock-sdk/; make install; popd
+$ pushd $VIRTUAL_ENV/src/xblock-mentoring/; pip install -r requirements.txt; popd
 ```
 
 2. To run the tests, from the xblock-ooyala repository root:

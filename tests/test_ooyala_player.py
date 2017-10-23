@@ -14,7 +14,7 @@ from xblock.test.tools import (
     assert_false, TestRuntime
 )
 
-from ooyala_player import OoyalaPlayerBlock
+from ooyala_player import OoyalaPlayerBlock, OoyalaPlayerLightChildBlock
 from .utils import MockNow, MockRuntime
 
 runtime = MockRuntime()
@@ -29,7 +29,10 @@ class MockService(object):
         return self.settings_dict[block.__class__.__name__]
 
 
-class OoyalaPlayerTestCaseDefaultSettings(TestCase):
+class DefaultSettingsTestMixin(object):
+    """
+    Base class for testing the OoyalaPlayer block's default settings.
+    """
     DEFAULT_SETTING_NAME = 'EXAMPLE_SETTING'
     DEFAULT_SETTING_VALUE = 'xxx'
     REAL_ATTRIBUTE = 'api_secret_key'
@@ -38,15 +41,6 @@ class OoyalaPlayerTestCaseDefaultSettings(TestCase):
             DEFAULT_SETTING_NAME: 'xxx'
         }
     }
-
-    def setUp(self):
-        field_data = KvsFieldData(DictKeyValueStore())
-        runtime = TestRuntime(services={'settings': MockService(OoyalaPlayerBlock, self.XBLOCK_SETTINGS)})
-        self.player = OoyalaPlayerBlock(runtime, field_data, scope_ids=Mock(spec=ScopeIds))
-        self.player.unmixed_class = OoyalaPlayerBlock
-        self.player.DEFAULT_ATTRIBUTE_SETTINGS = {
-            self.REAL_ATTRIBUTE: self.DEFAULT_SETTING_NAME
-        }
 
     def test_nonexistant_attribute(self):
         with self.assertRaises(AttributeError):
@@ -59,6 +53,37 @@ class OoyalaPlayerTestCaseDefaultSettings(TestCase):
             instance_value = 'something new'
             setattr(self.player, self.REAL_ATTRIBUTE, instance_value)
             self.assertEqual(self.player.get_attribute_or_default(self.REAL_ATTRIBUTE), instance_value)
+
+
+class OoyalaPlayerTestCaseDefaultSettings(DefaultSettingsTestMixin, TestCase):
+    """
+    Test the OoyalaPlayerBlock's default settings.
+    """
+
+    def setUp(self):
+        field_data = KvsFieldData(DictKeyValueStore())
+        runtime = TestRuntime(services={'settings': MockService(OoyalaPlayerBlock, self.XBLOCK_SETTINGS)})
+        self.player = OoyalaPlayerBlock(runtime, field_data, scope_ids=Mock(spec=ScopeIds))
+        self.player.DEFAULT_ATTRIBUTE_SETTINGS = {
+            self.REAL_ATTRIBUTE: self.DEFAULT_SETTING_NAME
+        }
+
+
+class OoyalaPlayerLightChildTestCaseDefaultSettings(DefaultSettingsTestMixin, TestCase):
+    """
+    Test the OoyalaPlayerLightChildBlock's default settings.
+    """
+    # The LightChild block does not support the settings service declaration, so returned settings will be empty string.
+    DEFAULT_SETTING_VALUE = ''
+
+    def setUp(self):
+        runtime = TestRuntime(services={'settings': MockService(OoyalaPlayerBlock, self.XBLOCK_SETTINGS)})
+        parent = Mock()
+        parent.runtime = runtime
+        self.player = OoyalaPlayerLightChildBlock(parent)
+        self.player.DEFAULT_ATTRIBUTE_SETTINGS = {
+            self.REAL_ATTRIBUTE: self.DEFAULT_SETTING_NAME
+        }
 
 
 def test_player_token_is_disabled_by_default():
