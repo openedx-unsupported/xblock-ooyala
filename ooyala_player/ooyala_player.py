@@ -18,6 +18,7 @@ from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
+from xblock.exceptions import JsonHandlerError, NoSuchServiceError
 
 from mentoring.light_children import (
     LightChild,
@@ -196,7 +197,10 @@ class OoyalaPlayerMixin(object):
             'height': self.height,
             'autoplay': self.autoplay,
             'config_url': json_config_url,
+            'publish_completion_url': self.runtime.handler_url(self, 'publish_completion', None).rstrip('/?'),
+            'complete_percentage': settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
         })
+
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
@@ -266,6 +270,31 @@ class OoyalaPlayerMixin(object):
             'content_id': self.content_id,
         })
         return data
+
+    @XBlock.json_handler
+    def publish_completion(self, data, dispatch):  # pylint: disable=unused-argument
+        """
+        Entry point for completion for student_view.
+
+        Parameters:
+            data: JSON dict:
+                key: "completion"
+                value: float in range [0.0, 1.0]
+
+            dispatch: Ignored.
+        Return value: JSON response (200 on success, 400 for malformed data, 404 for not finding the completion service)
+        """
+        try:
+            completion_service = self.runtime.service(self, 'completion')
+        except NoSuchServiceError:
+            raise JsonHandlerError(404, u"Completion service not available")
+        if not completion_service or not completion_service.is_completion_enabled():
+            raise JsonHandlerError(404, u"Completion service not available")
+        if not 0.0 <= data['completion'] <= 1.0:
+            message = u"Invalid completion value {}. Must be in range [0.0, 1.0]"
+            raise JsonHandlerError(400, message.format(data['completion']))
+        self.runtime.publish(self, "completion", data)
+        return {"result": "ok"}
 
 
 @XBlock.wants("settings")
