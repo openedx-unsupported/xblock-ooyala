@@ -13,6 +13,7 @@ from StringIO import StringIO
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.http import Http404
 
 from webob import Response
 from xblock.core import XBlock
@@ -164,7 +165,6 @@ class OoyalaPlayerMixin(object):
         """
         Player view, displayed to the student
         """
-
         # For lightchild xblock, pass skin resource URL, otherwise use our custom handler method
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = reverse('xblock_resource_url', kwargs={
@@ -200,7 +200,6 @@ class OoyalaPlayerMixin(object):
             'publish_completion_url': self.runtime.handler_url(self, 'publish_completion', None).rstrip('/?'),
             'complete_percentage': settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
         })
-
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
@@ -284,16 +283,14 @@ class OoyalaPlayerMixin(object):
             dispatch: Ignored.
         Return value: JSON response (200 on success, 400 for malformed data, 404 for not finding the completion service)
         """
-        try:
-            completion_service = self.runtime.service(self, 'completion')
-        except NoSuchServiceError:
-            raise JsonHandlerError(404, u"Completion service not available")
-        if not completion_service or not completion_service.is_completion_enabled():
-            raise JsonHandlerError(404, u"Completion service not available")
+        if not data['completion']:
+            raise JsonHandlerError(400, 'Must have a completion from 0.0 and 1.0')
         if not 0.0 <= data['completion'] <= 1.0:
             message = u"Invalid completion value {}. Must be in range [0.0, 1.0]"
             raise JsonHandlerError(400, message.format(data['completion']))
-        self.runtime.publish(self, "completion", data)
+        value = data['completion']
+        if value >= settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
+            self.runtime.publish(self, "completion", {"completion": 1.0})
         return {"result": "ok"}
 
 
