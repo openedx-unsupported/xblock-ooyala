@@ -74,8 +74,10 @@ function OoyalaPlayerBlock(runtime, element) {
                         data: JSON.stringify({
                             completion: 1.0
                         }),
-                        error: function() {console.log('completion progress not saved.')}
-                });
+                        error: function() {
+                            console.log('Completion progress not saved.')
+                        }
+                    });
                 } else {
                     console.warn('publishCompletionUrl not defined');
                 }
