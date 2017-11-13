@@ -19,7 +19,7 @@ from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
-from xblock.exceptions import JsonHandlerError NoSuchServiceError
+from xblock.exceptions import JsonHandlerError, NoSuchServiceError
 
 from mentoring.light_children import (
     LightChild,
@@ -292,7 +292,7 @@ class OoyalaPlayerMixin(object):
 
         value = data['completion']
         if value >= settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
-            data['completion'] = 1.0
+            value = 1.0
         self.runtime.publish(self, "completion", {"completion": value})
         return {"result": 200}
 

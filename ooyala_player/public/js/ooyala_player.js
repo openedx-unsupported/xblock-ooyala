@@ -8,7 +8,6 @@ function OoyalaPlayerBlock(runtime, element) {
             this.transcriptLang = null;
             this.disableCC = this.data.ccDisabled == 'True';
             this.updateToken = null;
-            this.lastUpdate = 0;
             this.complete = false;
 
             this.cleanUp();
