@@ -41,7 +41,6 @@ function OoyalaPlayerBlock(runtime, element) {
                 ccLang: $('.ooyalaplayer', element).data('cc-lang'),
                 ccDisabled: $('.ooyalaplayer', element).data('cc-disabled'),
                 configUrl: $('.ooyalaplayer', element).data('config-url'),
-                publishCompletionUrl: $('.ooyalaplayer', element).data('publish-completion-url'),
                 completePercentage: $('.ooyalaplayer', element).data('complete-percentage')
             }
         },
@@ -66,20 +65,16 @@ function OoyalaPlayerBlock(runtime, element) {
             }
             if (context.complete === false && percentComplete >= context.data.completePercentage) {
                 context.complete = true;
-                if (context.data.publishCompletionUrl) {
-                    $.ajax({
-                        type: 'POST',
-                        url: context.data.publishCompletionUrl,
-                        data: JSON.stringify({
-                            completion: 1.0
-                        }),
-                        error: function() {
-                            console.log('Completion progress not saved.')
-                        }
-                    });
-                } else {
-                    console.warn('publishCompletionUrl not defined');
-                }
+                $.ajax({
+                    type: 'POST',
+                    url: runtime.handlerUrl(element, 'publish_completion'),
+                    data: JSON.stringify({
+                        completion: 1.0
+                    }),
+                    error: function () {
+                        console.log('Completion progress not saved.')
+                    }
+                });
             }
         },
         subscribePlayerEvents: function(){

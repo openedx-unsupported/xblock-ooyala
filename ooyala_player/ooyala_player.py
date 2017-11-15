@@ -197,7 +197,6 @@ class OoyalaPlayerMixin(object):
             'height': self.height,
             'autoplay': self.autoplay,
             'config_url': json_config_url,
-            'publish_completion_url': self.runtime.handler_url(self, 'publish_completion', '').rstrip('/?'),
             'complete_percentage': settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
         })
 
@@ -284,17 +283,14 @@ class OoyalaPlayerMixin(object):
         Return value: If an error occurs, JSON response (200 on success,
         400 for malformed data) or {"result": 200} for success.
         """
-        if not data['completion']:
-            raise JsonHandlerError(400, 'Must have a completion between 0.0 and 1.0')
-        if not 0.0 <= data['completion'] <= 1.0:
+        value = data.get('completion', None)
+        if not 0.0 <= value <= 1.0:
             message = u"Invalid completion value {}. Must be in range [0.0, 1.0]"
-            raise JsonHandlerError(400, message.format(data['completion']))
-
-        value = data['completion']
+            raise JsonHandlerError(400, message.format(value))
         if value >= settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
             value = 1.0
         self.runtime.publish(self, "completion", {"completion": value})
-        return {"result": 200}
+        return {"result": "success"}
 
 
 @XBlock.wants("settings")
