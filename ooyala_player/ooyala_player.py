@@ -45,6 +45,10 @@ class OoyalaPlayerMixin(object):
     """
     Base functionality for the ooyala player.
     """
+    # TODO: Replace these with CompletableXBlockMixin once it's available in the solutions fork
+    has_custom_completion = True
+    completion_method = "completable"
+
     DEFAULT_ATTRIBUTE_SETTINGS = {
         'api_key_3play': '3PLAY_API_KEY',
         'enable_player_token': 'ENABLE_PLAYER_TOKEN',
