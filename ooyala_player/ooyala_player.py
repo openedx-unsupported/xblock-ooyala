@@ -13,11 +13,13 @@ from StringIO import StringIO
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.http import Http404
 
 from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
+from xblock.exceptions import JsonHandlerError, NoSuchServiceError
 
 from mentoring.light_children import (
     LightChild,
@@ -43,6 +45,10 @@ class OoyalaPlayerMixin(object):
     """
     Base functionality for the ooyala player.
     """
+    # TODO: Replace these with CompletableXBlockMixin once it's available in the solutions fork
+    has_custom_completion = True
+    completion_method = "completable"
+
     DEFAULT_ATTRIBUTE_SETTINGS = {
         'api_key_3play': '3PLAY_API_KEY',
         'enable_player_token': 'ENABLE_PLAYER_TOKEN',
@@ -163,7 +169,6 @@ class OoyalaPlayerMixin(object):
         """
         Player view, displayed to the student
         """
-
         # For lightchild xblock, pass skin resource URL, otherwise use our custom handler method
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = reverse('xblock_resource_url', kwargs={
@@ -196,6 +201,7 @@ class OoyalaPlayerMixin(object):
             'height': self.height,
             'autoplay': self.autoplay,
             'config_url': json_config_url,
+            'complete_percentage': settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
         })
 
         JS_URLS = [
@@ -266,6 +272,29 @@ class OoyalaPlayerMixin(object):
             'content_id': self.content_id,
         })
         return data
+
+    @XBlock.json_handler
+    def publish_completion(self, data, dispatch):  # pylint: disable=unused-argument
+        """
+        Entry point for completion for student_view.
+
+        Parameters:
+            data: JSON dict:
+                key: "completion"
+                value: float in range [0.0, 1.0]
+
+            dispatch: Ignored.
+        Return value: If an error occurs, JSON response (200 on success,
+        400 for malformed data) or {"result": 200} for success.
+        """
+        value = data.get('completion', None)
+        if not 0.0 <= value <= 1.0:
+            message = u"Invalid completion value {}. Must be in range [0.0, 1.0]"
+            raise JsonHandlerError(400, message.format(value))
+        if value >= settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
+            value = 1.0
+        self.runtime.publish(self, "completion", {"completion": value})
+        return {"result": "success"}
 
 
 @XBlock.wants("settings")

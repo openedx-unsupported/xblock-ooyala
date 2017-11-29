@@ -7,6 +7,8 @@ function OoyalaPlayerBlock(runtime, element) {
             this.ccLang = this.data.ccLang;
             this.transcriptLang = null;
             this.disableCC = this.data.ccDisabled == 'True';
+            this.updateToken = null;
+            this.complete = false;
 
             this.cleanUp();
             this.createPlayer();
@@ -38,7 +40,8 @@ function OoyalaPlayerBlock(runtime, element) {
                 overlays: $('.ooyala-overlays .ooyala-overlay', element),
                 ccLang: $('.ooyalaplayer', element).data('cc-lang'),
                 ccDisabled: $('.ooyalaplayer', element).data('cc-disabled'),
-                configUrl: $('.ooyalaplayer', element).data('config-url')
+                configUrl: $('.ooyalaplayer', element).data('config-url'),
+                completePercentage: $('.ooyalaplayer', element).data('complete-percentage')
             }
         },
         cleanUp: function(){
@@ -49,6 +52,31 @@ function OoyalaPlayerBlock(runtime, element) {
             // ToDo: (APROS Specific) Remove after fixing APROS JS
             $('#course-lessons').off('mouseup');
         },
+        updateCompletion: function(context){
+            var playing = context.player.isPlaying();
+            var percentComplete = context.player.getPlayheadTime() / context.player.getDuration();
+            if (playing === true){
+                context.updateToken = window.setTimeout(function(){context.updateCompletion(context)}, 1000);
+            }
+            else {
+                // We are no longer going to track if this is playing.
+                clearTimeout(context.updateToken);
+                context.updateToken = null;
+            }
+            if (context.complete === false && percentComplete >= context.data.completePercentage) {
+                context.complete = true;
+                $.ajax({
+                    type: 'POST',
+                    url: runtime.handlerUrl(element, 'publish_completion'),
+                    data: JSON.stringify({
+                        completion: 1.0
+                    }),
+                    error: function () {
+                        console.log('Completion progress not saved.')
+                    }
+                });
+            }
+        },
         subscribePlayerEvents: function(){
             this.player.mb.subscribe(OOV4.EVENTS.PLAYBACK_READY, 'eventLogger', this.eventHandlers.playbackReady.bind(this));
             this.player.mb.subscribe(OOV4.EVENTS.PLAYED, 'eventLogger', this.eventHandlers.played.bind(this));
@@ -57,6 +85,7 @@ function OoyalaPlayerBlock(runtime, element) {
             this.player.mb.subscribe(OOV4.EVENTS.SEEK, 'eventLogger', this.eventHandlers.seek.bind(this));
             this.player.mb.subscribe(OOV4.EVENTS.FULLSCREEN_CHANGED, 'eventLogger', this.eventHandlers.fullScreenChanged.bind(this));
             this.player.mb.subscribe(OOV4.EVENTS.SAVE_PLAYER_SETTINGS, 'eventLogger', this.eventHandlers.playerSettingsSaved.bind(this));
+            this.player.mb.subscribe(OOV4.EVENTS.VC_PLAYING, 'eventLogger', this.eventHandlers.playerPlaying.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
             $('.transcript-track', element).on('click', this.eventHandlers.getTranscript.bind(this));
@@ -109,6 +138,7 @@ function OoyalaPlayerBlock(runtime, element) {
             },
             played: function(ev, payload){
                 publishEvent({event_type: 'xblock.ooyala.player.ended'});
+                this.updateCompletion(this);
             },
             playing: function(ev, payload){
                 publishEvent({
@@ -188,6 +218,14 @@ function OoyalaPlayerBlock(runtime, element) {
                     return;
                 
                 this.player.mb.publish('CcLanguageChanged', this.transcriptLang);
+            },
+
+            playerPlaying: function(ev, playload) {
+                // Clear out any previous updates, because its now changed.
+                if (this.updateToken){
+                    clearTimeout(this.updateToken);
+                }
+                this.updateCompletion(this);
             },
             playerSettingsSaved: function (ev, payload) {
                 this.ccLang = payload.closedCaptionOptions.language;
