@@ -37,6 +37,7 @@ from .utils import render_template
 
 log = logging.getLogger(__name__)
 SKIN_FILE_PATH = 'public/skin/skin.js'
+COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
 
 # Classes ###########################################################
 
@@ -201,7 +202,7 @@ class OoyalaPlayerMixin(object):
             'height': self.height,
             'autoplay': self.autoplay,
             'config_url': json_config_url,
-            'complete_percentage': settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
+            'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
         })
 
         JS_URLS = [
@@ -291,7 +292,7 @@ class OoyalaPlayerMixin(object):
         if not 0.0 <= value <= 1.0:
             message = u"Invalid completion value {}. Must be in range [0.0, 1.0]"
             raise JsonHandlerError(400, message.format(value))
-        if value >= settings.COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
+        if value >= COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
             value = 1.0
         self.runtime.publish(self, "completion", {"completion": value})
         return {"result": "success"}

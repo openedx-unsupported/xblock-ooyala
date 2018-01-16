@@ -18,6 +18,7 @@ function OoyalaPlayerBlock(runtime, element) {
             var playerParam = {
                 "pcode": this.data.pcode,
                 "playerBrandingId": this.data.playerId,
+                "embedToken": this.data.playerToken,
                 "autoplay": (this.data.autoplay === "True"),
                 "skin": {
                     "config": this.data.configUrl
@@ -371,23 +372,7 @@ function OoyalaPlayerBlock(runtime, element) {
         });
     }
 
-    function isIE9() {
-        return !!window.navigator.userAgent.match(/MSIE 9.0/);
-    }
-    
-    if(isIE9()){
-        // fallback to Player V3 for IE9
-        $('.ooyala-player-container').css({width: 'auto', height: '428px'});
-        OO.ready(function () {
-            var playerData = Player.getPlayerData();
-            var identifier = 'ooyala-player-'+ playerData.domId;
-            window[identifier] = OO.Player.create(playerData.domId, playerData.contentId, {
-                autoplay: (playerData.autoplay === "True")
-            });
-        });
-    }else{
-        OOV4.ready(function () {
-            Player.init();
-        });
-    }
+    OOV4.ready(function () {
+        Player.init();
+    });
 }
