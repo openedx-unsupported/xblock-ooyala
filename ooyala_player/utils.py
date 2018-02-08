@@ -16,6 +16,13 @@ log = logging.getLogger(__name__)
 
 # Functions #########################################################
 
+def _(text):
+    """
+    Dummy `gettext` replacement to make string extraction tools scrape strings marked for translation
+    """
+    return text
+
+
 def load_resource(resource_path):
     """
     Gets the content of a resource

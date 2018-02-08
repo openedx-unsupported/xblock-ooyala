@@ -1,8 +1,12 @@
+{% load i18n %}
+
 {% if self.transcript_id %}
 <div class="p3sdk-interactive-transcript">
     <div class="p3sdk-interactive-transcript-collapse-visible">
-         <a href="javascript:void(0);" class="p3sdk-interactive-transcript-collapse p3sdk-collapse-onload" label_when_expanded = "&nbsp;<span class='transcript-toggle'>Hide Transcript</span><span class='fa fa-sort-asc transcript-hide fa-2' aria-hidden='true'></span>" label_when_collapsed = "&nbsp;<span class='transcript-toggle'>Show Transcript</span><span class='fa fa-sort-desc transcript-show fa-2' aria-hidden='true'></span>">
-            Hide Transcript
+        {% trans "Hide Transcript" as label_when_expanded %}
+        {% trans "Show Transcript" as label_when_collapsed %}
+        <a href="javascript:void(0);" class="p3sdk-interactive-transcript-collapse p3sdk-collapse-onload" label_when_expanded = "&nbsp;<span class='transcript-toggle'>{{label_when_expanded}}</span><span class='fa fa-sort-asc transcript-hide fa-2' aria-hidden='true'></span>" label_when_collapsed = "&nbsp;<span class='transcript-toggle'>{{label_when_collapsed}}</span><span class='fa fa-sort-desc transcript-show fa-2' aria-hidden='true'></span>">
+            {{label_when_expanded}}
         </a>
     </div>
     <div class="transcript-header">
@@ -17,8 +21,8 @@
                 {% endfor %}
                 </ul>
                 <ul>
-                    <li><a class="print-transcript-btn" title="Print Transcript"></a></li>
-                    <li><a href="javascript:void(0);" class="transcript-download-btn" title="Download Transcript" download_format="pdf"></i>
+                    <li><a class="print-transcript-btn" title="{% trans 'Print Transcript' %}"></a></li>
+                    <li><a href="javascript:void(0);" class="transcript-download-btn" title="{% trans 'Download Transcript' %}" download_format="pdf"></i>
 </a></li>
                 </ul>
             </li>
