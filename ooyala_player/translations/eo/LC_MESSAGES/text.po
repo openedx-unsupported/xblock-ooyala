@@ -1,0 +1,285 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-02-23 19:59+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: eo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Display Name"
+msgstr "Dïspläý Nämé Ⱡ'σяєм ιρѕυм ∂σłσя ѕ#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "This name appears in the horizontal navigation at the top of the page."
+msgstr ""
+"Thïs nämé äppéärs ïn thé hörïzöntäl nävïgätïön ät thé töp öf thé pägé. "
+"Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєтυя #"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Ooyala Player"
+msgstr "Ööýälä Pläýér Ⱡ'σяєм ιρѕυм ∂σłσя ѕι#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Content Id"
+msgstr "Çöntént Ìd Ⱡ'σяєм ιρѕυм ∂σłσ#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Identifier for the Content Id."
+msgstr "Ìdéntïfïér för thé Çöntént Ìd. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢т#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "3Play Transcript Id"
+msgstr "3Pläý Tränsçrïpt Ìd Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт,#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Identifier for the 3Play Transcript File"
+msgstr ""
+"Ìdéntïfïér för thé 3Pläý Tränsçrïpt Fïlé Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, "
+"¢σηѕє¢тєтυя#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Closed Captions Language"
+msgstr "Çlöséd Çäptïöns Längüägé Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢ση#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "User's preference for closed captions language"
+msgstr ""
+"Ûsér's préférénçé för çlöséd çäptïöns längüägé Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, "
+"¢σηѕє¢тєтυя α#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Turn Off Closed Captions and Translated transcripts"
+msgstr ""
+"Türn Öff Çlöséd Çäptïöns änd Tränslätéd tränsçrïpts Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт "
+"αмєт, ¢σηѕє¢тєтυя α#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Hides the CC button and transcript languages selection for this video"
+msgstr ""
+"Hïdés thé ÇÇ ßüttön änd tränsçrïpt längüägés séléçtïön för thïs vïdéö Ⱡ'σяєм"
+" ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєтυя #"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Enable Player Autoplay"
+msgstr "Énäßlé Pläýér Àütöpläý Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Set to True if you the player to automatically play."
+msgstr ""
+"Sét tö Trüé ïf ýöü thé pläýér tö äütömätïçällý pläý. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт "
+"αмєт, ¢σηѕє¢тєтυя α#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Enable Player Token"
+msgstr "Énäßlé Pläýér Tökén Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт,#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid ""
+"Set to True if a player token is required, e.g. if streaming videos to the "
+"mobile app."
+msgstr ""
+"Sét tö Trüé ïf ä pläýér tökén ïs réqüïréd, é.g. ïf stréämïng vïdéös tö thé "
+"mößïlé äpp. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Partner Code"
+msgstr "Pärtnér Çödé Ⱡ'σяєм ιρѕυм ∂σłσя ѕ#"
+
+#: ooyala_player/ooyala_player.py
+msgid "Required for V4 Player. Also needed to generate a player token."
+msgstr ""
+"Réqüïréd för V4 Pläýér. Àlsö néédéd tö généräté ä pläýér tökén. Ⱡ'σяєм ιρѕυм"
+" ∂σłσя ѕιт αмєт, ¢σηѕє¢тєтυя α#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+#: ooyala_player/templates/html/ooyala_player_edit.html
+#: ooyala_player/templates/html/ooyala_player_edit.html
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Needed to generate a player token."
+msgstr ""
+"Néédéd tö généräté ä pläýér tökén. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєт#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Api SecRet Key"
+msgstr "Àpï SéçRét Kéý Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "3play Api Key"
+msgstr "3pläý Àpï Kéý Ⱡ'σяєм ιρѕυм ∂σłσя ѕι#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "3play Api Key for transcript."
+msgstr "3pläý Àpï Kéý för tränsçrïpt. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Player Width"
+msgstr "Pläýér Wïdth Ⱡ'σяєм ιρѕυм ∂σłσя ѕ#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "The width of the player in pixels."
+msgstr ""
+"Thé wïdth öf thé pläýér ïn pïxéls. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєт#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Player Height"
+msgstr "Pläýér Héïght Ⱡ'σяєм ιρѕυм ∂σłσя ѕι#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "The height of the player in pixels."
+msgstr ""
+"Thé héïght öf thé pläýér ïn pïxéls. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєт#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Expiration Time"
+msgstr "Éxpïrätïön Tïmé Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт α#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Expiration time in seconds. Needed to generate a player token."
+msgstr ""
+"Éxpïrätïön tïmé ïn séçönds. Néédéd tö généräté ä pläýér tökén. Ⱡ'σяєм ιρѕυм "
+"∂σłσя ѕιт αмєт, ¢σηѕє¢тєтυя α#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid "Fire Progress Event on Student View"
+msgstr ""
+"Fïré Prögréss Évént ön Stüdént Vïéw Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєт#"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+msgid ""
+"Set to True if you would like to get a progress event in the event stream "
+"when the user views this xBlock."
+msgstr ""
+"Sét tö Trüé ïf ýöü wöüld lïké tö gét ä prögréss évént ïn thé évént stréäm "
+"whén thé üsér vïéws thïs xBlöçk. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт #"
+
+#: ooyala_player/ooyala_player.py ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "XML Configuration"
+msgstr "XML Çönfïgürätïön Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмє#"
+
+#: ooyala_player/ooyala_player.py
+msgid "Missing event_type in JSON data"
+msgstr "Mïssïng évént_týpé ïn JSÖN dätä Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢т#"
+
+#: ooyala_player/ooyala_player.py
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Api Key"
+msgstr "Àpï Kéý Ⱡ'σяєм ιρѕυм #"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Title"
+msgstr "Tïtlé Ⱡ'σяєм ιρѕ#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "The title of the Ooyala Player that is displayed to the user"
+msgstr ""
+"Thé tïtlé öf thé Ööýälä Pläýér thät ïs dïspläýéd tö thé üsér Ⱡ'σяєм ιρѕυм "
+"∂σłσя ѕιт αмєт, ¢σηѕє¢тєтυя α#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "This is the Ooyala Content Identifier"
+msgstr ""
+"Thïs ïs thé Ööýälä Çöntént Ìdéntïfïér Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, "
+"¢σηѕє¢тєтυ#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Transcript File Id"
+msgstr "Tränsçrïpt Fïlé Ìd Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "This is the 3Play Transcript File Identifier"
+msgstr ""
+"Thïs ïs thé 3Pläý Tränsçrïpt Fïlé Ìdéntïfïér Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, "
+"¢σηѕє¢тєтυя #"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Hide CC and Translations"
+msgstr "Hïdé ÇÇ änd Tränslätïöns Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢ση#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Hide the CC button and transcript languages selection for this video"
+msgstr ""
+"Hïdé thé ÇÇ ßüttön änd tränsçrïpt längüägés séléçtïön för thïs vïdéö Ⱡ'σяєм "
+"ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢тєтυя #"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "True"
+msgstr "Trüé Ⱡ'σяєм ι#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "False"
+msgstr "Fälsé Ⱡ'σяєм ιρѕ#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Api Secret Key"
+msgstr "Àpï Séçrét Kéý Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "3Play Api Key"
+msgstr "3Pläý Àpï Kéý Ⱡ'σяєм ιρѕυм ∂σłσя ѕι#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "3Play Api Key for transcript."
+msgstr "3Pläý Àpï Kéý för tränsçrïpt. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє¢#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Player width as a CSS length or percentage."
+msgstr ""
+"Pläýér wïdth äs ä ÇSS léngth ör pérçéntägé. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, "
+"¢σηѕє¢тєтυя #"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Player height as a CSS length or percentage."
+msgstr ""
+"Pläýér héïght äs ä ÇSS léngth ör pérçéntägé. Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, "
+"¢σηѕє¢тєтυя #"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "// JS crashes when empty //"
+msgstr "// JS çräshés whén émptý // Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт, ¢σηѕє#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Save"
+msgstr "Sävé Ⱡ'σяєм ι#"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html
+msgid "Cancel"
+msgstr "Çänçél Ⱡ'σяєм ιρѕυ#"
+
+#: ooyala_player/templates/html/ooyala_transcript.html
+msgid "Hide Transcript"
+msgstr "Hïdé Tränsçrïpt Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт α#"
+
+#: ooyala_player/templates/html/ooyala_transcript.html
+msgid "Show Transcript"
+msgstr "Shöw Tränsçrïpt Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт α#"
+
+#: ooyala_player/templates/html/ooyala_transcript.html
+msgid "Print Transcript"
+msgstr "Prïnt Tränsçrïpt Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αм#"
+
+#: ooyala_player/templates/html/ooyala_transcript.html
+msgid "Download Transcript"
+msgstr "Döwnlöäd Tränsçrïpt Ⱡ'σяєм ιρѕυм ∂σłσя ѕιт αмєт,#"

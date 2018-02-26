@@ -31,7 +31,7 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .utils import render_template
+from .utils import render_template, _
 
 # Globals ###########################################################
 
@@ -305,111 +305,111 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
     """
 
     display_name = String(
-        display_name="Display Name",
-        help="This name appears in the horizontal navigation at the top of the page.",
+        display_name=_("Display Name"),
+        help=_("This name appears in the horizontal navigation at the top of the page."),
         scope=Scope.settings,
-        default="Ooyala Player"
+        default=_("Ooyala Player")
     )
 
     content_id = String(
-        display_name="Content Id",
-        help="Identifier for the Content Id.",
+        display_name=_("Content Id"),
+        help=_("Identifier for the Content Id."),
         scope=Scope.content,
         default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
     transcript_file_id = String(
-        display_name="3Play Transcript Id",
-        help="Identifier for the 3Play Transcript File",
+        display_name=_("3Play Transcript Id"),
+        help=_("Identifier for the 3Play Transcript File"),
         scope=Scope.content,
         default=''
     )
 
     cc_language_preference = String(
-        display_name="Closed Captions Language",
-        help="User's preference for closed captions language",
+        display_name=_("Closed Captions Language"),
+        help=_("User's preference for closed captions language"),
         scope=Scope.user_info,
         default='en'
     )
 
     disable_cc_and_translations = Boolean(
-        display_name="Turn Off Closed Captions and Translated transcripts",
-        help="Hides the CC button and transcript languages selection for this video",
+        display_name=_("Turn Off Closed Captions and Translated transcripts"),
+        help=_("Hides the CC button and transcript languages selection for this video"),
         scope=Scope.settings,
         default=False
     )
 
     autoplay = Boolean(
-        display_name="Enable Player Autoplay",
-        help='Set to True if you the player to automatically play.',
+        display_name=_("Enable Player Autoplay"),
+        help=_("Set to True if you the player to automatically play."),
         scope=Scope.content,
         default=True
     )
 
     enable_player_token = Boolean(
-        display_name="Enable Player Token",
-        help='Set to True if a player token is required, e.g. if streaming videos to the mobile app.',
+        display_name=_("Enable Player Token"),
+        help=_("Set to True if a player token is required, e.g. if streaming videos to the mobile app."),
         scope=Scope.content,
         default=False
     )
 
     partner_code = String(
-        display_name="Partner Code",
-        help='Required for V4 Player. Also needed to generate a player token.',
+        display_name=_("Partner Code"),
+        help=_("Required for V4 Player. Also needed to generate a player token."),
         scope=Scope.content,
         default=''
     )
 
     api_key = String(
         display_name="Api Key",
-        help='Needed to generate a player token.',
+        help=_("Needed to generate a player token."),
         scope=Scope.content,
         default=''
     )
 
     api_secret_key = String(
-        display_name="Api SecRet Key",
-        help='Needed to generate a player token.',
+        display_name=_("Api SecRet Key"),
+        help=_("Needed to generate a player token."),
         scope=Scope.content,
         default=''
     )
 
     api_key_3play = String(
-        display_name="3play Api Key",
-        help='3play Api Key for transcript.',
+        display_name=_("3play Api Key"),
+        help=_("3play Api Key for transcript."),
         scope=Scope.content,
         default=''
     )
 
     width = String(
-        display_name="Player Width",
-        help='The width of the player in pixels.',
+        display_name=_("Player Width"),
+        help=_("The width of the player in pixels."),
         scope=Scope.content,
         default="100%"
     )
 
     height = String(
-        display_name="Player Height",
-        help='The height of the player in pixels.',
+        display_name=_("Player Height"),
+        help=_('The height of the player in pixels.'),
         scope=Scope.content,
         default="100%"
     )
 
     expiration_time = Integer(
-        display_name="Expiration Time",
-        help='Expiration time in seconds. Needed to generate a player token.',
+        display_name=_("Expiration Time"),
+        help=_('Expiration time in seconds. Needed to generate a player token.'),
         scope=Scope.content,
         default=600
     )
 
     fire_progress_event_on_student_view = Boolean(
-        display_name="Fire Progress Event on Student View",
-        help='Set to True if you would like to get a progress event in the event stream when the user views this xBlock.',
+        display_name=_("Fire Progress Event on Student View"),
+        help=_('Set to True if you would like to get a progress event in the event stream when the user views this xBlock.'),
         scope=Scope.content,
         default=True
     )
 
-    xml_config = String(help="XML Configuration", default='<ooyala>\n</ooyala>',
+    xml_config = String(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
                         scope=Scope.content)
 
     def local_resource_url(self, block, uri):
@@ -429,7 +429,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         try:
             event_type = data.pop('event_type')
         except KeyError as e:
-            return {'result': 'error', 'message': 'Missing event_type in JSON data'}
+            return {'result': 'error', 'message': self.ugettext('Missing event_type in JSON data')}
 
         data['content_id'] = self.content_id
         data['user_id'] = self.scope_ids.user_id
@@ -526,111 +526,111 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
     lightchild_block_type = 'ooyala-player' # used by LightChild.local_resource_url
 
     display_name = LCString(
-        display_name="Display Name",
-        help="This name appears in the horizontal navigation at the top of the page.",
+        display_name=_("Display Name"),
+        help=_("This name appears in the horizontal navigation at the top of the page."),
         scope=LCScope.content,
-        default="Ooyala Player"
+        default=_("Ooyala Player")
     )
 
     content_id = LCString(
-        display_name="Content Id",
-        help="Identifier for the Content Id.",
+        display_name=_("Content Id"),
+        help=_("Identifier for the Content Id."),
         scope=LCScope.content,
         default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
     transcript_file_id = LCString(
-        display_name="3Play Transcript Id",
-        help="Identifier for the 3Play Transcript File",
+        display_name=_("3Play Transcript Id"),
+        help=_("Identifier for the 3Play Transcript File"),
         scope=LCScope.content,
         default=''
     )
 
     cc_language_preference = LCString(
-        display_name="Closed Captions Language",
-        help="User's preference for closed captions language",
+        display_name=_("Closed Captions Language"),
+        help=_("User's preference for closed captions language"),
         scope=LCScope.user_state,
         default='en'
     )
 
     disable_cc_and_translations = LCBoolean(
-        display_name="Turn Off Closed Captions and Translated transcripts",
-        help="Hides the CC button and transcript languages selection for this video",
+        display_name=_("Turn Off Closed Captions and Translated transcripts"),
+        help=_("Hides the CC button and transcript languages selection for this video"),
         scope=LCScope.content,
         default=False
     )
 
     autoplay = LCBoolean(
-        display_name="Enable Player Autoplay",
-        help='Set to True if you the player to automatically play.',
+        display_name=_("Enable Player Autoplay"),
+        help=_('Set to True if you the player to automatically play.'),
         scope=LCScope.content,
         default=False
     )
 
     enable_player_token = LCBoolean(
-        display_name="Enable Player Token",
-        help='Set to True if a player token is required, e.g. if streaming videos to the mobile app.',
+        display_name=_("Enable Player Token"),
+        help=_('Set to True if a player token is required, e.g. if streaming videos to the mobile app.'),
         scope=LCScope.content,
         default=False
     )
 
     partner_code = LCString(
-        display_name="Partner Code",
-        help='Needed to generate a player token.',
+        display_name=_("Partner Code"),
+        help=_('Needed to generate a player token.'),
         scope=LCScope.content,
         default=''
     )
 
     api_key = LCString(
-        display_name="Api Key",
-        help='Needed to generate a player token.',
+        display_name=_("Api Key"),
+        help=_('Needed to generate a player token.'),
         scope=LCScope.content,
         default=''
     )
 
     api_secret_key = LCString(
-        display_name="Api SecRet Key",
-        help='Needed to generate a player token.',
+        display_name=_("Api SecRet Key"),
+        help=_('Needed to generate a player token.'),
         scope=LCScope.content,
         default=''
     )
 
     api_key_3play = LCString(
-        display_name="3play Api Key",
-        help='3play Api Key for transcript.',
+        display_name=_("3play Api Key"),
+        help=_('3play Api Key for transcript.'),
         scope=LCScope.content,
         default=''
     )
 
     width = LCString(
-        display_name="Player Width",
-        help='The width of the player in pixels.',
+        display_name=_("Player Width"),
+        help=_('The width of the player in pixels.'),
         scope=LCScope.content,
         default="100%"
     )
 
     height = LCString(
-        display_name="Player Height",
-        help='The height of the player in pixels.',
+        display_name=_("Player Height"),
+        help=_('The height of the player in pixels.'),
         scope=LCScope.content,
         default="428px"
     )
 
     expiration_time = Integer(
-        display_name="Expiration Time",
-        help='Expiration time in seconds. Needed to generate a player token.',
+        display_name=_("Expiration Time"),
+        help=_('Expiration time in seconds. Needed to generate a player token.'),
         scope=LCScope.content,
         default=600
     )
 
     fire_progress_event_on_student_view = LCBoolean(
-        display_name="Fire Progress Event on Student View",
-        help='Set to True if you would like to get a progress event in the event stream when the user views this xBlock.',
+        display_name=_("Fire Progress Event on Student View"),
+        help=_('Set to True if you would like to get a progress event in the event stream when the user views this xBlock.'),
         scope=LCScope.content,
         default=True
     )
 
-    xml_config = LCString(help="XML Configuration", default='<ooyala>\n</ooyala>',
+    xml_config = LCString(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
                         scope=LCScope.content)
 
     @classmethod
