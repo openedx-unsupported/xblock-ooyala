@@ -35,7 +35,7 @@ if (!OOV4.HM)
   OOV4.HM = window.Hazmat.noConflict().create(hazmatConfig);
 }
 
-},{"./InitOOUnderscore.js":3,"hazmat":6}],3:[function(require,module,exports){
+},{"./InitOOUnderscore.js":3,"hazmat":7}],3:[function(require,module,exports){
 require("./InitOO.js");
 
 if (!window._)
@@ -48,7 +48,7 @@ if (!OOV4._)
   OOV4._ = window._.noConflict();
 }
 
-},{"./InitOO.js":1,"underscore":7}],4:[function(require,module,exports){
+},{"./InitOO.js":1,"underscore":8}],4:[function(require,module,exports){
   /**
    * @namespace OOV4
    */
@@ -127,6 +127,21 @@ if (!OOV4._)
        * @event OOV4.EVENTS#SET_EMBED_CODE
        */
       SET_EMBED_CODE : 'setEmbedCode',
+
+      /**
+       * An attempt has been made to set the embed code by Ooyala Ads.
+       * If you are developing a plugin, reset the internal state since the player is switching to a new asset.
+       * Depending on the context, the handler is called with:
+       *   <ul>
+       *     <li>The ID (embed code) of the asset.</li>
+       *     <li>The ID (embed code) of the asset, with options.</li>
+       *   </ul>
+       *
+       *
+       * @event OOV4.EVENTS#SET_EMBED_CODE_AFTER_OOYALA_AD
+       * @private
+       */
+      SET_EMBED_CODE_AFTER_OOYALA_AD : 'setEmbedCodeAfterOoyalaAd',
 
       /**
        * The player's embed code has changed. The handler is called with two parameters:
@@ -291,6 +306,15 @@ if (!OOV4._)
       METADATA_FETCHED: 'metadataFetched',
 
       /**
+       * The skin metadata, which is set in Backlot, has been retrieved.
+       * The handler is called with the JSON object containing metadata set in Backlot for the current asset.
+       * This is used by the skin plug-in to deep merge with the embedded skin config.<br/><br/>
+       *
+       * @event OOV4.EVENTS#SKIN_METADATA_FETCHED
+       */
+      SKIN_METADATA_FETCHED: 'skinMetadataFetched',
+
+      /**
        * The thumbnail metadata needed for thumbnail previews while seeking has been fetched and will be
        * passed through to the event handlers subscribing to this event.
        * Thumbnail metadata will have the following structure:
@@ -342,9 +366,15 @@ if (!OOV4._)
 
       /**
        * Play has been called for the first time. <br/><br/>
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The unix timestamp of the initial playtime</li>
+       *   <li>True if the playback request was the result of an autoplay, false or undefined otherwise</li>
+       * </ul>
        *
        *
        * @event OOV4.EVENTS#INITIAL_PLAY
+       * @public
        */
       INITIAL_PLAY: "initialPlay", // when play is called for the very first time ( in start screen )
 
@@ -378,6 +408,7 @@ if (!OOV4._)
        * The handler is called with the following arguments:
        * <ul>
        *   <li>The url of the video that is buffering.</li>
+       *   <li>The playhead position.</li>
        *   <li>The id of the video that is buffering (as defined by the module that controls it).</li>
        * </ul><br/><br/>
        *
@@ -611,6 +642,39 @@ if (!OOV4._)
       VOLUME_CHANGED: 'volumeChanged',
 
       /**
+       * A request to change the mute state has been made.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The desired mute state of the video element.</li>
+       *   <li>The id of the video on which to mute (as defined by the module that controls it).
+       *        If null or undefined, all video elements volume will be changed</li>
+       *   <li>Whether or not the request was from a user action. True if it was from a user action,
+       *        false otherwise.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#CHANGE_MUTE_STATE
+       * @public
+       */
+      CHANGE_MUTE_STATE: 'changeMuteState',
+
+      /**
+       * The mute state has changed.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The current mute state of the video element.</li>
+       *   <li>The id of the video that was muted (as defined by the module that controls it).</li>
+       *   <li>Whether or not the mute state was changed for muted autoplay. True if it was
+       *        done for muted autoplay, false or undefined otherwise.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#MUTE_STATE_CHANGED
+       * @public
+       */
+      MUTE_STATE_CHANGED: 'muteStateChanged',
+
+      /**
        * Controls are shown.<br/><br/>
        *
        *
@@ -635,6 +699,112 @@ if (!OOV4._)
        * @event OOV4.EVENTS#ERROR
        */
       ERROR: 'error',
+
+      /**
+       * An api related error has occurred. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The url requested.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#API_ERROR
+       * @public
+       */
+      API_ERROR: 'apiError',
+
+      /**
+       * Event containing the bitrate used at the start of playback. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The bitrate in kbps.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#BITRATE_INITIAL
+       * @public
+       */
+      BITRATE_INITIAL: 'bitrateInitial',
+
+      /**
+       * Event containing the bitrate used five seconds into playback. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The bitrate in kbps.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#BITRATE_FIVE_SEC
+       * @public
+       */
+      BITRATE_FIVE_SEC: 'bitrateFiveSec',
+
+      /**
+       * Event containing the bitrate used thirty seconds into playback. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The bitrate in kbps.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#BITRATE_STABLE
+       * @public
+       */
+      BITRATE_STABLE: 'bitrateStable',
+
+      /**
+       * A playback error has occurred before the video start. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The la url if DRM used.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#PLAYBACK_START_ERROR
+       * @public
+       */
+      PLAYBACK_START_ERROR: 'playbackStartError',
+
+      /**
+       * A playback error has occurred midstream. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The playhead position.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#PLAYBACK_MIDSTREAM_ERROR
+       * @public
+       */
+      PLAYBACK_MIDSTREAM_ERROR: 'playbackMidstreamError',
+
+      /**
+       * A plugin has been loaded successfully. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The player core version.</li>
+       *   <li>The plugin type: ad, video, analytics, playtest, skin.</li>
+       *   <li>The plugin name.</li>
+       *   <li>The time it took to load the plugin.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#PLAYBACK_MIDSTREAM_ERROR
+       * @public
+       */
+      PLUGIN_LOADED: 'pluginLoaded',
+
+      /**
+       * The video plugin has sent an error message. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       * </ul>
+       *
+       *
+       * @event OOV4.EVENTS#VC_PLUGIN_ERROR
+       * @public
+       */
+      VC_PLUGIN_ERROR: 'videoPluginError',
 
       /**
        * The player is currently being destroyed, and anything created by your module must also be deleted.
@@ -813,6 +983,17 @@ if (!OOV4._)
       VC_PLAY: 'videoPlay',
 
       /**
+        * Notifies the video element to play.
+        * The handler is called with the following arguments:
+        * <ul>
+        *   <li>The id of the video to play (as defined by the module that controls it).</li>
+        * </ul>
+        * @event OOV4.EVENTS#PLAY_VIDEO_ELEMENT
+        * @private
+        */
+      PLAY_VIDEO_ELEMENT: 'playVideoElement',
+
+      /**
        * The video element has detected a command to play and will begin playback.
        * The handler is called with the following arguments:
        * <ul>
@@ -944,6 +1125,144 @@ if (!OOV4._)
        * @public
        */
       VC_TAG_FOUND: 'videoTagFound',
+
+      /**
+       * Notifies the player that the initial playback of content has started.
+       * <ul>
+       *   <li>The time since the initial play request was made (number)</li>
+       *   <li>Boolean parameter. True if video was autoplayed, false otherwise (boolean)</li>
+       *   <li>Boolean parameter. True if the video had an ad play before it started.
+       *       This includes midrolls that play before content due to an initial playhead time > 0.
+       *       False otherwise  (number)</li>(boolean)</li>
+       *   <li>The initial position of the playhead upon playback start. (number)</li>
+       *   <li>The video plugin used for playback (string)</li>
+       *   <li>The browser technology used - HTML5, Flash, Mixed, or Other (string)</li>
+       *   <li>The stream encoding type, i.e. MP4, HLS, Dash, etc. (string)</li>
+       *   <li>The URL of the content being played (string)</li>
+       *   <li>The DRM being used, none if there is no DRM (string)</li>
+       *   <li>Boolean parameter. True if a live stream is playing. False if VOD.(boolean)</li>
+       * </ul>
+       * @event OOV4.EVENTS#INITIAL_PLAY_STARTING
+       * @public
+       */
+      INITIAL_PLAY_STARTING: 'initialPlayStarting',
+
+      /**
+       * This event is triggered when an ad sdk has been loaded successfully. The handler is called with:
+       * <ul>
+       *   <li>The ad plugin loaded.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_SDK_LOADED
+       */
+      AD_SDK_LOADED: 'adSdkLoaded',
+
+      /**
+       * This event is triggered when there is an failure to load the ad sdk.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin that failed to load.</li>
+       *   <li>The player core version.</li>
+       *   <li>The error message associated with the load failure.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_SDK_LOAD_FAILED
+       */
+      AD_SDK_LOAD_FAILED: 'adSdkLoadFailed',
+
+      /**
+       * This event is triggered whenever an ad is requested.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_REQUEST
+       */
+      AD_REQUEST: 'adRequest',
+
+      /**
+       * This event is triggered upon receiving a successful response for an ad request.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The ad request response time.</li>
+       *   <li>Time from initial play to ad request success</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_REQUEST_SUCCESS
+       */
+      AD_REQUEST_SUCCESS: 'adRequestSuccess',
+
+      /**
+       * This event is triggered upon receiving an error for an ad request.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The final ad tag after macro substitution</li>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>If there was a request timeout or not.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_REQUEST_ERROR
+       */
+      AD_REQUEST_ERROR: 'adRequestError',
+
+
+      /**
+       * This event is triggered upon receiving an empty response for an ad request.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The final ad tag after macro substitution</li>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_REQUEST_EMPTY
+       */
+      AD_REQUEST_EMPTY: 'adRequestEmpty',
+
+      /**
+       * This event is triggered upon when an error occurs trying to play an ad.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The final ad tag after macro substitution</li>
+       *   <li>The list of all video plugins.</li>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The media file URL.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_PLAYBACK_ERROR
+       */
+      AD_PLAYBACK_ERROR: 'adPlaybackError',
+
+      /**
+       * This event is triggered when the ad plugin sdk records an impression event.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The ad load time - time between ad request success and first frame started.</li>
+       *   <li>The ad protocol: VAST or VPAID.</li>
+       *   <li>The ad type: linearVideo, linearOverlay, nonLinearVideo, nonLinearOverlay.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_SDK_IMPRESSION
+       */
+      AD_SDK_IMPRESSION: 'adSdkImpression',
+
+      /**
+       * This event is triggered when an ad has completed playback.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time passed since the ad impression.</li>
+       *   <li>If the ad was skipped or not.</li>
+       * </ul>
+       * @event OOV4.EVENTS#AD_COMPLETED
+       */
+      AD_COMPLETED: 'adCompleted',
 
       WILL_FETCH_ADS: 'willFetchAds',
       DISABLE_SEEKING: 'disableSeeking',
@@ -1095,6 +1414,15 @@ if (!OOV4._)
        */
       SHOW_AD_MARQUEE: "showAdMarquee",
 
+      /**
+       * An ad plugin will publish this event whenever the ad SDK throws an ad event. Typical ad events are
+       * impressions, clicks, quartiles, etc. <br/><br/>
+       *
+       * @event OOV4.EVENTS#SDK_AD_EVENT
+       * @private
+       */
+      SDK_AD_EVENT: "sdkAdEvent",
+
       // Window published beforeUnload event. It's still user cancellable.
       /**
        * The window, document, and associated resources are being unloaded.
@@ -1119,6 +1447,20 @@ if (!OOV4._)
       // DiscoveryApi publishes these, OoyalaAnalytics listens for them and propagates to reporter.js
       REPORT_DISCOVERY_IMPRESSION: "reportDiscoveryImpression",
       REPORT_DISCOVERY_CLICK: "reportDiscoveryClick",
+
+      /**
+       * Denotes that the playlist plugin is ready and has configured the playlist Pod(s).
+       * @event OOV4.EVENTS#PLAYLISTS_READY
+       * @public
+       */
+      PLAYLISTS_READY: 'playlistReady',
+
+      /**
+       * It shows that a type of a video was changed
+       * @event OOV4.EVENTS#VIDEO_TYPE_CHANGED
+       * @public
+       */
+      VIDEO_TYPE_CHANGED: "videoTypeChanged",
 
       /**
        * The UI layer has finished its initial render. The handler is called with an object
@@ -1388,6 +1730,14 @@ if (!OOV4._)
       __end_marker : true
     };
 
+    OOV4.PLUGINS = {
+      ADS: "ads",
+      VIDEO: "video",
+      ANALYTICS: "analytics",
+      PLAYLIST: "playlist",
+      SKIN: "skin"
+    };
+
     OOV4.VIDEO = {
       MAIN: "main",
       ADS: "ads",
@@ -1476,6 +1826,14 @@ if (!OOV4._)
          * @type {string}
          */
         MP4: "mp4",
+
+        /**
+         * @description <code>OOV4.VIDEO.ENCODING.YOUTUBE ('youtube')</code>:
+         *   An encoding type for non-drm youtube streams.
+         * @constant OOV4.VIDEO.ENCODING.YOUTUBE
+         * @type {string}
+         */
+        YOUTUBE:"youtube",
 
         /**
          * @description <code>OOV4.VIDEO.ENCODING.RTMP ('rtmp')</code>:
@@ -1686,7 +2044,7 @@ if (!OOV4._)
 
     OOV4.TEMPLATES = {
       RANDOM_PLACE_HOLDER: ['[place_random_number_here]', '<now>', '[timestamp]', '<rand-num>', '[cache_buster]', '[random]'],
-      REFERAK_PLACE_HOLDER: ['[referrer_url]', '[LR_URL]'],
+      REFERAK_PLACE_HOLDER: ['[referrer_url]', '[LR_URL]', '[description_url]'],
       EMBED_CODE_PLACE_HOLDER: ['[oo_embedcode]'],
       MESSAGE : '\
                   <table width="100%" height="100%" bgcolor="black" style="padding-left:55px; padding-right:55px; \
@@ -1937,8 +2295,24 @@ if (!OOV4._)
       return (parseInt(macOs[1],10) >= 10 && parseInt(macOs[2],10) >= 7);
     }());
 
+    OOV4.macOsSafariVersion = (function() {
+      try {
+        if (OOV4.isMacOs && OOV4.isSafari) {
+          return parseInt(window.navigator.userAgent.match(/Version\/(\d+)/)[1], 10);
+        } else {
+          return null;
+        }
+      } catch(err) {
+        return null;
+      }
+    }());
+
     OOV4.isKindleHD = (function(){
       return !!OOV4.os.match(/Silk\/2/);
+    }());
+
+    OOV4.supportMSE = (function() {
+      return 'MediaSource' in window || 'WebKitMediaSource' in window || 'mozMediaSource' in window || 'msMediaSource' in window;
     }());
 
     OOV4.supportAds = (function() {
@@ -2022,16 +2396,21 @@ if (!OOV4._)
     /**
      * Determines if a single video element should be used.<br/>
      * <ul><li>Use single video element on iOS, all versions</li>
-     *     <li>Use single video element on Android < v4.0</li>
+     *     <li>Use single video element on Android, all versions</li></ul>
+     * 01/11/17 Previous JSDoc for Android - to be removed once fix is confirmed and there is no regression:<br />
+     * <ul><li>Use single video element on Android < v4.0</li>
      *     <li>Use single video element on Android with Chrome < v40<br/>
-     *       (note, it might work on earlier versions but don't know which ones! Does not work on v18)</li>
+     *       (note, it might work on earlier versions but don't know which ones! Does not work on v18)</li></ul>
+     *
      * @private
      * @returns {boolean} True if a single video element is required
      */
     OOV4.requiresSingleVideoElement = (function() {
-      var iosRequireSingleElement = OOV4.isIos;
-      var androidRequireSingleElement = OOV4.isAndroid && (!OOV4.isAndroid4Plus || OOV4.chromeMajorVersion < 40);
-      return iosRequireSingleElement || androidRequireSingleElement;
+      return OOV4.isIos || OOV4.isAndroid;
+      // 01/11/17 - commenting out, but not removing three lines below pending QA, we may need to restore this logic
+      //var iosRequireSingleElement = OOV4.isIos;
+      //var androidRequireSingleElement = OOV4.isAndroid && (!OOV4.isAndroid4Plus || OOV4.chromeMajorVersion < 40);
+      // return iosRequireSingleElement || androidRequireSingleElement;
     }());
 
     // TODO(jj): need to make this more comprehensive
@@ -2107,6 +2486,311 @@ if (!OOV4._)
   }(OOV4, OOV4._, OOV4.HM));
 
 },{}],6:[function(require,module,exports){
+  (function(OOV4,_,$) {
+    OOV4.getRandomString = function() { return Math.random().toString(36).substring(7); };
+
+    OOV4.safeClone = function(source) {
+      if (_.isNumber(source) || _.isString(source) || _.isBoolean(source) || _.isFunction(source) ||
+          _.isNull(source) || _.isUndefined(source)) {
+        return source;
+      }
+      var result = (source instanceof Array) ? [] : {};
+      try {
+        $.extend(true, result, source);
+      } catch(e) { OOV4.log("deep clone error", e); }
+      return result;
+    };
+
+    OOV4.d = function() {
+      if (OOV4.isDebug) { OOV4.log.apply(OOV4, arguments); }
+      OOV4.$("#OOYALA_DEBUG_CONSOLE").append(JSON.stringify(OOV4.safeClone(arguments))+'<br>');
+    };
+
+    // Note: This inherit only for simple inheritance simulation, the Parennt class still has a this binding
+    // to the parent class. so any variable initiated in the Parent Constructor, will not be available to the
+    // Child Class, you need to copy paste constructor to Child Class to make it work.
+    // coffeescript is doing a better job here by binding the this context to child in the constructor.
+    // Until we switch to CoffeeScript, we need to be careful using this simplified inherit lib.
+    OOV4.inherit = function(ParentClass, myConstructor) {
+      if (typeof(ParentClass) !== "function") {
+        OOV4.log("invalid inherit, ParentClass need to be a class", ParentClass);
+        return null;
+      }
+      var SubClass = function() {
+        ParentClass.apply(this, arguments);
+        if (typeof(myConstructor) === "function") { myConstructor.apply(this, arguments); }
+      };
+      var parentClass = new ParentClass();
+      OOV4._.extend(SubClass.prototype, parentClass);
+      SubClass.prototype.parentClass = parentClass;
+      return SubClass;
+    };
+
+    var styles = {}; // keep track of all styles added so we can remove them later if destroy is called
+
+    OOV4.attachStyle = function(styleContent, playerId) {
+      var s = $('<style type="text/css">' + styleContent + '</style>').appendTo("head");
+      styles[playerId] = styles[playerId] || [];
+      styles[playerId].push(s);
+    };
+
+    OOV4.removeStyles = function(playerId) {
+      OOV4._.each(styles[playerId], function(style) {
+        style.remove();
+      });
+    };
+
+    // object: object to get the inner property for, ex. {"mod":{"fw":{"data":{"key":"val"}}}}
+    // keylist: list of keys to find, ex. ["mod", "fw", "data"]
+    // example output: {"key":"val"}
+    OOV4.getInnerProperty = function(object, keylist) {
+      var innerObject = object;
+      var list = keylist;
+      while (list.length > 0) {
+        var key = list.shift();
+        // Note that function and arrays are objects
+        if (_.isNull(innerObject) || !_.isObject(innerObject) ||
+            _.isFunction(innerObject) || _.isArray(innerObject))
+          return null;
+        innerObject = innerObject[key];
+      }
+      return innerObject;
+    }
+
+    OOV4.formatSeconds = function(timeInSeconds) {
+      var seconds = parseInt(timeInSeconds,10) % 60;
+      var hours = parseInt(timeInSeconds / 3600, 10);
+      var minutes = parseInt((timeInSeconds - hours * 3600) / 60, 10);
+
+
+      if (hours < 10) {
+        hours = '0' + hours;
+      }
+
+      if (minutes < 10) {
+        minutes = '0' + minutes;
+      }
+
+      if (seconds < 10) {
+        seconds = '0' + seconds;
+      }
+
+      return (parseInt(hours,10) > 0) ? (hours + ":" + minutes + ":" + seconds) : (minutes + ":" + seconds);
+    };
+
+    OOV4.timeStringToSeconds = function(timeString) {
+      var timeArray = (timeString || '').split(":");
+      return _.reduce(timeArray, function(m, s) { return m * 60 + parseInt(s, 10); }, 0);
+    };
+
+    OOV4.leftPadding = function(num, totalChars) {
+      var pad = '0';
+      var numString = num ? num.toString() : '';
+      while (numString.length < totalChars) {
+        numString = pad + numString;
+      }
+      return numString;
+    };
+
+    OOV4.getColorString = function(color) {
+      return '#' + (OOV4.leftPadding(color.toString(16), 6)).toUpperCase();
+    };
+
+    OOV4.hexToRgb = function(hex) {
+      var r = (hex & 0xFF0000) >> 16;
+      var g = (hex & 0xFF00) >> 8;
+      var b = (hex & 0xFF);
+      return [r, g, b];
+    };
+
+    OOV4.changeColor = function(color, ratio, darker) {
+      var minmax     = darker ? Math.max : Math.min;
+      var boundary = darker ? 0 : 255;
+      var difference = Math.round(ratio * 255) * (darker ? -1 : 1);
+      var rgb = OOV4.hexToRgb(color);
+      return [
+        OOV4.leftPadding(minmax(rgb[0] + difference, boundary).toString(16), 2),
+        OOV4.leftPadding(minmax(rgb[1] + difference, boundary).toString(16), 2),
+        OOV4.leftPadding(minmax(rgb[2] + difference, boundary).toString(16), 2)
+      ].join('');
+    };
+
+    OOV4.decode64 = function(s) {
+      s = s.replace(/\n/g,"");
+      var results = "";
+      var j, i = 0;
+      var enc = [];
+      var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+      //shortcut for browsers with atob
+      if (window.atob) {
+        return atob(s);
+      }
+
+      do {
+        for (j = 0; j < 4; j++) {
+          enc[j] = b64.indexOf(s.charAt(i++));
+        }
+        results += String.fromCharCode((enc[0] << 2) | (enc[1] >> 4),
+                                        enc[2] == 64 ? 0 : ((enc[1] & 15) << 4) | (enc[2] >> 2),
+                                        enc[3] == 64 ? 0 : ((enc[2] & 3) << 6) | enc[3]);
+      } while (i < s.length);
+
+      //trim tailing null characters
+      return results.replace(/\0/g, "");
+    };
+
+    OOV4.pixelPing = function (url) {
+      var img = new Image();
+      img.onerror = img.onabort = function() { OOV4.d("onerror:", url); };
+      img.src = OOV4.getNormalizedTagUrl(url);
+    };
+
+    // ping array of urls.
+    OOV4.pixelPings = function (urls) {
+        if (_.isEmpty(urls)) { return; }
+        _.each(urls, function(url) {
+          OOV4.pixelPing(url);
+        }, this);
+    };
+
+    // helper function to convert types to boolean
+    // the (!!) trick only works to verify if a string isn't the empty string
+    // therefore, we must use a special case for that
+    OOV4.stringToBoolean = function(value) {
+      if (typeof value === 'string')
+        return (value.toLowerCase().indexOf("true") > -1 || value.toLowerCase().indexOf("yes") > -1);
+      return !!value;
+    }
+
+    OOV4.regexEscape = function(value) {
+      var specials = /[<>()\[\]{}]/g;
+      return value.replace(specials, "\\$&");
+    };
+
+    OOV4.getNormalizedTagUrl = function (url, embedCode) {
+      var ts = new Date().getTime();
+      var pageUrl = escape(document.URL);
+
+      var placeHolderReplace = function (template, replaceValue) {
+        _.each(template, function (placeHolder) {
+          var regexSearchVal = new RegExp("(" +
+                                    OOV4.regexEscape(placeHolder) + ")", 'gi');
+          url = url.replace(regexSearchVal, replaceValue);
+        }, this);
+      }
+
+      // replace the timestamp and referrer_url placeholders
+      placeHolderReplace(OOV4.TEMPLATES.RANDOM_PLACE_HOLDER, ts);
+      placeHolderReplace(OOV4.TEMPLATES.REFERAK_PLACE_HOLDER, pageUrl);
+
+      // first make sure that the embedCode exists, then replace the
+      // oo_embedcode placeholder
+      if (embedCode) {
+        placeHolderReplace(OOV4.TEMPLATES.EMBED_CODE_PLACE_HOLDER, embedCode);
+      }
+      return url;
+    };
+
+    OOV4.safeSeekRange = function(seekRange) {
+      return {
+        start : seekRange.length > 0 ? seekRange.start(0) : 0,
+        end : seekRange.length > 0 ? seekRange.end(0) : 0
+      };
+    };
+
+    OOV4.loadedJS = OOV4.loadedJS || {};
+
+    OOV4.jsOnSuccessList = OOV4.jsOnSuccessList || {};
+
+    OOV4.safeFuncCall = function(fn) {
+      if (typeof fn !== "function") { return; }
+      try {
+        fn.apply();
+      } catch (e) {
+        OOV4.log("Can not invoke function!", e);
+      }
+    };
+
+    OOV4.loadScriptOnce = function(jsSrc, successCallBack, errorCallBack, timeoutInMillis) {
+      OOV4.jsOnSuccessList[jsSrc] = OOV4.jsOnSuccessList[jsSrc] || [];
+      if (OOV4.loadedJS[jsSrc]) {
+        // invoke call back directly if loaded.
+        if (OOV4.loadedJS[jsSrc] === "loaded") {
+          OOV4.safeFuncCall(successCallBack);
+        } else if (OOV4.loadedJS[jsSrc] === "loading") {
+          OOV4.jsOnSuccessList[jsSrc].unshift(successCallBack);
+        }
+        return false;
+      }
+      OOV4.loadedJS[jsSrc] = "loading";
+      $.ajax({
+        url: jsSrc,
+        type: 'GET',
+        cache: true,
+        dataType: 'script',
+        timeout: timeoutInMillis || 15000,
+        success: function() {
+          OOV4.loadedJS[jsSrc] = "loaded";
+          OOV4.jsOnSuccessList[jsSrc].unshift(successCallBack);
+          OOV4._.each(OOV4.jsOnSuccessList[jsSrc], function(fn) {
+            OOV4.safeFuncCall(fn);
+          }, this);
+          OOV4.jsOnSuccessList[jsSrc] = [];
+        },
+        error: function() {
+          OOV4.safeFuncCall(errorCallBack);
+        }
+      });
+      return true;
+    };
+
+    try {
+      OOV4.localStorage = window.localStorage;
+    } catch (err) {
+      OOV4.log(err);
+    }
+    if (!OOV4.localStorage) {
+      OOV4.localStorage = {
+        getItem: function (sKey) {
+          if (!sKey || !this.hasOwnProperty(sKey)) { return null; }
+          return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+        },
+        key: function (nKeyId) {
+          return unescape(document.cookie.replace(/\s*\=(?:.(?!;))*$/, "").split(/\s*\=(?:[^;](?!;))*[^;]?;\s*/)[nKeyId]);
+        },
+        setItem: function (sKey, sValue) {
+          if(!sKey) { return; }
+          document.cookie = escape(sKey) + "=" + escape(sValue) + "; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/";
+          this.length = document.cookie.match(/\=/g).length;
+        },
+        length: 0,
+        removeItem: function (sKey) {
+          if (!sKey || !this.hasOwnProperty(sKey)) { return; }
+          document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+          this.length--;
+        },
+        hasOwnProperty: function (sKey) {
+          return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+        }
+      };
+      OOV4.localStorage.length = (document.cookie.match(/\=/g) || OOV4.localStorage).length;
+    }
+
+    // A container to properly request OOV4.localStorage.setItem
+    OOV4.setItem = function (sKey, sValue) {
+      try {
+        OOV4.localStorage.setItem(sKey, sValue);
+      } catch (err) {
+        OOV4.log(err);
+      }
+    };
+
+    OOV4.JSON = window.JSON;
+
+  }(OOV4, OOV4._, OOV4.$));
+
+},{}],7:[function(require,module,exports){
 // Actual Hazmat Code
 var HazmatBuilder = function(_,root) {
 
@@ -2240,11 +2924,11 @@ var HazmatBuilder = function(_,root) {
         return this._safeValue(name, value, fallback, {name: 'Object', checker: _.isObject, evalFallback:false});
       }
     },
-    
+
     safeArray : function(name, value, fallback) {
       return this._safeValue(name, value, fallback, {name: 'Array', checker: _.isArray, evalFallback:false});
     },
-    
+
     safeArrayOfElements : function(name, value, elementValidator, fallback) {
       var safeArray = this._safeValue(name, value, fallback, {name: 'Array', checker: _.isArray, evalFallback:false});
       return _.map(safeArray, elementValidator);
@@ -2267,7 +2951,7 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
   _.extend(exports,hazmat);
 }
 
-},{"underscore":7}],7:[function(require,module,exports){
+},{"underscore":8}],8:[function(require,module,exports){
 //     Underscore.js 1.3.3
 //     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore is freely distributable under the MIT license.
@@ -3328,7 +4012,7 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
 
 }).call(this);
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /*
  * Simple HTML5 video tag plugin for mp4 and hls
  * version: 0.1
@@ -3338,6 +4022,7 @@ require("../../../html5-common/js/utils/InitModules/InitOO.js");
 require("../../../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../../../html5-common/js/utils/InitModules/InitOOHazmat.js");
 require("../../../html5-common/js/utils/constants.js");
+require("../../../html5-common/js/utils/utils.js");
 require("../../../html5-common/js/utils/environment.js");
 
 (function(_, $) {
@@ -3405,9 +4090,10 @@ require("../../../html5-common/js/utils/environment.js");
      * @param {object} controller A reference to the video controller in the Ooyala player
      * @param {object} css The css to apply to the video element
      * @param {string} playerId An id that represents the player instance
+     * @param {object} pluginParams An object containing all of the options set for this plugin
      * @returns {object} A reference to the wrapper for the newly created element
      */
-    this.create = function(parentContainer, domId, controller, css, playerId) {
+    this.create = function(parentContainer, domId, controller, css, playerId, pluginParams) {
       // If the current player has reached max supported elements, do not create a new one
       if (this.maxSupportedElements > 0 && playerId &&
           currentInstances[playerId] >= this.maxSupportedElements) {
@@ -3430,10 +4116,18 @@ require("../../../html5-common/js/utils/environment.js");
 
       video.css(css);
 
-      // enable airplay for iOS
-      // http://developer.apple.com/library/safari/#documentation/AudioVideo/Conceptual/AirPlayGuide/OptingInorOutofAirPlay/OptingInorOutofAirPlay.html
       if (OOV4.isIos) {
+        // enable airplay for iOS
+        // http://developer.apple.com/library/safari/#documentation/AudioVideo/Conceptual/AirPlayGuide/OptingInorOutofAirPlay/OptingInorOutofAirPlay.html
+        //
         video.attr("x-webkit-airplay", "allow");
+
+        //enable inline playback for mobile
+        if (pluginParams["iosPlayMode"] === "inline") {
+          if (OOV4.iosMajorVersion >= 10) {
+            video.attr('playsinline', '');
+          }
+        }
       }
 
       // Set initial container dimension
@@ -3514,6 +4208,7 @@ require("../../../html5-common/js/utils/environment.js");
     var playQueued = false;
     var isSeeking = false;
     var currentTime = 0;
+    var currentVolumeSet = 0;
     var isM3u8 = false;
     var TRACK_CLASS = "track_cc";
     var firstPlay = true;
@@ -3525,6 +4220,8 @@ require("../../../html5-common/js/utils/environment.js");
     var isLive = false;
     var lastCueText = null;
     var availableClosedCaptions = {};
+    var textTrackModes = {};
+    var originalPreloadValue = $(_video).attr("preload") || "none";
 
     // Watch for underflow on Chrome
     var underflowWatcherTimer = null;
@@ -3548,7 +4245,7 @@ require("../../../html5-common/js/utils/environment.js");
         if (document.hidden) {
           canSeek = false;
         }
-      }, this)
+      }, this);
       document.addEventListener("visibilitychange", watchHidden);
     }
 
@@ -3636,11 +4333,6 @@ require("../../../html5-common/js/utils/environment.js");
       if (_currentUrl.replace(/[\?&]_=[^&]+$/,'') != url) {
         _currentUrl = url || "";
 
-        // bust the chrome caching bug
-        if (_currentUrl.length > 0 && OOV4.isChrome) {
-          _currentUrl = _currentUrl + (/\?/.test(_currentUrl) ? "&" : "?") + "_=" + getRandomString();
-        }
-
         isM3u8 = (encoding == OOV4.VIDEO.ENCODING.HLS ||
           encoding == OOV4.VIDEO.ENCODING.AKAMAI_HD2_VOD_HLS ||
           encoding == OOV4.VIDEO.ENCODING.AKAMAI_HD2_HLS
@@ -3674,6 +4366,15 @@ require("../../../html5-common/js/utils/environment.js");
       isPriming = false;
       stopUnderflowWatcher();
       lastCueText = null;
+      textTrackModes = {};
+      // Restore the preload attribute to the value it had when the video
+      // element was created
+      $(_video).attr("preload", originalPreloadValue);
+      // [PLAYER-212]
+      // Closed captions persist across discovery videos unless they are cleared
+      // when a new video is set
+      $(_video).find('.' + TRACK_CLASS).remove();
+      availableClosedCaptions = {};
     }, this);
 
     /**
@@ -3719,6 +4420,11 @@ require("../../../html5-common/js/utils/environment.js");
         }
       }
       canPlay = false;
+      // The load() method might still be affected by the value of the preload attribute in
+      // some browsers (i.e. it might determine how much data is actually loaded). We set preload to auto
+      // before loading in case that this.load() was called by VC_PRELOAD. If load() is called prior to
+      // starting playback this will be redundant, but it shouldn't cause any issues
+      $(_video).attr("preload", "auto");
       _video.load();
       loaded = true;
     };
@@ -3756,6 +4462,30 @@ require("../../../html5-common/js/utils/environment.js");
     };
 
     /**
+     * Since there are no standards for error codes or names for play promises,
+     * we'll compile a list of errors that represent a user interaction required error.
+     * @private
+     * @method OoyalaVideoWrapper#userInteractionRequired
+     * @param {string} error The error object given by the play promise when it fails
+     * @returns {boolean} True if this error represents a user interaction required error, false otherwise
+     */
+    var userInteractionRequired = function(error) {
+      var userInteractionRequired = false;
+      if (error) {
+        var chromeError = error.name === "NotAllowedError";
+        //Safari throws the error "AbortError" for all play promise failures
+        //so we'll have to treat all of them the same
+        if (!OOV4.isChrome || chromeError) {
+          //There is no requirement for muted autoplay on Firefox,
+          //so we'll ignore any Firefox play promise errors
+          userInteractionRequired = !OOV4.isFirefox;
+        }
+      }
+
+      return userInteractionRequired;
+    };
+
+    /**
      * Triggers playback on the video element.
      * @public
      * @method OoyalaVideoWrapper#play
@@ -3765,7 +4495,29 @@ require("../../../html5-common/js/utils/environment.js");
       if (_video.seeking) {
         playQueued = true;
       } else {
-        executePlay(false);
+        var playPromise = executePlay(false);
+        if (playPromise) {
+          if (typeof playPromise.catch === 'function') {
+            playPromise.catch(_.bind(function(error) {
+              if (error) {
+                OOV4.log("Play Promise Failure", error, error.name);
+                if (userInteractionRequired(error)) {
+                  if (!_video.muted) {
+                    this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED, {error: error});
+                  }
+                }
+              }
+            }, this));
+          }
+          if (typeof playPromise.then === 'function') {
+            playPromise.then(_.bind(function() {
+              //playback succeeded
+              if (!_video.muted) {
+                this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_SUCCEEDED);
+              }
+            }, this));
+          }
+        }
       }
     };
 
@@ -3800,6 +4552,42 @@ require("../../../html5-common/js/utils/environment.js");
     };
 
     /**
+     * Triggers a mute on the video element.
+     * @public
+     * @method OoyalaVideoWrapper#mute
+     */
+    this.mute = function() {
+      _video.muted = true;
+
+      //the volumechange event is supposed to be fired when video.muted is changed,
+      //but it doesn't always fire. Raising a volume event here with the current volume
+      //to cover these situations
+      raiseVolumeEvent({ target: { volume: _video.volume }});
+    };
+
+    /**
+     * Triggers an unmute on the video element.
+     * @public
+     * @method OoyalaVideoWrapper#unmute
+     */
+    this.unmute = function() {
+      _video.muted = false;
+
+      //workaround of an issue where some external SDKs (such those used in ad/video plugins)
+      //are setting the volume to 0 when muting
+      //Set the volume to our last known setVolume setting.
+      //Since we're unmuting, we don't want to set volume to 0
+      if (currentVolumeSet > 0) {
+        this.setVolume(currentVolumeSet);
+      }
+
+      //the volumechange event is supposed to be fired when video.muted is changed,
+      //but it doesn't always fire. Raising a volume event here with the current volume
+      //to cover these situations
+      raiseVolumeEvent({ target: { volume: _video.volume }});
+    };
+
+    /**
      * Triggers a volume change on the video element.
      * @public
      * @method OoyalaVideoWrapper#setVolume
@@ -3812,6 +4600,8 @@ require("../../../html5-common/js/utils/environment.js");
       } else if (resolvedVolume > 1) {
         resolvedVolume = 1;
       }
+
+      currentVolumeSet = resolvedVolume;
 
       //  TODO check if we need to capture any exception here. ios device will not allow volume set.
       _video.volume = resolvedVolume;
@@ -3841,8 +4631,21 @@ require("../../../html5-common/js/utils/environment.js");
      */
     this.primeVideoElement = function() {
       // We need to "activate" the video on a click so we can control it with JS later on mobile
-      executePlay(true);
-      _video.pause();
+      var playPromise = executePlay(true);
+      // PLAYER-1323
+      // Safar iOS seems to freeze when pausing right after playing when using preloading.
+      // On this platform we wait for the play promise to be resolved before pausing.
+      if (OOV4.isIos && playPromise && typeof playPromise.then === 'function') {
+        playPromise.then(function() {
+          // There is no point in pausing anymore if actual playback has already been requested
+          // by the time the promise is resolved
+          if (!hasPlayed) {
+            _video.pause();
+          }
+        });
+      } else {
+        _video.pause();
+      }
     };
 
     /**
@@ -3863,6 +4666,7 @@ require("../../../html5-common/js/utils/environment.js");
      */
     this.destroy = function() {
       _video.pause();
+      stopUnderflowWatcher();
       //On IE and Edge, setting the video source to an empty string has the unwanted effect
       //of a network request to the base url
       if (!OOV4.isIE && !OOV4.isEdge) {
@@ -3887,11 +4691,32 @@ require("../../../html5-common/js/utils/environment.js");
      * @param {object} params The params to set with closed captions
      */
     this.setClosedCaptions = _.bind(function(language, closedCaptions, params) {
-      //Remove and disable current captions before setting new ones.
-      $(_video).find('.' + TRACK_CLASS).remove();
-      if (language == null) return;
-
-      var captionMode = (params && params.mode) || OOV4.CONSTANTS.CLOSED_CAPTIONS.SHOWING;
+      var iosVersion = OOV4.iosMajorVersion;
+      var macOsSafariVersion = OOV4.macOsSafariVersion;
+      var useOldLogic = (iosVersion && iosVersion < 10) || (macOsSafariVersion && macOsSafariVersion < 10);
+      if (useOldLogic) { // XXX HACK! PLAYER-54 iOS and OSX Safari versions < 10 require re-creation of textTracks every time this function is called
+        $(_video).find('.' + TRACK_CLASS).remove();
+        textTrackModes = {};
+        if (language == null) {
+          return;
+        }
+      } else {
+        if (language == null) {
+          $(_video).find('.' + TRACK_CLASS).remove();
+          textTrackModes = {};
+          return;
+        }
+        // Remove captions before setting new ones if they are different, otherwise we may see native closed captions
+        if (closedCaptions) {
+          $(_video).children('.' + TRACK_CLASS).each(function() {
+            if ($(this).label != closedCaptions.locale[language] ||
+                $(this).srclang != language ||
+                $(this).kind != "subtitles") {
+              $(this).remove();
+            }
+          });
+        }
+      }
 
       //Add the new closed captions if they are valid.
       var captionsFormat = "closed_captions_vtt";
@@ -3907,29 +4732,56 @@ require("../../../html5-common/js/utils/environment.js");
         });
       }
 
+      var trackId = OOV4.getRandomString();
+      var captionMode = (params && params.mode) || OOV4.CONSTANTS.CLOSED_CAPTIONS.SHOWING;
       //Set the closed captions based on the language and our available closed captions
       if (availableClosedCaptions[language]) {
         var captions = availableClosedCaptions[language];
         //If the captions are in-stream, we just need to enable them; Otherwise we must add them to the video ourselves.
         if (captions.inStream == true && _video.textTracks) {
           for (var i = 0; i < _video.textTracks.length; i++) {
-            if (_video.textTracks[i].kind === "captions") {
+            if (((OOV4.isSafari || OOV4.isEdge) && isLive) || _video.textTracks[i].kind === "captions") {
               _video.textTracks[i].mode = captionMode;
               _video.textTracks[i].oncuechange = onClosedCaptionCueChange;
             } else {
-             _video.textTracks[i].mode = OOV4.CONSTANTS.CLOSED_CAPTIONS.DISABLED;
+              _video.textTracks[i].mode = OOV4.CONSTANTS.CLOSED_CAPTIONS.DISABLED;
             }
+            // [PLAYER-327], [PLAYER-73]
+            // We keep track of all text track modes in order to prevent Safari from randomly
+            // changing them. We can't set the id of inStream tracks, so we use a custom
+            // trackId property instead
+            trackId = _video.textTracks[i].id || _video.textTracks[i].trackId || OOV4.getRandomString();
+            _video.textTracks[i].trackId = trackId;
+            textTrackModes[trackId] = _video.textTracks[i].mode;
           }
         } else if (!captions.inStream) {
           this.setClosedCaptionsMode(OOV4.CONSTANTS.CLOSED_CAPTIONS.DISABLED);
-          $(_video).append("<track class='" + TRACK_CLASS + "' kind='subtitles' label='" + captions.label + "' src='" + captions.src + "' srclang='" + captions.language + "' default>");
-          if (_video.textTracks && _video.textTracks[0]) {
-            _video.textTracks[0].mode = captionMode;
-            //We only want to let the controller know of cue change if we aren't rendering cc from the plugin.
-            if (captionMode == OOV4.CONSTANTS.CLOSED_CAPTIONS.HIDDEN) {
-              _video.textTracks[0].oncuechange = onClosedCaptionCueChange;
+          if (useOldLogic) { // XXX HACK! PLAYER-54 create video element unconditionally as it was removed
+            $(_video).append("<track id='" + trackId + "' class='" + TRACK_CLASS + "' kind='subtitles' label='" + captions.label + "' src='" + captions.src + "' srclang='" + captions.language + "' default>");
+            if (_video.textTracks && _video.textTracks[0]) {
+              _video.textTracks[0].mode = captionMode;
+              //We only want to let the controller know of cue change if we aren't rendering cc from the plugin.
+              if (captionMode == OOV4.CONSTANTS.CLOSED_CAPTIONS.HIDDEN) {
+                _video.textTracks[0].oncuechange = onClosedCaptionCueChange;
+              }
+            }
+          } else {
+            if ($(_video).children('.' + TRACK_CLASS).length == 0) {
+              $(_video).append("<track id='" + trackId + "' class='" + TRACK_CLASS + "' kind='subtitles' label='" + captions.label + "' src='" + captions.src + "' srclang='" + captions.language + "' default>");
+            }
+            if (_video.textTracks && _video.textTracks.length > 0) {
+              for (var i = 0; i < _video.textTracks.length; i++) {
+                _video.textTracks[i].mode = captionMode;
+                //We only want to let the controller know of cue change if we aren't rendering cc from the plugin.
+                if (captionMode == OOV4.CONSTANTS.CLOSED_CAPTIONS.HIDDEN) {
+                  _video.textTracks[i].oncuechange = onClosedCaptionCueChange;
+                }
+              }
             }
           }
+          // [PLAYER-327], [PLAYER-73]
+          // Store mode of newly added tracks for future use in workaround
+          textTrackModes[trackId] = captionMode;
           //Sometimes there is a delay before the textTracks are accessible. This is a workaround.
           _.delay(function(captionMode) {
             if (_video.textTracks && _video.textTracks[0]) {
@@ -3956,11 +4808,14 @@ require("../../../html5-common/js/utils/environment.js");
       if (_video.textTracks) {
         for (var i = 0; i < _video.textTracks.length; i++) {
           _video.textTracks[i].mode = mode;
+          // [PLAYER-327], [PLAYER-73]
+          // Store newly set track mode for future use in workaround
+          var trackId = _video.textTracks[i].id || _video.textTracks[i].trackId;
+          textTrackModes[trackId] = mode;
         }
       }
       if (mode == OOV4.CONSTANTS.CLOSED_CAPTIONS.DISABLED) {
         raiseClosedCaptionCueChanged("");
-        this.setClosedCaptions(null);
       }
     }, this);
 
@@ -3972,7 +4827,19 @@ require("../../../html5-common/js/utils/environment.js");
      */
     this.setCrossorigin = function(crossorigin) {
       if (crossorigin) {
-        $(_video).attr("crossorigin", crossorigin);
+        // [PBW-6882]
+        // There's a strange bug in Safari on iOS11 that causes CORS errors to be
+        // incorrectly thrown when setting the crossorigin attribute after a video has
+        // played without it. This usually happens when a video with CC's is played
+        // after a preroll that's not using crossorigin.
+        // At the time of writing iOS Safari doesn't seem to enforce same origin policy
+        // for either HLS manifests/segments or VTT files. We avoid setting crossorigin
+        // as a workaround for iOS 11 since it currently appears to not be needed.
+        var isIos11 = OOV4.isIos && OOV4.iosMajorVersion === 11;
+
+        if (!isIos11) {
+          $(_video).attr("crossorigin", crossorigin);
+        }
       } else {
         $(_video).removeAttr("crossorigin");
       }
@@ -4001,8 +4868,40 @@ require("../../../html5-common/js/utils/environment.js");
      * @method OoyalaVideoWrapper#onLoadedMetadata
      */
     var onLoadedMetadata = _.bind(function() {
+      // [PLAYER-327], [PLAYER-73]
+      // We need to monitor track change in Safari in order to prevent
+      // it from overriding our settings
+      if (OOV4.isSafari && _video && _video.textTracks) {
+        _video.textTracks.onchange = onTextTracksChange;
+      }
       dequeueSeek();
       loaded = true;
+    }, this);
+
+    /**
+     * Fired when there is a change on a text track.
+     * @private
+     * @method OoyalaVideoWrapper#onTextTracksChange
+     * @param {object} event The event from the track change
+     */
+    var onTextTracksChange = _.bind(function(event) {
+      for (var i = 0; i < _video.textTracks.length; i++) {
+        var trackId = _video.textTracks[i].id || _video.textTracks[i].trackId;
+
+        if (typeof textTrackModes[trackId] === 'undefined') {
+          continue;
+        }
+        // [PLAYER-327], [PLAYER-73]
+        // Safari (desktop and iOS) sometimes randomly switches a track's mode. As a
+        // workaround, we force our own value if we detect that we have switched
+        // to a mode that we didn't set ourselves
+        if (_video.textTracks[i].mode !== textTrackModes[trackId]) {
+          OOV4.log("main_html5: Forcing text track mode for track " + trackId + ". Expected: '"
+                + textTrackModes[trackId] + "', received: '" + _video.textTracks[i].mode + "'");
+
+          _video.textTracks[i].mode = textTrackModes[trackId];
+        }
+      }
     }, this);
 
     /**
@@ -4055,7 +4954,7 @@ require("../../../html5-common/js/utils/environment.js");
       if (_video.textTracks && _video.textTracks.length > 0) {
         var languages = [];
         for (var i = 0; i < _video.textTracks.length; i++) {
-          if (_video.textTracks[i].kind === "captions") {
+          if (((OOV4.isSafari || OOV4.isEdge) && isLive) || _video.textTracks[i].kind === "captions") {
             var captionInfo = {
               language: "CC",
               inStream: true,
@@ -4221,8 +5120,8 @@ require("../../../html5-common/js/utils/environment.js");
      */
     var raiseWaitingEvent = _.bind(function() {
       // WAITING event is not raised if no video is assigned yet
-      if (_.isEmpty(_video.currentSrc)) { 
-        return; 
+      if (_.isEmpty(_video.currentSrc)) {
+        return;
       }
       waitingEventRaised = true;
       this.controller.notify(this.controller.EVENTS.WAITING, {"url":_video.currentSrc});
@@ -4290,6 +5189,7 @@ require("../../../html5-common/js/utils/environment.js");
       }
       if (videoEnded) { return; } // no double firing ended event.
       videoEnded = true;
+      initialTime.value = 0;
 
       this.controller.notify(this.controller.EVENTS.ENDED);
     }, this);
@@ -4384,6 +5284,7 @@ require("../../../html5-common/js/utils/environment.js");
      */
     var raiseVolumeEvent = _.bind(function(event) {
       this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { volume: event.target.volume });
+      this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: _video.muted });
     }, this);
 
     /**
@@ -4469,12 +5370,13 @@ require("../../../html5-common/js/utils/environment.js");
         this.load(true);
       }
 
-      _video.play();
+      var playPromise = _video.play();
 
       if (!isPriming) {
         hasPlayed = true;
         videoEnded = false;
       }
+      return playPromise;
     }, this);
 
 
@@ -4670,6 +5572,7 @@ require("../../../html5-common/js/utils/environment.js");
         {
           this.controller.notify(this.controller.EVENTS.SEEKED);
           videoEnded = true;
+          initialTime.value = 0;
           this.controller.notify(this.controller.EVENTS.ENDED);
         }
       }
@@ -4684,7 +5587,7 @@ require("../../../html5-common/js/utils/environment.js");
      * @method OoyalaVideoWrapper#startUnderflowWatcher
      */
     var startUnderflowWatcher = _.bind(function() {
-      if ((OOV4.isChrome || OOV4.isIos || OOV4.isIE11Plus) && !underflowWatcherTimer) {
+      if ((OOV4.isChrome || OOV4.isIos || OOV4.isIE11Plus || OOV4.isEdge) && !underflowWatcherTimer) {
         var watchInterval = 300;
         underflowWatcherTimer = setInterval(underflowWatcher, watchInterval)
       }
@@ -4743,4 +5646,4 @@ require("../../../html5-common/js/utils/environment.js");
   OOV4.Video.plugin(new OoyalaVideoFactory());
 }(OOV4._, OOV4.$));
 
-},{"../../../html5-common/js/utils/InitModules/InitOO.js":1,"../../../html5-common/js/utils/InitModules/InitOOHazmat.js":2,"../../../html5-common/js/utils/InitModules/InitOOUnderscore.js":3,"../../../html5-common/js/utils/constants.js":4,"../../../html5-common/js/utils/environment.js":5}]},{},[8]);
+},{"../../../html5-common/js/utils/InitModules/InitOO.js":1,"../../../html5-common/js/utils/InitModules/InitOOHazmat.js":2,"../../../html5-common/js/utils/InitModules/InitOOUnderscore.js":3,"../../../html5-common/js/utils/constants.js":4,"../../../html5-common/js/utils/environment.js":5,"../../../html5-common/js/utils/utils.js":6}]},{},[9]);

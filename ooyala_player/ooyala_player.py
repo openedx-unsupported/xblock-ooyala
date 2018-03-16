@@ -109,27 +109,6 @@ class OoyalaPlayerMixin(object):
             cc_disabled=self.disable_cc_and_translations
         )
 
-    @XBlock.handler
-    def get_config_json(self, request, suffix=''):
-        """
-        Return Player Skin file's JSON contents
-        """
-        config_resource_url = reverse('xblock_resource_url', kwargs={
-            'block_type': self.scope_ids.block_type,
-            'uri': SKIN_FILE_PATH,
-        })
-
-        # create fully qualified url
-        url = '{host}{path}'.format(host=request.host_url, path=config_resource_url)
-
-        try:
-            resource = urlopen(url=url)
-            data = resource.read()
-        except URLError:
-            data = json.dumps({})
-
-        return Response(data, content_type='application/json')
-
     def player_token(self):
         """
         Return a player token URL and its expiry datetime.
@@ -170,14 +149,17 @@ class OoyalaPlayerMixin(object):
         """
         Player view, displayed to the student
         """
-        # For lightchild xblock, pass skin resource URL, otherwise use our custom handler method
+        # Skin file path according to block type
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = reverse('xblock_resource_url', kwargs={
                 'block_type': OoyalaPlayerLightChildBlock.lightchild_block_type,
                 'uri': SKIN_FILE_PATH,
             })
         else:
-            json_config_url = self.runtime.handler_url(self, 'get_config_json')
+            json_config_url = reverse('xblock_resource_url', kwargs={
+                'block_type': self.scope_ids.block_type,
+                'uri': SKIN_FILE_PATH,
+            })
 
         dom_id = 'ooyala-' + self._get_unique_id()
 

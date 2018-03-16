@@ -3,7 +3,7 @@ try {
   var OO = {};
 
   OO.VERSION = {
-    "core" : {"releaseVersion": "4.8.5", "rev": "<CORE_REV>"}
+    "core" : {"releaseVersion": "4.20.8", "rev": "<CORE_REV>"}
   };
 
   OO.playerParams = {
@@ -10877,11 +10877,11 @@ var HazmatBuilder = function(_,root) {
         return this._safeValue(name, value, fallback, {name: 'Object', checker: _.isObject, evalFallback:false});
       }
     },
-    
+
     safeArray : function(name, value, fallback) {
       return this._safeValue(name, value, fallback, {name: 'Array', checker: _.isArray, evalFallback:false});
     },
-    
+
     safeArrayOfElements : function(name, value, elementValidator, fallback) {
       var safeArray = this._safeValue(name, value, fallback, {name: 'Array', checker: _.isArray, evalFallback:false});
       return _.map(safeArray, elementValidator);
@@ -11592,7 +11592,7 @@ window.LZW = {
         ANALYTICS: OO.isSSL ? OO.playerParams.analytics_ssl_server || "https://player.ooyala.com" :
                               OO.playerParams.analytics_server || "http://player.ooyala.com"
       };
-    }
+    };
 
     // process tweaks
     // tweaks is optional. Hazmat takes care of this but throws an undesirable warning.
@@ -11743,8 +11743,24 @@ window.LZW = {
       return (parseInt(macOs[1],10) >= 10 && parseInt(macOs[2],10) >= 7);
     }());
 
+    OO.macOsSafariVersion = (function() {
+      try {
+        if (OO.isMacOs && OO.isSafari) {
+          return parseInt(window.navigator.userAgent.match(/Version\/(\d+)/)[1], 10);
+        } else {
+          return null;
+        }
+      } catch(err) {
+        return null;
+      }
+    }());
+
     OO.isKindleHD = (function(){
       return !!OO.os.match(/Silk\/2/);
+    }());
+
+    OO.supportMSE = (function() {
+      return 'MediaSource' in window || 'WebKitMediaSource' in window || 'mozMediaSource' in window || 'msMediaSource' in window;
     }());
 
     OO.supportAds = (function() {
@@ -11828,16 +11844,21 @@ window.LZW = {
     /**
      * Determines if a single video element should be used.<br/>
      * <ul><li>Use single video element on iOS, all versions</li>
-     *     <li>Use single video element on Android < v4.0</li>
+     *     <li>Use single video element on Android, all versions</li></ul>
+     * 01/11/17 Previous JSDoc for Android - to be removed once fix is confirmed and there is no regression:<br />
+     * <ul><li>Use single video element on Android < v4.0</li>
      *     <li>Use single video element on Android with Chrome < v40<br/>
-     *       (note, it might work on earlier versions but don't know which ones! Does not work on v18)</li>
+     *       (note, it might work on earlier versions but don't know which ones! Does not work on v18)</li></ul>
+     *
      * @private
      * @returns {boolean} True if a single video element is required
      */
     OO.requiresSingleVideoElement = (function() {
-      var iosRequireSingleElement = OO.isIos;
-      var androidRequireSingleElement = OO.isAndroid && (!OO.isAndroid4Plus || OO.chromeMajorVersion < 40);
-      return iosRequireSingleElement || androidRequireSingleElement;
+      return OO.isIos || OO.isAndroid;
+      // 01/11/17 - commenting out, but not removing three lines below pending QA, we may need to restore this logic
+      //var iosRequireSingleElement = OO.isIos;
+      //var androidRequireSingleElement = OO.isAndroid && (!OO.isAndroid4Plus || OO.chromeMajorVersion < 40);
+      // return iosRequireSingleElement || androidRequireSingleElement;
     }());
 
     // TODO(jj): need to make this more comprehensive
@@ -12082,7 +12103,14 @@ window.LZW = {
       * This event provides the opportunity for any other modules to perform their own initialization.
       * The handler is called with the query string parameters.
       * The DOM has been created at this point, and plugins may make changes or additions to the DOM.<br/><br/>
-      *
+      * <ul>
+      *   <li>The element id.</li>
+      *   <li>The object containing the player page level parameters.</li>
+      *   <li>The object containing the player persistent settings.</li>
+      *   <li>The embed code.</li>
+      *   <li>The timestamp when the player was created.</li>
+      *   <li>The player url.</li>
+      * </ul>
       *
       * @event OO.EVENTS#PLAYER_CREATED
       * @public
@@ -12105,6 +12133,21 @@ window.LZW = {
        * @public
        */
       SET_EMBED_CODE : 'setEmbedCode',
+
+      /**
+       * An attempt has been made to set the embed code by Ooyala Ads.
+       * If you are developing a plugin, reset the internal state since the player is switching to a new asset.
+       * Depending on the context, the handler is called with:
+       *   <ul>
+       *     <li>The ID (embed code) of the asset.</li>
+       *     <li>The ID (embed code) of the asset, with options.</li>
+       *   </ul>
+       *
+       *
+       * @event OO.EVENTS#SET_EMBED_CODE_AFTER_OOYALA_AD
+       * @private
+       */
+      SET_EMBED_CODE_AFTER_OOYALA_AD : 'setEmbedCodeAfterOoyalaAd',
 
       /**
        * An attempt has been made to set a new asset.
@@ -12160,6 +12203,18 @@ window.LZW = {
        * @public
        */
       EMBED_CODE_CHANGED : 'embedCodeChanged',
+      /**
+       * The player's embed code has been changed by an Ooyala Ad. The handler is called with two parameters:
+       * <ul>
+       *    <li>The ID (embed code) of the asset.</li>
+       *    <li>The options JSON object.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#EMBED_CODE_CHANGED_AFTER_OOYALA_AD
+       * @private
+       */
+      EMBED_CODE_CHANGED_AFTER_OOYALA_AD : 'embedCodeChangedAfterOoyalaAd',
 
       /**
        * An <code>AUTH_TOKEN_CHANGED</code> event is triggered when an authorization token is issued by the Player Authorization API.<br/>
@@ -12227,6 +12282,23 @@ window.LZW = {
        */
       METADATA_FETCHED: 'metadataFetched',
 
+      /**
+       * The skin metadata, which is set in Backlot, has been retrieved.
+       * The handler is called with the JSON object containing metadata set in Backlot for the current asset.
+       * This is used by the skin plug-in to deep merge with the embedded skin config.<br/><br/>
+       *
+       * @event OO.EVENTS#SKIN_METADATA_FETCHED
+       */
+      SKIN_METADATA_FETCHED: 'skinMetadataFetched',
+
+      /**
+       * The attributes from the metadata API call have been retrieved.
+       * The handler is called with the JSON object containing metadata for the current asset.
+       * This is used by the skin plug-in to apply logic based on attribute values.<br/><br/>
+       *
+       * @event OO.EVENTS#ATTRIBUTES_FETCHED
+       */
+      ATTRIBUTES_FETCHED: 'attributesFetched',
 
       /**
        * The thumbnail metadata needed for thumbnail previews while seeking has been fetched and will be
@@ -12320,7 +12392,9 @@ window.LZW = {
        * All preparations are complete, and the player is ready to receive playback commands
        * such as play, seek, and so on. The default UI shows the <b>Play</b> button,
        * displaying the non-clickable spinner before this point. <br/><br/>
-       *
+       * <ul>
+       *   <li>The time from player creation to when it is in the playback ready state.</li>
+       * </ul>
        *
        * @event OO.EVENTS#PLAYBACK_READY
        * @public
@@ -12329,7 +12403,11 @@ window.LZW = {
 
       /**
        * Play has been called for the first time. <br/><br/>
-       *
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The unix timestamp of the initial playtime</li>
+       *   <li>True if the playback request was the result of an autoplay, false or undefined otherwise</li>
+       * </ul>
        *
        * @event OO.EVENTS#INITIAL_PLAY
        * @public
@@ -12383,6 +12461,7 @@ window.LZW = {
        * The handler is called with the following arguments:
        * <ul>
        *   <li>The url of the video that is buffering.</li>
+       *   <li>The playhead position.</li>
        *   <li>The id of the video that is buffering (as defined by the module that controls it).</li>
        * </ul><br/><br/>
        *
@@ -12488,7 +12567,7 @@ window.LZW = {
        *   <li>object containing:
        *     <ul>
        *       <li><code>languages</code>: (array) a list of available languages.</li>
-       *       <li><code>locale</code>: (object) contains language names by id. For example, <code>{en:"English", fr:"Français", sp:"Español"}</code>.</li>
+       *       <li><code>locale</code>: (object) contains language names by id. For example, <code>{en:"English", fr:"FranÃ§ais", sp:"EspaÃ±ol"}</code>.</li>
        *     </ul>
        *   </li>
        * </ul>
@@ -12583,7 +12662,7 @@ window.LZW = {
       LIVE_BUTTON_CLICKED : 'liveButtonClicked',
 
       /**
-       * A playback request has been made. <br/><br/>
+       * A playback request has been made. This event is called anytime the video plays, including at the video's initial play, as well as when a user resumes playback after a pause. <br/><br/>
        *
        *
        * @event OO.EVENTS#PLAY
@@ -12694,23 +12773,103 @@ window.LZW = {
       VOLUME_CHANGED: 'volumeChanged',
 
       /**
+       * A request to change the mute state has been made.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The desired mute state of the video element.</li>
+       *   <li>The id of the video on which to mute (as defined by the module that controls it).
+       *        If null or undefined, all video elements volume will be changed</li>
+       *   <li>Whether or not the request was from a user action. True if it was from a user action,
+       *        false otherwise.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#CHANGE_MUTE_STATE
+       * @public
+       */
+      CHANGE_MUTE_STATE: 'changeMuteState',
+
+      /**
+       * The mute state has changed.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The current mute state of the video element.</li>
+       *   <li>The id of the video that was muted (as defined by the module that controls it).</li>
+       *   <li>Whether or not the mute state was changed for muted autoplay. True if it was
+       *        done for muted autoplay, false or undefined otherwise.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#MUTE_STATE_CHANGED
+       * @public
+       */
+      MUTE_STATE_CHANGED: 'muteStateChanged',
+
+      /**
+       * The stereo parameter has been changed. The handler is called with a new parameter, the value of the parameter can be
+       * true or false.
+       * @event OO.EVENTS#TOGGLE_STEREO
+       * @public
+       */
+      TOGGLE_STEREO_VR: 'toggleStereoVr',
+
+      /**
+       * The camera (the visible part of video360) can be shifted when you press the keyboard keys or a special control
+       * on the screen. This event is called when events "mousestart" or "mouseend" triggered
+       * @event OO.EVENTS#MOVE_VR_TO_DIRECTION
+       * @public
+       */
+      MOVE_VR_TO_DIRECTION: 'moveVrToDirection',
+
+      /**
+       * @event OO.EVENTS#VIDEO_VR
+       * @private
+       */
+      VIDEO_VR: 'videoVr',
+
+      /**
+       * Used to say skins to clear interface for vr
+       * @event OO.EVENTS#CLEAR_VIDEO_TYPE
+       * @public
+       */
+      CLEAR_VIDEO_TYPE: 'clearVideoType',
+
+      /**
+       * To re-create skins
+       * @event OO.EVENTS#RECREATING_UI
+       * @public
+       */
+      RECREATING_UI: 'recreatingUI',
+
+      /**
        * Controls are shown.<br/><br/>
        *
        *
        * @event OO.EVENTS#CONTROLS_SHOWN
-       * @public
+       * @private
        */
       CONTROLS_SHOWN: 'controlsShown',
+
+      // Set to private temporarily.
+      // Set these to public when they are working.
 
       /**
        * Controls are hidden.<br/><br/>
        *
-       *
        * @event OO.EVENTS#CONTROLS_HIDDEN
-       * @public
+       * @private
        */
       CONTROLS_HIDDEN: 'controlsHidden',
       END_SCREEN_SHOWN: 'endScreenShown',
+
+      /**
+       * Request change to closed caption language.<br/><br/>
+       *
+       *
+       * @event OO.EVENTS#CHANGE_CLOSED_CAPTION_LANGUAGE
+       * @public
+       */
+      CHANGE_CLOSED_CAPTION_LANGUAGE: 'changeClosedCaptionLanguage',
 
       /**
        * An error has occurred. The handler is called with a JSON object that always includes an error code field,
@@ -12721,6 +12880,135 @@ window.LZW = {
        * @public
        */
       ERROR: 'error',
+
+      /**
+       * An api related error has occurred. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The url requested.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#API_ERROR
+       * @public
+       */
+      API_ERROR: 'apiError',
+
+      /**
+       * Event containing the bitrate used at the start of playback. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The bitrate in kbps.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#BITRATE_INITIAL
+       * @public
+       */
+      BITRATE_INITIAL: 'bitrateInitial',
+
+      /**
+       * Event containing the bitrate used five seconds into playback. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The bitrate in kbps.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#BITRATE_FIVE_SEC
+       * @public
+       */
+      BITRATE_FIVE_SEC: 'bitrateFiveSec',
+
+      /**
+       * Event containing the bitrate used thirty seconds into playback. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The bitrate in kbps.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#BITRATE_STABLE
+       * @public
+       */
+      BITRATE_STABLE: 'bitrateStable',
+
+      /**
+       * A playback error has occurred before the video start. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The la url if DRM used.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#PLAYBACK_START_ERROR
+       * @public
+       */
+      PLAYBACK_START_ERROR: 'playbackStartError',
+
+      /**
+       * A playback error has occurred midstream. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The playhead position.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#PLAYBACK_MIDSTREAM_ERROR
+       * @public
+       */
+      PLAYBACK_MIDSTREAM_ERROR: 'playbackMidstreamError',
+
+      /**
+       * A plugin has been loaded successfully. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The player core version.</li>
+       *   <li>The plugin type: ad, video, analytics, playtest, skin.</li>
+       *   <li>The plugin name.</li>
+       *   <li>The time it took to load the plugin.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#PLAYBACK_MIDSTREAM_ERROR
+       * @public
+       */
+      PLUGIN_LOADED: 'pluginLoaded',
+
+      /**
+       * The video plugin has sent an error message. The handler is called with the following arguments:
+       * <ul>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       * </ul>
+       *
+       *
+       * @event OO.EVENTS#VC_PLUGIN_ERROR
+       * @public
+       */
+
+      /**
+       * Notifies the player that the initial playback of content has started.
+       * <ul>
+       *   <li>The time since the initial play request was made (number)</li>
+       *   <li>Boolean parameter. True if video was autoplayed, false otherwise (boolean)</li>
+       *   <li>Boolean parameter. True if the video had an ad play before it started.
+       *       This includes midrolls that play before content due to an initial playhead time > 0.
+       *       False otherwise  (number)</li>(boolean)</li>
+       *   <li>The initial position of the playhead upon playback start. (number)</li>
+       *   <li>The video plugin used for playback (string)</li>
+       *   <li>The browser technology used - HTML5, Flash, Mixed, or Other (string)</li>
+       *   <li>The stream encoding type, i.e. MP4, HLS, Dash, etc. (string)</li>
+       *   <li>The URL of the content being played (string)</li>
+       *   <li>The DRM being used, none if there is no DRM (string)</li>
+       *   <li>Boolean parameter. True if a live stream is playing. False if VOD.(boolean)</li>
+       * </ul>
+       * @event OO.EVENTS#INITIAL_PLAY_STARTING
+       * @public
+       */
+      INITIAL_PLAY_STARTING: 'initialPlayStarting',
+
+
+      VC_PLUGIN_ERROR: 'videoPluginError',
 
       /**
        * The player is currently being destroyed, and anything created by your module must also be deleted.
@@ -12884,6 +13172,7 @@ window.LZW = {
        * <ul>
        *   <li>The id of the video that encountered the error (as defined by the module that controls it).</li>
        *   <li>The error details (object) containing an error code.</li>
+       *   <li>The playhead position (number)</li>
        * @event OO.EVENTS#VC_ERROR
        * @public
        */
@@ -12909,6 +13198,17 @@ window.LZW = {
        * @public
        */
       VC_PLAY: 'videoPlay',
+
+      /**
+       * Notifies the video element to play.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The id of the video to play (as defined by the module that controls it).</li>
+       * </ul>
+       * @event OO.EVENTS#PLAY_VIDEO_ELEMENT
+       * @private
+       */
+      PLAY_VIDEO_ELEMENT: 'playVideoElement',
 
       /**
        * The video element has been initialized and deferred command to play is unblocked
@@ -13065,6 +13365,146 @@ window.LZW = {
        */
       VC_TAG_FOUND: 'videoTagFound',
 
+     /**
+       * Initiate reload of manifest.
+       * When reload will be completed
+       * OO.EVENTS.PLAY will be fired.
+       * @event OO.EVENTS#VC_RELOAD_AND_PLAY
+       * @public
+       */
+      VC_RELOAD_AND_PLAY: 'vcReloadAndPlay',
+
+      /**
+       * Triggered right before reloading of manifest
+       * @event OO.EVENTS#VC_WILL_RELOAD_AND_PLAY
+       * @public
+       */
+      VC_WILL_RELOAD_AND_PLAY: 'vcWillReloadAndPlay',
+
+      /**
+       * Triggered right after reload of manifest completed.
+       * @event OO.EVENTS#VC_RELOADED
+       * @public
+       */
+      VC_RELOADED: 'vcReloaded',
+
+      /**
+       * This event is triggered when an ad sdk has been loaded successfully. the handler is called with:
+       * <ul>
+       *   <li>The ad plugin loaded.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_SDK_LOADED
+       */
+      AD_SDK_LOADED: 'adSdkLoaded',
+
+      /**
+       * This event is triggered when there is an failure to load the ad sdk.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin that failed to load.</li>
+       *   <li>The player core version.</li>
+       *   <li>The error message associated with the load failure.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_SDK_LOAD_FAILED
+      */
+      AD_SDK_LOAD_FAILED: 'adSdkLoadFailed',
+
+      /**
+       * This event is triggered whenever an ad is requested.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_REQUEST
+       */
+      AD_REQUEST: 'adRequest',
+
+      /**
+       * This event is triggered upon receiving a successful response for an ad request.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The ad request response time.</li>
+       *   <li>Time from initial play to ad request success</li>
+       * </ul>
+       * @event OO.EVENTS#AD_REQUEST_SUCCESS
+       */
+      AD_REQUEST_SUCCESS: 'adRequestSuccess',
+
+      /**
+       * This event is triggered upon receiving an error for an ad request.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The final ad tag after macro substitution</li>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>If there was a request timeout or not.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_REQUEST_ERROR
+       */
+      AD_REQUEST_ERROR: 'adRequestError',
+
+
+      /**
+       * This event is triggered upon receiving an empty response for an ad request.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The final ad tag after macro substitution</li>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_REQUEST_EMPTY
+       */
+      AD_REQUEST_EMPTY: 'adRequestEmpty',
+
+      /**
+       * This event is triggered upon when an error occurs trying to play an ad.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time/position the ad was scheduled to play.</li>
+       *   <li>The final ad tag url after macro substitution</li>
+       *   <li>The error code.</li>
+       *   <li>The error message.</li>
+       *   <li>The list of all video plugins.</li>
+       *   <li>The media file URL.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_PLAYBACK_ERROR
+       */
+      AD_PLAYBACK_ERROR: 'adPlaybackError',
+
+      /**
+       * This event is triggered when the ad plugin sdk records an impression event.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time the ad was scheduled to play.</li>
+       *   <li>The ad load time - time between ad request success and first frame started.</li>
+       *   <li>The ad protocol: VAST or VPAID.</li>
+       *   <li>The ad type: linearVideo, linearOverlay, nonLinearVideo, nonLinearOverlay.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_SDK_IMPRESSION
+       */
+      AD_SDK_IMPRESSION: 'adSdkImpression',
+
+      /**
+       * This event is triggered when an ad has completed playback.
+       * The handler is called with the following arguments:
+       * <ul>
+       *   <li>The ad plugin.</li>
+       *   <li>The time passed since the ad impression.</li>
+       *   <li>If the ad was skipped or not.</li>
+       * </ul>
+       * @event OO.EVENTS#AD_COMPLETED
+       */
+      AD_COMPLETED: 'adCompleted',
+
       WILL_FETCH_ADS: 'willFetchAds',
       DISABLE_SEEKING: 'disableSeeking',
       ENABLE_SEEKING: 'enableSeeking',
@@ -13190,16 +13630,25 @@ window.LZW = {
       // This event contains the information AMC need to know to place the overlay in the correct position.
       OVERLAY_RENDERING: "overlayRendering",
 
-     /**
-      * Event for signaling Ad Marquee rendering:
-      *   <ul>
-      *     <li>Boolean parameter, 'false' to not show ad marquee, 'true' to show ad marquee based on skin config</li>
-      *   </ul>
-      *
-      *
-      * @event OO.EVENTS#SHOW_AD_MARQUEE
-      */
-     SHOW_AD_MARQUEE: "showAdMarquee",
+      /**
+       * Event for signaling Ad Marquee rendering:
+       *   <ul>
+       *     <li>Boolean parameter, 'false' to not show ad marquee, 'true' to show ad marquee based on skin config</li>
+       *   </ul>
+       *
+       *
+       * @event OO.EVENTS#SHOW_AD_MARQUEE
+       */
+      SHOW_AD_MARQUEE: "showAdMarquee",
+
+      /**
+       * An ad plugin will publish this event whenever the ad SDK throws an ad event. Typical ad events are
+       * impressions, clicks, quartiles, etc. <br/><br/>
+       *
+       * @event OO.EVENTS#SDK_AD_EVENT
+       * @private
+       */
+      SDK_AD_EVENT: "sdkAdEvent",
 
       // Window published beforeUnload event. It's still user cancellable.
       /**
@@ -13228,6 +13677,13 @@ window.LZW = {
       REPORT_DISCOVERY_CLICK: "reportDiscoveryClick",
 
       /**
+       * Denotes that the playlist plugin is ready and has configured the playlist Pod(s).
+       * @event OO.EVENTS#PLAYLISTS_READY
+       * @public
+       */
+      PLAYLISTS_READY: 'playlistReady',
+
+      /**
        * The UI layer has finished its initial render. The handler is called with an object
        * of the following structure:
        *
@@ -13241,6 +13697,101 @@ window.LZW = {
        * @event OO.EVENTS#UI_READY
        */
       UI_READY: "uiReady",
+
+      /**
+       * Represents the mousemove event
+       * @event OO.EVENTS#TOUCH_MOVE
+       * @public
+       */
+      TOUCH_MOVE: "touchMove",
+
+      /**
+       * Represents the mouseUp event
+       * @event OO.EVENTS#CHECK_VR_DIRECTION
+       * @public
+       */
+      CHECK_VR_DIRECTION: "checkVrDirection",
+
+      /**
+       * Represents a change in the direction of movement of the camera
+       * @event OO.EVENTS#VR_DIRECTION_CHANGED
+       * @public
+       */
+      VR_DIRECTION_CHANGED: "vrDirectionChanged",
+
+      /**
+       * Says that a video type in playlist was updated
+       * @event OO.EVENTS#VIDEO_TYPE_CHANGED
+       * @public
+       */
+      VIDEO_TYPE_CHANGED: "videoTypeChanged",
+
+      /**
+       * Triggers if asset movie attributes has ha_enabled set to "true"(string)
+       * @event OO.EVENTS.HA_ENABLED
+       * @public
+       */
+      HA_ENABLED: 'haEnabled',
+
+      /**
+       * Triggers manual failover. As result player should reload manifest and start playing
+       * @event OO.EVENTS#HA_FAILOVER_NOW
+       * @public
+       */
+      HA_FAILOVER_NOW:'haFailoverNow',
+
+      /**
+       * Triggers update of the config for HA Failover plugin. Takes new config as parameter
+       * @event OO.EVENTS#HA_CONFIG_UPDATE
+       * @private
+       */
+      HA_CONFIG_UPDATE:'haConfigUpdate',
+
+      /**
+       * Use it to submit any new information about segments loading or requests.
+       * Ha Plugin gathers data and based on provided data taking actions.
+       * @event OO.EVENTS#HA_NOTIFY
+       * @private
+       */
+      HA_NOTIFY: 'haNotify',
+
+      /**
+       * This events is triggered right after HA plugin got notified and processed data
+       * handler parameter will be boolean, true if data valid and accepted
+       * used by unit tests.
+       * @event OO.EVENTS#HA_NOTIFY
+       * @private
+       */
+      HA_NOTIFIED:'haNotified',
+      /**
+       * This events is triggered right after HA config updated. Returns updated config
+       * @event OO.EVENTS#HA_CONFIG_UPDATED
+       * @private
+       */
+      HA_CONFIG_UPDATED:'haConfigUpdated',
+
+      /**
+       * This events is triggered right before initiating failover
+       * @event OO.EVENTS#HA_WILL_FAILOVER
+       * @public
+       */
+      HA_WILL_FAILOVER: 'haWillFailover',
+
+      /**
+       * This events is triggered after failover completed successfully.
+       * Usually right after OO.EVENTS.VC_WILL_PLAY
+       * @event OO.EVENTS#HA_FAILOVER_COMPLETE
+       * @public
+       */
+      HA_FAILOVER_COMPLETE: 'haFailoverComplete',
+
+      /**
+       * This events is triggered if some error happens during attempt of failover.
+       * Usually right after OO.EVENTS.VC_WILL_PLAY
+       * @event OO.EVENTS#HA_FAILOVER_ERROR
+       * @public
+       */
+      HA_FAILOVER_ERROR: 'haFailoverError',
 
       __end_marker : true
     };
@@ -13527,8 +14078,18 @@ window.LZW = {
       __end_marker : true
     };
 
+
+    OO.PLUGINS = {
+      ADS: "ads",
+      VIDEO: "video",
+      ANALYTICS: "analytics",
+      PLAYLIST: "playlist",
+      SKIN: "skin"
+    };
+
     OO.VIDEO = {
       MAIN: "main",
+      RELOAD:"reload",
       ADS: "ads",
 
       /**
@@ -13614,6 +14175,14 @@ window.LZW = {
          * @type {string}
          */
         MP4: "mp4",
+
+        /**
+         * @description <code>OO.VIDEO.ENCODING.YOUTUBE ('youtube')</code>:
+         *   An encoding type for non-drm youtube streams.
+         * @constant OO.VIDEO.ENCODING.YOUTUBE
+         * @type {string}
+         */
+        YOUTUBE:"youtube",
 
         /**
          * @description <code>OO.VIDEO.ENCODING.RTMP ('rtmp')</code>:
@@ -13808,6 +14377,67 @@ window.LZW = {
 
     };
 
+    OO.VIDEO_PLAYERS = {
+      OOYALA_HTML5_VIDEO_TECH: "ooyalaHtml5VideoTech",
+      BIT_WRAPPER: "bit-wrapper"
+    };
+
+    OO.PLAYER_VR = {
+      /**
+       * @description Default settings for playback video360. Can be changed by metadata
+       */
+      DEFAULT_SETTINGS: {
+        /**
+         * @description stereo mode
+         * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.STEREO
+         * @type {boolean}
+         */
+        STEREO: false,
+        /**
+         * @description It describes 360 video format
+         * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.CONTENT_TYPE
+         * @type {string}
+         */
+        CONTENT_TYPE: "single",
+        /**
+         * @description It defines a spatial horizontal offset (angle) in degree for the first view-port displayed.
+         * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.CONTENT_TYPE
+         * @type {number}
+         */
+        START_POSITION: 0,
+
+        /**
+         * @description Represents a viewing window for VR content. The current viewing direction is restricted to the set viewing window.
+         */
+        VIEW_WINDOW: {
+          /**
+           * @description Lower bound for yaw.
+           * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.VIEW_WINDOW.maxYaw
+           * @type {number}
+           */
+          minYaw: 0,
+          /**
+           * @description Upper bound for yaw.
+           * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.VIEW_WINDOW.maxYaw
+           * @type {number}
+           */
+          maxYaw: 360,
+          /**
+           * @description Lower bound for pitch.
+           * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.VIEW_WINDOW.minPitch
+           * @type {number}
+           */
+          minPitch: -90,
+          /**
+           * @description Upper bound for pitch.
+           * @constant OO.PLAYER_VR.DEFAULT_SETTINGS.VIEW_WINDOW.maxPitch
+           * @type {number}
+           */
+          maxPitch: 90
+        }
+      }
+    };
+
     OO.CSS = {
       VISIBLE_POSITION : "0px",
       INVISIBLE_POSITION : "-100000px",
@@ -13824,7 +14454,7 @@ window.LZW = {
 
     OO.TEMPLATES = {
       RANDOM_PLACE_HOLDER: ['[place_random_number_here]', '<now>', '[timestamp]', '<rand-num>', '[cache_buster]', '[random]'],
-      REFERAK_PLACE_HOLDER: ['[referrer_url]', '[LR_URL]'],
+      REFERAK_PLACE_HOLDER: ['[referrer_url]', '[LR_URL]', '[description_url]'],
       EMBED_CODE_PLACE_HOLDER: ['[oo_embedcode]'],
       MESSAGE : '\
                   <table width="100%" height="100%" bgcolor="black" style="padding-left:55px; padding-right:55px; \
@@ -13856,6 +14486,10 @@ window.LZW = {
       },
 
       OOYALA_PLAYER_SETTINGS_KEY: 'ooyala_player_settings',
+
+      VALHALLA_CACHE_CONTENT_TREE_KEY:  'content_tree',
+      VALHALLA_CACHE_METADATA_KEY:      'metadata',
+      VALHALLA_CACHE_SAS_KEY:           'sas_auth',
 
       __end_marker : true
     };
@@ -13917,82 +14551,82 @@ window.LZW = {
 
   // SPANISH
   es[OO.ERROR.API.NETWORK] = "No se puede contactar al servidor";
-  es[OO.ERROR.API.SAS.GENERIC] = "Respuesta de autorización no válida";
-  es[OO.ERROR.API.SAS.GEO] = "El vídeo no está autorizado en su ubicación";
-  es[OO.ERROR.API.SAS.DOMAIN] = "El vídeo no está autorizado para su dominio";
-  es[OO.ERROR.API.SAS.FUTURE] = "El vídeo estará disponible pronto";
-  es[OO.ERROR.API.SAS.PAST] = "El vídeo ya no está disponible";
-  es[OO.ERROR.API.SAS.DEVICE] = "El vídeo no está autorizado para reproducirse en este dispositivo";
-  es[OO.ERROR.API.SAS.PROXY] = "Se detectó un proxy anónimo. Deshabilite el proxy e intente nuevamente.";
-  es[OO.ERROR.API.SAS.CONCURRENT_STREAMS] = "Ha superado la cantidad máxima de transmisiones concurrentes";
-  es[OO.ERROR.API.SAS.INVALID_HEARTBEAT] = "Respuesta de pulso no válida";
-  es[OO.ERROR.API.SAS.ERROR_INVALID_ENTITLEMENTS] = "La suscripción del usuario a terminado - El video ya no está disponible para el usuario";
-  es[OO.ERROR.API.CONTENT_TREE] = "Contenido no válido";
-  es[OO.ERROR.API.METADATA] = "Metadatos no válidos";
+  es[OO.ERROR.API.SAS.GENERIC] = "Respuesta de autorizaciÃ³n no vÃ¡lida";
+  es[OO.ERROR.API.SAS.GEO] = "El vÃ­deo no estÃ¡ autorizado en su ubicaciÃ³n";
+  es[OO.ERROR.API.SAS.DOMAIN] = "El vÃ­deo no estÃ¡ autorizado para su dominio";
+  es[OO.ERROR.API.SAS.FUTURE] = "El vÃ­deo estarÃ¡ disponible pronto";
+  es[OO.ERROR.API.SAS.PAST] = "El vÃ­deo ya no estÃ¡ disponible";
+  es[OO.ERROR.API.SAS.DEVICE] = "El vÃ­deo no estÃ¡ autorizado para reproducirse en este dispositivo";
+  es[OO.ERROR.API.SAS.PROXY] = "Se detectÃ³ un proxy anÃ³nimo. Deshabilite el proxy e intente nuevamente.";
+  es[OO.ERROR.API.SAS.CONCURRENT_STREAMS] = "Ha superado la cantidad mÃ¡xima de transmisiones concurrentes";
+  es[OO.ERROR.API.SAS.INVALID_HEARTBEAT] = "Respuesta de pulso no vÃ¡lida";
+  es[OO.ERROR.API.SAS.ERROR_INVALID_ENTITLEMENTS] = "La suscripciÃ³n del usuario a terminado - El video ya no estÃ¡ disponible para el usuario";
+  es[OO.ERROR.API.CONTENT_TREE] = "Contenido no vÃ¡lido";
+  es[OO.ERROR.API.METADATA] = "Metadatos no vÃ¡lidos";
   es[OO.ERROR.PLAYBACK.GENERIC] = "No se pudo reproducir el contenido";
-  es[OO.ERROR.PLAYBACK.STREAM] = "El vídeo no está codificado para su dispositivo";
-  es[OO.ERROR.PLAYBACK.LIVESTREAM] = "La transmisión en vivo está fuera del aire";
-  es[OO.ERROR.PLAYBACK.NETWORK] = "La conexión de red se halla temporalmente perdida";
-  es[OO.ERROR.UNPLAYABLE_CONTENT] = "El vídeo no se puede reproducir en este reproductor";
-  es[OO.ERROR.INVALID_EXTERNAL_ID] = "ID externo no válido";
-  es[OO.ERROR.EMPTY_CHANNEL] = "El canal está vacío";
-  es[OO.ERROR.EMPTY_CHANNEL_SET] = "El conjunto de canales está vacío";
+  es[OO.ERROR.PLAYBACK.STREAM] = "El vÃ­deo no estÃ¡ codificado para su dispositivo";
+  es[OO.ERROR.PLAYBACK.LIVESTREAM] = "La transmisiÃ³n en vivo estÃ¡ fuera del aire";
+  es[OO.ERROR.PLAYBACK.NETWORK] = "La conexiÃ³n de red se halla temporalmente perdida";
+  es[OO.ERROR.UNPLAYABLE_CONTENT] = "El vÃ­deo no se puede reproducir en este reproductor";
+  es[OO.ERROR.INVALID_EXTERNAL_ID] = "ID externo no vÃ¡lido";
+  es[OO.ERROR.EMPTY_CHANNEL] = "El canal estÃ¡ vacÃ­o";
+  es[OO.ERROR.EMPTY_CHANNEL_SET] = "El conjunto de canales estÃ¡ vacÃ­o";
   es[OO.ERROR.CHANNEL_CONTENT] = "El canal no se puede reproducir en este momento";
-  es[OO.ERROR.VC_PLAY_FAILED] = "El vídeo no está codificado para su dispositivo";
-  es[OO.TEXT.ADS_COUNTDOWN] = "Anuncio: el vídeo se reanudará en breve";
+  es[OO.ERROR.VC_PLAY_FAILED] = "El vÃ­deo no estÃ¡ codificado para su dispositivo";
+  es[OO.TEXT.ADS_COUNTDOWN] = "Anuncio: el vÃ­deo se reanudarÃ¡ en breve";
   es[OO.TEXT.LIVE] = "EN VIVO";
 
   // FRENCH
   fr[OO.ERROR.API.NETWORK] = "Impossible de contacter le serveur";
-  fr[OO.ERROR.API.SAS.GENERIC] = "Réponse d'autorisation non valide";
-  fr[OO.ERROR.API.SAS.GEO] = "Cette vidéo n'est pas autorisée dans votre pays";
-  fr[OO.ERROR.API.SAS.DOMAIN] = "Cette vidéo n'est pas autorisée pour votre domaine";
-  fr[OO.ERROR.API.SAS.FUTURE] = "Cette vidéo sera bientôt disponible";
-  fr[OO.ERROR.API.SAS.PAST] = "Cette vidéo n'est plus disponible";
-  fr[OO.ERROR.API.SAS.DEVICE] = "La lecture de cette vidéo n'est pas autorisée sur cet appareil";
-  fr[OO.ERROR.API.SAS.PROXY] = "Un proxy anonyme a été détecté. Désactivez le proxy, puis réessayez.";
-  fr[OO.ERROR.API.SAS.CONCURRENT_STREAMS] = "Vous avez dépassé le nombre maximum de flux simultanés.";
-  fr[OO.ERROR.API.SAS.INVALID_HEARTBEAT] = "Réponse du signal de pulsation ('heartbeat') non valide";
+  fr[OO.ERROR.API.SAS.GENERIC] = "RÃ©ponse d'autorisation non valide";
+  fr[OO.ERROR.API.SAS.GEO] = "Cette vidÃ©o n'est pas autorisÃ©e dans votre pays";
+  fr[OO.ERROR.API.SAS.DOMAIN] = "Cette vidÃ©o n'est pas autorisÃ©e pour votre domaine";
+  fr[OO.ERROR.API.SAS.FUTURE] = "Cette vidÃ©o sera bientÃ´t disponible";
+  fr[OO.ERROR.API.SAS.PAST] = "Cette vidÃ©o n'est plus disponible";
+  fr[OO.ERROR.API.SAS.DEVICE] = "La lecture de cette vidÃ©o n'est pas autorisÃ©e sur cet appareil";
+  fr[OO.ERROR.API.SAS.PROXY] = "Un proxy anonyme a Ã©tÃ© dÃ©tectÃ©. DÃ©sactivez le proxy, puis rÃ©essayez.";
+  fr[OO.ERROR.API.SAS.CONCURRENT_STREAMS] = "Vous avez dÃ©passÃ© le nombre maximum de flux simultanÃ©s.";
+  fr[OO.ERROR.API.SAS.INVALID_HEARTBEAT] = "RÃ©ponse du signal de pulsation ('heartbeat') non valide";
   fr[OO.ERROR.API.CONTENT_TREE] = "Contenu non valide";
-  fr[OO.ERROR.API.METADATA] = "Métadonnées non valides";
+  fr[OO.ERROR.API.METADATA] = "MÃ©tadonnÃ©es non valides";
   fr[OO.ERROR.PLAYBACK.GENERIC] = "Impossible de lire le contenu";
-  fr[OO.ERROR.PLAYBACK.STREAM] = "Cette vidéo n'est pas encodée pour votre appareil";
-  fr[OO.ERROR.PLAYBACK.LIVESTREAM] = "Le flux direct a été interrompu";
-  fr[OO.ERROR.PLAYBACK.NETWORK] = "Connexion au réseau temporairement interrompue";
-  fr[OO.ERROR.UNPLAYABLE_CONTENT] = "Vous ne pouvez pas lire cette vidéo sur ce lecteur";
+  fr[OO.ERROR.PLAYBACK.STREAM] = "Cette vidÃ©o n'est pas encodÃ©e pour votre appareil";
+  fr[OO.ERROR.PLAYBACK.LIVESTREAM] = "Le flux direct a Ã©tÃ© interrompu";
+  fr[OO.ERROR.PLAYBACK.NETWORK] = "Connexion au rÃ©seau temporairement interrompue";
+  fr[OO.ERROR.UNPLAYABLE_CONTENT] = "Vous ne pouvez pas lire cette vidÃ©o sur ce lecteur";
   fr[OO.ERROR.INVALID_EXTERNAL_ID] = "Identifiant externe non valide";
-  fr[OO.ERROR.EMPTY_CHANNEL] = "Cette chaîne est vide";
-  fr[OO.ERROR.EMPTY_CHANNEL_SET] = "Ce groupe de chaînes est vide";
-  fr[OO.ERROR.CHANNEL_CONTENT] = "Vous ne pouvez pas lire cette chaîne pour le moment";
-  fr[OO.ERROR.VC_PLAY_FAILED] = "Cette vidéo n'est pas encodée pour votre appareil";
-  fr[OO.TEXT.ADS_COUNTDOWN] = "Publicité : votre vidéo reprendra bientôt";
+  fr[OO.ERROR.EMPTY_CHANNEL] = "Cette chaÃ®ne est vide";
+  fr[OO.ERROR.EMPTY_CHANNEL_SET] = "Ce groupe de chaÃ®nes est vide";
+  fr[OO.ERROR.CHANNEL_CONTENT] = "Vous ne pouvez pas lire cette chaÃ®ne pour le moment";
+  fr[OO.ERROR.VC_PLAY_FAILED] = "Cette vidÃ©o n'est pas encodÃ©e pour votre appareil";
+  fr[OO.TEXT.ADS_COUNTDOWN] = "PublicitÃ© : votre vidÃ©o reprendra bientÃ´t";
   fr[OO.TEXT.LIVE] = "EN DIRECT";
 
   // JAPANESE
-  ja[OO.ERROR.API.NETWORK] = "後でご確認ください。";
-  ja[OO.ERROR.API.SAS.GENERIC] = "ビデオを認証できません。";
-  ja[OO.ERROR.API.SAS.GEO] = "この地域ではこのビデオは許可されていません。";
-  ja[OO.ERROR.API.SAS.DOMAIN] = "お使いのドメインではこのビデオは許可されていません。";
-  ja[OO.ERROR.API.SAS.FUTURE] = "このビデオはしばらくすると再生可能になります。";
-  ja[OO.ERROR.API.SAS.PAST] = "このビデオは、既に御利用いただけません。";
-  ja[OO.ERROR.API.SAS.DEVICE] = "このビデオは、このデバイスでの再生は許可されていません。";
-  ja[OO.ERROR.API.SAS.CONCURRENT_STREAMS] = "最大同時接続数を超えています。";
-  ja[OO.ERROR.API.SAS.INVALID_HEARTBEAT] = "同時再生ストリームの最大数に達しました。";
-  ja[OO.ERROR.API.CONTENT_TREE] = "不正なコンテンツです。";
-  ja[OO.ERROR.API.METADATA] = "不正なメタデータです。";
-  ja[OO.ERROR.PLAYBACK.GENERIC] = "このコンテンツを再生できませんでした。";
-  ja[OO.ERROR.PLAYBACK.STREAM] = "このビデオは、お使いのデバイス向けにエンコードされていません。";
-  ja[OO.ERROR.PLAYBACK.LIVESTREAM] = "ライブ配信はされておりません。";
-  ja[OO.ERROR.PLAYBACK.NETWORK] = "ネットワークに一時的に接続できません。";
-  ja[OO.ERROR.UNPLAYABLE_CONTENT] = "このビデオは、このプレーヤーでは再生できません。";
-  ja[OO.ERROR.INVALID_EXTERNAL_ID] = "External IDが不正です。";
-  ja[OO.ERROR.EMPTY_CHANNEL] = "このチャンネルは空です。";
-  ja[OO.ERROR.EMPTY_CHANNEL_SET] = "このチャンネルセットは空です。";
-  ja[OO.ERROR.CHANNEL_CONTENT] = "このチャンネルは、現在再生できません。";
-  ja[OO.ERROR.VC_PLAY_FAILED] = "このビデオは、お使いのデバイス向けにエンコードされていません。";
-  ja[OO.TEXT.ADS_COUNTDOWN] = "広告：";
-  ja[OO.TEXT.ADS_COUNTDOWN_SECONDS] = "広告: <%= time %>数秒後にビデオの再生が開始します";
-  ja[OO.TEXT.LIVE] = "ライブ";
+  ja[OO.ERROR.API.NETWORK] = "å¾Œã§ã”ç¢ºèªãã ã•ã„ã€‚";
+  ja[OO.ERROR.API.SAS.GENERIC] = "ãƒ“ãƒ‡ã‚ªã‚’èªè¨¼ã§ãã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.API.SAS.GEO] = "ã“ã®åœ°åŸŸã§ã¯ã“ã®ãƒ“ãƒ‡ã‚ªã¯è¨±å¯ã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.API.SAS.DOMAIN] = "ãŠä½¿ã„ã®ãƒ‰ãƒ¡ã‚¤ãƒ³ã§ã¯ã“ã®ãƒ“ãƒ‡ã‚ªã¯è¨±å¯ã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.API.SAS.FUTURE] = "ã“ã®ãƒ“ãƒ‡ã‚ªã¯ã—ã°ã‚‰ãã™ã‚‹ã¨å†ç”Ÿå¯èƒ½ã«ãªã‚Šã¾ã™ã€‚";
+  ja[OO.ERROR.API.SAS.PAST] = "ã“ã®ãƒ“ãƒ‡ã‚ªã¯ã€æ—¢ã«å¾¡åˆ©ç”¨ã„ãŸã ã‘ã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.API.SAS.DEVICE] = "ã“ã®ãƒ“ãƒ‡ã‚ªã¯ã€ã“ã®ãƒ‡ãƒã‚¤ã‚¹ã§ã®å†ç”Ÿã¯è¨±å¯ã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.API.SAS.CONCURRENT_STREAMS] = "æœ€å¤§åŒæ™‚æŽ¥ç¶šæ•°ã‚’è¶…ãˆã¦ã„ã¾ã™ã€‚";
+  ja[OO.ERROR.API.SAS.INVALID_HEARTBEAT] = "åŒæ™‚å†ç”Ÿã‚¹ãƒˆãƒªãƒ¼ãƒ ã®æœ€å¤§æ•°ã«é”ã—ã¾ã—ãŸã€‚";
+  ja[OO.ERROR.API.CONTENT_TREE] = "ä¸æ­£ãªã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã§ã™ã€‚";
+  ja[OO.ERROR.API.METADATA] = "ä¸æ­£ãªãƒ¡ã‚¿ãƒ‡ãƒ¼ã‚¿ã§ã™ã€‚";
+  ja[OO.ERROR.PLAYBACK.GENERIC] = "ã“ã®ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã‚’å†ç”Ÿã§ãã¾ã›ã‚“ã§ã—ãŸã€‚";
+  ja[OO.ERROR.PLAYBACK.STREAM] = "ã“ã®ãƒ“ãƒ‡ã‚ªã¯ã€ãŠä½¿ã„ã®ãƒ‡ãƒã‚¤ã‚¹å‘ã‘ã«ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.PLAYBACK.LIVESTREAM] = "ãƒ©ã‚¤ãƒ–é…ä¿¡ã¯ã•ã‚Œã¦ãŠã‚Šã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.PLAYBACK.NETWORK] = "ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ã«ä¸€æ™‚çš„ã«æŽ¥ç¶šã§ãã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.UNPLAYABLE_CONTENT] = "ã“ã®ãƒ“ãƒ‡ã‚ªã¯ã€ã“ã®ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼ã§ã¯å†ç”Ÿã§ãã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.INVALID_EXTERNAL_ID] = "External IDãŒä¸æ­£ã§ã™ã€‚";
+  ja[OO.ERROR.EMPTY_CHANNEL] = "ã“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã¯ç©ºã§ã™ã€‚";
+  ja[OO.ERROR.EMPTY_CHANNEL_SET] = "ã“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã‚»ãƒƒãƒˆã¯ç©ºã§ã™ã€‚";
+  ja[OO.ERROR.CHANNEL_CONTENT] = "ã“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã¯ã€ç¾åœ¨å†ç”Ÿã§ãã¾ã›ã‚“ã€‚";
+  ja[OO.ERROR.VC_PLAY_FAILED] = "ã“ã®ãƒ“ãƒ‡ã‚ªã¯ã€ãŠä½¿ã„ã®ãƒ‡ãƒã‚¤ã‚¹å‘ã‘ã«ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚";
+  ja[OO.TEXT.ADS_COUNTDOWN] = "åºƒå‘Šï¼š";
+  ja[OO.TEXT.ADS_COUNTDOWN_SECONDS] = "åºƒå‘Š: <%= time %>æ•°ç§’å¾Œã«ãƒ“ãƒ‡ã‚ªã®å†ç”ŸãŒé–‹å§‹ã—ã¾ã™";
+  ja[OO.TEXT.LIVE] = "ãƒ©ã‚¤ãƒ–";
   OO.getLocalizedMessage = function(code) {
     var language = OO.getLocale();
     return (OO.MESSAGES[language] ? OO.MESSAGES[language][code] : undefined) ||
@@ -14007,7 +14641,7 @@ window.LZW = {
       __end_marker:1 };
   }(OO));
 
-    OO.VERSION.core.rev='796778274824b347eb703933c94ac0861292e621';
+    OO.VERSION.core.rev='f3c1f128bb3316362ea166196df05d8a909f306b';
 
 
   (function(OO) {
@@ -14562,6 +15196,13 @@ window.LZW = {
             OO.log("MB DEBUG: publishing \'" + eventName + "\' w\/ args ", args);
           }
 
+          // Intercept setEmbedCode, prevent emptyString to be set
+          if (eventName == OO.EVENTS.SET_EMBED_CODE) {
+            if (args[1].length === 0 || !args[1].trim()) {
+              return;
+            }
+          }
+
           this._emitter.trigger.apply(this._emitter, args);
           _.each(this._blockList[eventName], function(e) {
             this._clearDependent(e, eventName);
@@ -15102,6 +15743,10 @@ window.LZW = {
     //instance variables
     var mb = new OO.MessageBus();
 
+    if (parameters.debug && parameters.enableDebugTools && parameters.enableDebugTools.startDebugMB === true) {
+      mb.debug = true;
+    }
+
     $("#" + elementId).html(''); // clear the container for player rendering.
 
     // Module initialziation
@@ -15141,7 +15786,12 @@ window.LZW = {
     }
 
     // announce player instance was created
-    mb.publish(OO.EVENTS.PLAYER_CREATED, elementId, parameters, persistentSettings);
+    var createTime = new Date().valueOf();
+    var playerUrl = "";
+    if ( OO.$.ajaxSettings != null){
+      playerUrl = OO.$.ajaxSettings.url;
+    }
+    mb.publish(OO.EVENTS.PLAYER_CREATED, elementId, parameters, persistentSettings, _asset, createTime, playerUrl);
 
     /*
     PARTITION THE FLOW TO CMS-LESS PLAYER. Prevent any setEmbedCode action to execute
@@ -15184,28 +15834,35 @@ window.LZW = {
         return null;
       }
 
+      // Some parts of the code obtain the pcode and playerBrandingId values directly
+      // from the page-level parameters, so we make sure that the internal values set
+      // by Valhalla are available at the page-level as well.
+      // Page-level params will have precedence over Valhalla values in order to accommodate sub-accounts.
+      var internalParams = _.pick(OO.playerParams, 'pcode', 'playerBrandingId');
+      var playerParams = _.extend({}, internalParams, parameters);
+
       // extend Pcode, playerBrandingId and debug to playerParams
-      OO.configurePublisher(parameters);
+      OO.configurePublisher(playerParams);
       if (!OO.isPublisherConfigured()) {
         console.error("Error: pcode and playerBrandingId must be provided");
         return null;
       }
 
       // Set player environment if provided in parameters
-      OO.setServerHost(parameters);
+      OO.setServerHost(playerParams);
 
       // will not allow OO.players create twice for the same embedding element.
       if (!OO.players[elementId]) {
         OO.playerCount++;
-        OO.players[elementId] = OO.Player(elementId, asset, parameters);
+        OO.players[elementId] = OO.Player(elementId, asset, playerParams);
       }
 
       if (OO.DEBUG !== false && OO.DEBUG !== true) {
-        OO.DEBUG = (parameters.debug === true);
+        OO.DEBUG = (playerParams.debug === true);
         if (OO.DEBUG === true) {
           this.exposeDebugApi(elementId, OO.players[elementId]);
           //activate tools from the player params
-          this.enableDebugTools(elementId, parameters["enableDebugTools"]);
+          this.enableDebugTools(elementId, playerParams["enableDebugTools"]);
         }
       }
 
@@ -15382,7 +16039,7 @@ window.LZW = {
      *
      * Two important things to note:
      * 1. These features get turned on after the player is created. So this will not capture messages and debug output while the player is initializing.
-     * 2. If the console message isn't sent through OO.log, it won't get recorded. 
+     * 2. If the console message isn't sent through OO.log, it won't get recorded.
      * @private
      * @method player#enableDebugTools
      * @param {string} elementId The div in which the player lives
@@ -15459,6 +16116,7 @@ window.LZW = {
     var isAdPlaying = false;
     var isPlaying = false;
     var playheadTime = -1;
+    var isLive = false;
     var duration = -1;
     var adDuration = -1;
     var bufferLength = -1;
@@ -15497,6 +16155,7 @@ window.LZW = {
       isPlaying = false;
       state = OO.STATE.LOADING;
       playheadTime = -1;
+      isLive = false;
       duration = -1;
       adDuration = -1;
       bufferLength = -1;
@@ -15590,8 +16249,13 @@ window.LZW = {
       // NOTE[jigish]: we do not support channels yet, so currentItem *is* the root item
       item = tree;
       if (!tree) { return; }
-      // preset duration to what contentTree thinks it is. we'll change it later
-      duration = tree.duration;
+      // Preset duration to what contentTree thinks it is. This will get updated once
+      // real duration is known
+      var treeDuration = Number(tree.duration);
+      if (!isNaN(treeDuration)) {
+        // Content tree duration is in milliseconds, convert to seconds
+        duration = treeDuration / 1000;
+      }
     }, this));
 
     this.mb.subscribe(OO.EVENTS.WILL_FETCH_AUTHORIZATION, 'player', _.bind(function(event) {
@@ -15605,16 +16269,26 @@ window.LZW = {
       clockOffset = (tree.debug_data.user_info.request_timestamp * 1000) + latency - currentTime;
     }, this));
 
+    this.mb.subscribe(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, 'player', _.bind(function(event, videoId, streams, parentContainer, params) {
+      if (videoId === OO.VIDEO.MAIN) {
+        isLive = streams ? streams.isLive : false;
+      }
+    }, this));
+
     this.mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'player', _.bind(function(event, time, newDuration, buffer) {
       playheadTime = time;
-      duration = newDuration;
+      if (newDuration) {
+        duration = newDuration;
+      }
       bufferLength = buffer;
       if (!startTime) { startTime = new Date().getTime(); }
     }, this));
 
     this.mb.subscribe(OO.EVENTS.DOWNLOADING, 'player', _.bind(function(event, time, newDuration, buffer) {
       playheadTime = time;
-      duration = newDuration;
+      if (newDuration) {
+        duration = newDuration;
+      }
       bufferLength = buffer;
     }, this));
 
@@ -15639,7 +16313,7 @@ window.LZW = {
       _.extend(this.persistentSettings.closedCaptionOptions, sourceSettings.closedCaptionOptions);
       var newSettings = JSON.stringify(this.persistentSettings);
       // save new settings to local storage
-      OO.localStorage.setItem(OO.CONSTANTS.OOYALA_PLAYER_SETTINGS_KEY, newSettings);
+      OO.setItem(OO.CONSTANTS.OOYALA_PLAYER_SETTINGS_KEY, newSettings);
     }, this));
 
     this.mb.subscribe(OO.EVENTS.SET_EMBED_CODE, 'player', _.bind(function(event, embedCode, options) {
@@ -15738,7 +16412,17 @@ window.LZW = {
         return;
       }
 
-      this.mb.publish(_atEndScreen ? OO.EVENTS.REPLAY : (_playedOnce ? OO.EVENTS.PLAY : OO.EVENTS.INITIAL_PLAY));
+      if (_atEndScreen) {
+        this.mb.publish(OO.EVENTS.REPLAY);
+      }
+      else {
+        if (_playedOnce) {
+          this.mb.publish(OO.EVENTS.PLAY);
+        }
+        else {
+          this.mb.publish(OO.EVENTS.INITIAL_PLAY, Date.now(), false);
+        }
+      }
     };
 
     /**
@@ -15845,15 +16529,21 @@ window.LZW = {
     };
 
     /**
-     * Retrieves the total duration, in milliseconds, of the video.
+     * Retrieves the total duration, in seconds, of the video.
+     * This method should not be called before the player fires the <code>PLAYBACK_READY</code> event.
+     * The duration is not guaranteed to be known before that point.
      *
      * @public
      * @method getDuration
      * @memberOf OO.Player.prototype
-     * @return {Number} The total duration of the video in milliseconds.
+     * @return {Number} The total duration of the video in seconds.  The method returns a value of <code>Infinity</code> for all live assets, including assets that feature DVR functionality.
      */
     this.getDuration = function() {
-      return duration;
+      if (isLive) {
+        return Infinity;
+      } else {
+        return duration;
+      }
     };
 
     /**
@@ -16096,7 +16786,9 @@ window.LZW = {
      * To show no closed captions, set the language to <code>"none"</code>.
      */
     this.setClosedCaptionsLanguage = function(language) {
-      this.mb.publish(OO.EVENTS.SET_CLOSED_CAPTIONS_LANGUAGE, language);
+      if(language) {
+        this.mb.publish(OO.EVENTS.CHANGE_CLOSED_CAPTION_LANGUAGE, language);
+      }
     };
 
     /**
@@ -16378,7 +17070,7 @@ window.LZW = {
     onPlayerCreated: function(event, elementId, params) {
       this.elementId = elementId;
       this.topMostElement = $('#'+this.elementId);
-      this.topMostElement.append('<div class="innerWrapper"></div>');
+      this.topMostElement.append('<div class="innerWrapper" style="width:inherit; height:inherit"></div>');
       this.rootElement = this.topMostElement.find("div.innerWrapper");
       this.params = params;
 
@@ -16549,6 +17241,762 @@ window.LZW = {
   });
 }(OO, OO.$, OO._));
 
+/**
+ * HAFailoverMechanism
+ * Plugin that designed to handle failure scenario for HA (High Availability) enabled live channels.
+ * If stream failure is detected, it will initiate a reload of the manifest.
+ * @fires OO.EVENTS.HA_WILL_FAILOVER
+ * @fires OO.EVENTS.HA_FAILOVER_COMPLETE
+ * @fires OO.EVENTS.VC_RELOAD_AND_PLAY
+ * @fires OO.EVENTS.HA_FAILOVER_ERROR
+ */
+OO.plugin("HAFailoverMechanism", function(OO, _, $) {
+
+  var log = function() {
+    OO.log.apply(this, $.merge(["HAFailoverMechanism:"], arguments));
+  };
+
+  var dummy = {
+    feed: function() {},
+    feedSegments: function() {},
+    updateConfig: function() {},
+    isEnabled: function() {
+      return false
+    },
+    isDummy: true
+  };
+
+
+
+  /**
+   * @class HAFailoverMechanism
+   * @param {object} mb Message Bus
+   * @return {object} Return instance of itself. In case if setup was wrong return dummy placeholder.
+   *
+   * @public
+   */
+  var HAFailoverMechanism = function(mb) {
+    if (!mb) {
+      log('Wrong configuration. Returning dummy object', mb, dummy);
+      OO.exposeStaticApi('ha', dummy);
+      return dummy;
+    }
+
+    var _this = this;
+    var config = {};
+
+    var DEFAULT_CONFIG = Object.freeze({
+      failRatio: 0.4,
+      maxSegmentsToCheck: 20,
+      segmentsBuffered: 3,
+      timeoutCheckFrequencyMs: 500,
+      manifestFailureTimeoutMs: 3 * 1000,
+      failoverErrorTimeoutMs: 6 * 1000,
+      plugin: 'bit-wrapper'
+    });
+
+    //constants
+    _this.CONSTANTS = Object.freeze({
+      HA_ASSET_FLAG: 'ha_enabled',
+      HA_IGNORE_MAX_FLAG: 'ha_ignore_max_timeout',
+      DEFAULT_SEGMENT_LENGTH: 4,
+      PROXY_REFRESH_TIME: 6,
+    });
+
+    //it is turned off by default
+    var enabled = false;
+    var ignoreMax = false;
+    var failingOver = false;
+    var bitrates = [];
+    var currentBitrateID = '';
+    var initialPlay = false;
+
+    var segmentsInfo = [];
+    var startTime = null;
+
+    var avgSegmentLength = config.segmentLength || 0;
+    var segmentsChecked = 0;
+    var bitratesFailed = {};
+    var bitratesFailedCount = 0;
+    var topLevelManifestFailure = false;
+
+    var currentTime = 0;
+    var bufferedTime = 0;
+    var lastTimeDownload = 0;
+
+    var workerInterval = null;
+
+    if (OO.TEST_TEST_TEST) {
+      _this.failover = failover;
+      _this.reset = reset;
+      _this.isEnabled = isEnabled;
+      _this.feed = feed;
+      _this.feedSegments = feedSegments;
+      _this._getTimeoutTimeMs = _getTimeoutTimeMs;
+    }
+
+    initialize();
+
+
+
+    /**
+     * @method HAFailoverMechanism#initialize
+     * @description Subscribing to mb events and building config, creating worker
+     */
+    function initialize() {
+      config = buildConfig(config);
+
+      //events subscribe
+      mb.subscribe(OO.EVENTS.INITIAL_PLAY, 'HAFailoverMechanism', _onInitialPlay);
+      mb.subscribe(OO.EVENTS.HA_FAILOVER_NOW, 'HAFailoverMechanism', _onHaFailoverNow);
+      mb.subscribe(OO.EVENTS.HA_CONFIG_UPDATE, 'HAFailoverMechanism', _onHaUpdateConfig);
+      mb.subscribe(OO.EVENTS.HA_NOTIFY, 'HAFailoverMechanism', _onHaNotify);
+      mb.subscribe(OO.EVENTS.BITRATE_CHANGED, 'HAFailoverMechanism', _onBitrateChanged);
+      mb.subscribe(OO.EVENTS.BITRATE_INFO_AVAILABLE, 'HAFailoverMechanism', _onBitrateInfoAvailable);
+      mb.subscribe(OO.EVENTS.ASSET_CHANGED, 'HAFailoverMechanism', _onAssetChanged);
+      mb.subscribe(OO.EVENTS.METADATA_FETCHED, 'HAFailoverMechanism', _onMetadataFetched);
+      mb.subscribe(OO.EVENTS.DESTROY, 'HAFailoverMechanism', destroy)
+      mb.subscribe(OO.EVENTS.DOWNLOADING, 'HAFailoverMechanism', _onDownloading);
+      mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'HAFailoverMechanism', _onPlayheadTimeChanged);
+
+      log('initialization completed', config);
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onInitialPlay
+     * @description Callback function for OO.EVENTS.INITIAL_PLAY
+     * @param  {string} event Event name
+     * @private
+     */
+    function _onInitialPlay(event) {
+      initialPlay = true;
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onHaFailoverNow
+     * @description Callback function for OO.EVENTS.HA_FAILOVER_NOW
+     * @param  {string} event Event name
+     * @private
+     */
+    function _onHaFailoverNow(event) {
+      log('Failover due to event', event);
+      failover();
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onBitrateChanged
+     * @description Callback for OO.EVENTS.BITRATE_CHANGED
+     * @param  {string} event Event name
+     * @param  {object} data  Bitrate data
+     * @private
+     */
+    function _onBitrateChanged(event, data) {
+      if (!data) {
+        return;
+      }
+
+      currentBitrateID = data.id || '';
+
+      //debug
+      log('_onBitrateChanged', event, data);
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onBitrateInfoAvailable
+     * @description Callback for OO.EVENTS.BITRATE_INFO_AVAILABLE
+     * @param  {string} event Event name
+     * @param  {object} data  Bitrates data.
+     * @private
+     */
+    function _onBitrateInfoAvailable(event, data) {
+      if (!data) {
+        return;
+      }
+
+      bitrates = data.bitrates || [];
+
+      //debug
+      log('_onBitrateInfoAvailable', event, data);
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onAssetChanged
+     * @description Fired by the message bus when a new Standalone Player asset is set.
+     * @private
+     * @param {String} event The event name.
+     * @param {Object} asset The OSP asset json that was passed to setAsset().
+     * @param {Object} params The page-level parameters associated with the new asset.
+     */
+    function _onAssetChanged(event, asset, params) {
+      asset = asset || {};
+      var haConfig = asset.highAvailability || {};
+      // We extract the HA config values and mimic the METADATA_FETCHED data structure in
+      // order to process these with the same code path
+      var metadata = {
+        base: {}
+      };
+      if (typeof haConfig.enabled !== 'undefined') {
+        metadata.base[_this.CONSTANTS.HA_ASSET_FLAG] = _parseBoolStringProperty(haConfig.enabled);
+      }
+      if (typeof haConfig.ignoreMaxTimeout !== 'undefined') {
+        metadata.base[_this.CONSTANTS.HA_IGNORE_MAX_FLAG] = _parseBoolStringProperty(haConfig.ignoreMaxTimeout);
+      }
+      _processMetadata(metadata);
+    }
+
+    /**
+     * @method HAFailoverMechanism#parseBoolStringProperty
+     * @description Used as a workaround in order to mimic some of the metadata values passed by the backend,
+     * which are boolean but are provided as strings. For consistency with the rest of the
+     * code, we convert the boolean values provided in the asset json to string.
+     * @private
+     * @param {*} property A property usually taken from the asset json (Stand Alone Player) which we want to convert to the format used by the backend.
+     * @return {String} The string representation of a boolean (either 'true' or 'false'). Note:
+     * always returns 'false' when the property is falsy.
+     */
+    function _parseBoolStringProperty(property) {
+      if (!property) {
+        return 'false';
+      }
+      if (property === true || property === 'true') {
+        return 'true';
+      } else {
+        // Default to false any values that can't be recognized as true
+        return 'false';
+      }
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onMetadataFetched
+     * @description Callback for OO.EVENTS.METADATA_FETCHED
+     * @param  {string} event Event name
+     * @param  {object} data  Metadata object.
+     * @fires OO.EVENTS.HA_ENABLED
+     * @private
+     */
+    function _onMetadataFetched(event, data) {
+      _processMetadata(data);
+    }
+
+    /**
+     * @method HAFailoverMechanism#_processMetadata
+     * @description Called after either OO.EVENTS.METADATA_FETCHED or OO.EVENTS.ASSET_CHANGED in order to
+     * apply the external HA config values.
+     * @private
+     * @param {Object} data The metadata object from the OO.EVENTS.METADATA_FETCHED or a similarly
+     * formatted object constructed from the values from the asset json passed in OO.EVENTS.ASSET_CHANGED.
+     */
+    function _processMetadata(data) {
+      if (!data) {
+        return;
+      }
+
+      //every time metadata fetched we need to reset
+      reset();
+      var haEnabledAsset = data.base ? data.base[_this.CONSTANTS.HA_ASSET_FLAG] || '' : '';
+      enabled = String(haEnabledAsset).toLowerCase() === 'true';
+
+      //this flag is useful if customer need Live Low Latency and Live HA
+      var ignoreMaxAttrValue = data.base ? data.base[_this.CONSTANTS.HA_IGNORE_MAX_FLAG] || '' : '';
+      ignoreMax = String(ignoreMaxAttrValue).toLowerCase() === 'true';
+
+      clearInterval(workerInterval);
+      if (enabled) {
+        workerInterval = setInterval(timeoutCheck, config.timeoutCheckFrequencyMs);
+      }
+
+      mb.publish(OO.EVENTS.HA_ENABLED, enabled);
+
+      //debug
+      log('_onMetadataFetched', event, data);
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onVcWillPlay
+     * @description Callback for OO.EVENTS.VC_WILL_PLAY
+     * @private
+     * @fires OO.EVENTS.HA_FAILOVER_COMPLETE
+     */
+    function _onVcWillPlay() {
+      if (failingOver) {
+        failingOver = false;
+        mb.publish(OO.EVENTS.HA_FAILOVER_COMPLETE)
+      }
+      mb.unsubscribe(OO.EVENTS.VC_WILL_PLAY, 'HAFailoverMechanism');
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onDownloading
+     * @description Callback for OO.EVENTS.DOWNLOADING
+     * @param  {string} event Event name
+     * @param  {number} current_time  Current time in seconds
+     * @param {number} duration Current duration
+     * @param {number} buffered_time Time buffered in seconds
+     * @private
+     */
+    function _onDownloading(event, current_time, duration, buffered_time) {
+      if (!isEnabled()) {
+        return;
+      }
+
+      if (!pluginSupportsNativeEventsOnly()) {
+        return;
+      }
+
+      if(!initialPlay){
+        return;
+      }
+
+      if (segmentsChecked >= config.maxSegmentsToCheck) {
+        return;
+      }
+
+      var timeNow = _nowTimestamp();
+      if (lastTimeDownload) {
+        avgSegmentLength = ((avgSegmentLength * segmentsChecked) + (timeNow - lastTimeDownload)) / (segmentsChecked + 1);
+        segmentsChecked++;
+      }
+
+      bufferedTime = buffered_time;
+      currentTime = current_time;
+      lastTimeDownload = timeNow;
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onPlayheadTimeChanged
+     * @description Callback for OO.EVENTS.PLAYHEAD_TIME_CHANGED
+     * @param  {string} event Event name
+     * @param  {number} current_time  Current time in seconds
+     * @param {number} duration Current duration
+     * @param {number} buffered_time Time buffered in seconds
+     * @private
+     */
+    function _onPlayheadTimeChanged(event, current_time, duration, buffered_time) {
+      if (!isEnabled()) {
+        return;
+      }
+
+      if (!pluginSupportsNativeEventsOnly()) {
+        return;
+      }
+
+      bufferedTime = buffered_time;
+      currentTime = current_time;
+    }
+
+    /**
+     * @method HAFailoverMechanism#_onHaUpdateConfig
+     * @description Callback for OO.EVENTS.HA_CONFIG_UPDATE. Updates current config.
+     * @param  {string} event Event name
+     * @param  {object} newConfig New config that will be merged with existed. It will override fields.
+     *
+     * @fires OO.EVENTS.HA_CONFIG_UPDATED
+     * @private
+     */
+    function _onHaUpdateConfig(event, newConfig) {
+      config = buildConfig(newConfig || {});
+      log('Config updated', config);
+      mb.publish(OO.EVENTS.HA_CONFIG_UPDATED, config);
+    }
+
+
+    /**
+     * @method HAFailoverMechanism#_onHaNotify
+     * @description Callback for OO.EVENTS.HA_NOTIFY. Pass over data to appropriate functions
+     * @param  {string} event Event name
+     * @param  {string} Type of data
+     * @param  {object} Data that needs to be processed
+     *
+     * @private
+     */
+    function _onHaNotify(event, type, data) {
+      switch (type) {
+        case 'requestCompleted':
+          feed(data);
+          break;
+        case 'segmentLoaded':
+          feedSegments(data);
+          break;
+      }
+    }
+
+    /**
+     * @method HAFailoverMechanism#buildConfig
+     * @description Updating config with fields from default config.
+     * @param  {object} configuration Config that needs to be modified and updated with default data.
+     * @return {object}               Returns back updated config
+     * @public
+     */
+    function buildConfig(configuration) {
+      var _config = $.extend($.extend({}, DEFAULT_CONFIG), configuration);
+
+      if (!_config.segmentLength) {
+        _config.maxSegmentsToCheck = _config.maxSegmentsToCheck || DEFAULT_CONFIG.maxSegmentsToCheck;
+      } else {
+        _config.maxSegmentsToCheck = -1;
+      }
+
+      return _config;
+    }
+
+    /**
+     * @method HAFailoverMechanism#_nowTimestamp
+     * @description Returns current UTC timestamp
+     * @return {number}
+     * @example 1504642484388
+     *
+     * @private
+     */
+    function _nowTimestamp() {
+      return new Date().valueOf();
+    }
+
+    /**
+     * @method HAFailoverMechanism#_getSegmentLength
+     * @description Return average segments length in seconds
+     * @return {number}
+     * @example 10
+     *
+     * @private
+     */
+    function _getSegmentLength() {
+      return avgSegmentLength || _this.CONSTANTS.DEFAULT_SEGMENT_LENGTH;
+    }
+
+    /**
+     * @method HAFailoverMechanism#_getTimeoutTimeMs
+     * @description Returns timeout time in ms based on segments length
+     * @return {number}
+     * @example 6000
+     *
+     * @private
+     */
+    function _getTimeoutTimeMs() {
+      var timeoutMs = _getSegmentLength() * (config.segmentsBuffered) * 1000 / 2;
+      if (ignoreMax) {
+        return timeoutMs;
+      }
+      return Math.max(timeoutMs, _this.CONSTANTS.PROXY_REFRESH_TIME * 1000);
+    }
+
+    /**
+     * @method HAFailoverMechanism#_getPlaybackURL
+     * @description Returns playback url from a streams for current encoding
+     * @return {string}
+     *
+     * @private
+     */
+    function _getPlaybackURL() {
+      return (config.streams && config.chosenEncoding &&
+        config.streams[config.chosenEncoding] &&
+        (config.streams[config.chosenEncoding].url || '')) || '';
+    }
+
+    /**
+     * @method HAFailoverMechanism#isEnabled
+     * @description Returns true if HAFailoverMechanism enabled and setup correctly.
+     * @return {Boolean}
+     *
+     * @private
+     */
+    function isEnabled() {
+      return initialPlay && enabled && valid();
+    }
+
+    /**
+     * @method HAFailoverMechanism#pluginSupportSegmentsData
+     * @description Returns true if current plugin bit-wrapper.
+     * @return {Boolean}
+     *
+     * @private
+     */
+    function pluginSupportSegmentsData() {
+      return config.plugin === 'bit-wrapper';
+    }
+
+    /**
+     * @method HAFailoverMechanism#pluginSupportSegmentsData
+     * @description Returns true if current plugin ooyalaHtml5VideoTech.
+     * @return {Boolean}
+     *
+     * @private
+     */
+    function pluginSupportsNativeEventsOnly() {
+      return config.plugin === 'ooyalaHtml5VideoTech';
+    }
+
+    /**
+     * @method HAFailoverMechanism#feed
+     * @description Feed download info. Based on that info HAFailoverMechanism will detect
+     * failures and initiate failover if it is required.
+     * @param  {object} data Download info
+     * @return {boolean} Returns true if data was accepted and processed
+     *
+     * @public
+     */
+    function feed(data) {
+      if (!data || !data.downloadType) {
+        log('invalid data provided to feed method', data)
+        return false;
+      }
+
+      if (!isEnabled() || !pluginSupportSegmentsData()) {
+        log('disabled feed ignored');
+        return false;
+      }
+
+      //collect only data that indicate failures
+      if (!data.success && data.attempt > 0) {
+        segmentsInfo.push(data);
+        if (!startTime) {
+          startTime = _nowTimestamp()
+        }
+        log("data type is ", data.downloadType);
+      } else {
+        //if sequence interacted by success data, reset.
+        reset();
+      }
+
+      processCollectedData();
+      checkProcessedData();
+      return true;
+    }
+
+    /**
+     * @method HAFailoverMechanism#failover
+     * @description Trigger failover manually. Can be triggered by firing OO.EVENTS.HA_FAILOVER_NOW
+     *
+     * @fires OO.EVENTS.HA_WILL_FAILOVER
+     * @fires OO.EVENTS.VC_RELOAD_AND_PLAY
+     * @fires OO.EVENTS.HA_FAILOVER_ERROR
+     *
+     * @public
+     */
+    function failover() {
+      if (!isEnabled()) {
+        log('disabled. failover ignored');
+        log(initialPlay, enabled, valid());
+        return;
+      }
+
+      if (failingOver) {
+        log('video stream is in a process of fail over');
+        return;
+      }
+
+      mb.publish(OO.EVENTS.HA_WILL_FAILOVER);
+
+      log('trying to failover');
+      failingOver = true;
+
+      mb.subscribe(OO.EVENTS.VC_WILL_PLAY, 'HAFailoverMechanism', _onVcWillPlay);
+      mb.publish(OO.EVENTS.VC_RELOAD_AND_PLAY, config.streams || {});
+
+      log('failover initiated');
+
+      setTimeout(function() {
+        if (failingOver) {
+          mb.publish(OO.EVENTS.HA_FAILOVER_ERROR);
+          failingOver = false;
+        }
+      }, config.failoverErrorTimeoutMs);
+
+      reset(true);
+    }
+
+    /**
+     * @method HAFailoverMechanism#feedSegments
+     * @description Feed HAFailoverMechanism with segments info, so it can calculate more accurate timeout for failover
+     * This is optional by default. The algorithm will count the segment duration as 4 seconds
+     * @param  {object} data Loaded segments info
+     *
+     * @optional
+     * @public
+     */
+    function feedSegments(data) {
+      if (!data || !data.duration) {
+        log('invalid data provided to feedSegments method', data)
+        return;
+      }
+
+      if (config.maxSegmentsToCheck === -1) {
+        log('segments check disabled');
+        return;
+      }
+
+      if (!pluginSupportSegmentsData()) {
+        log('segments check disabled due to unsupported plugin', config.plugin);
+        return;
+      }
+
+      if (segmentsChecked > config.maxSegmentsToCheck) {
+        return;
+      }
+
+      if (data.duration) {
+        avgSegmentLength = (avgSegmentLength * segmentsChecked + parseFloat(data.duration)) / (segmentsChecked + 1);
+        segmentsChecked++;
+      }
+
+      log('Average segments length', avgSegmentLength);
+    }
+
+    /**
+     * @method HAFailoverMechanism#destroy
+     * @description Unsubscribe from all events, reset data, stop worker
+     *
+     * @private
+     */
+    function destroy() {
+      reset(true);
+      mb.unsubscribe(OO.EVENTS.INITIAL_PLAY, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.BITRATE_CHANGED, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.BITRATE_INFO_AVAILABLE, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.ASSET_CHANGED, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.METADATA_FETCHED, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.VC_WILL_PLAY, 'HAFailoverMechanism')
+      mb.unsubscribe(OO.EVENTS.DESTROY, 'HAFailoverMechanism')
+      mb.unsubscribe(OO.EVENTS.DOWNLOADING, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.DOWNLOADING, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.HA_FAILOVER_NOW, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.HA_CONFIG_UPDATE, 'HAFailoverMechanism');
+      mb.unsubscribe(OO.EVENTS.HA_NOTIFY, 'HAFailoverMechanism');
+
+      clearInterval(workerInterval);
+
+      log('destroy');
+    }
+
+
+    /**
+     * @method HAFailoverMechanism#valid
+     * @description Returns true if config contains required data for failover
+     * @return {boolean}
+     *
+     * @private
+     */
+    function valid() {
+      return !!config.streams;
+    }
+
+    /**
+     * @method HAFailoverMechanism#processCollectedData
+     * @description Processing collected data
+     *
+     * @private
+     */
+    function processCollectedData() {
+      if (!segmentsInfo.length || !isEnabled()) {
+        return;
+      }
+
+      var item = segmentsInfo[segmentsInfo.length - 1];
+
+      topLevelManifestFailure = item.downloadType === 'manifest' && item.url === _getPlaybackURL();
+      if (!topLevelManifestFailure && item.attempt >= 2 && !bitratesFailed[currentBitrateID]) {
+        bitratesFailedCount++;
+        bitratesFailed[currentBitrateID] = true;
+        log('Bitrate failure', currentBitrateID);
+      }
+    }
+
+    /**
+     * @method HAFailoverMechanism#checkProcessedData
+     * Check results of collected and processed data.
+     * Can trigger failover if failures detected
+     *
+     * @private
+     */
+    function checkProcessedData() {
+      if (!isEnabled()) {
+        return;
+      }
+
+      if (bitrates.length > 0 && bitratesFailedCount >= Math.round(bitrates.length * config.failRatio)) {
+        log('failover due to check of bitrates', bitratesFailedCount);
+        failover();
+      }
+    }
+
+    /**
+     * @method HAFailoverMechanism#reset
+     * @description Resets information to it's origin values. Perfect to use after failures recovers on it's own.
+     * Recommended to use hard reset after failover.
+     * Hard reset will reset everything to pure origin state
+     * Soft reset is reseting data that was recently processed.
+     * @param  {boolean} hard True if you want to do hard reset of the plugin
+     *
+     * @private
+     */
+    function reset(hard) {
+      segmentsInfo = [];
+      startTime = null;
+      bitratesFailedCount = 0;
+      topLevelManifestFailure = false;
+      bitratesFailed = {};
+      avgSegmentLength = config.segmentLength || 0;
+      segmentsChecked = 0;
+
+      if (hard) {
+        bitrates = [];
+        currentBitrateID = '';
+        lastTimeDownload = 0;
+      }
+
+      if (OO.TEST_TEST_TEST && hard === 'hard') {
+        failingOver = false;
+      }
+    }
+
+    /**
+     * @method HAFailoverMechanism#timeoutCheck
+     * @description Worker that check every so often (configured by config.timeoutCheckFrequencyMs) if failover is required or not
+     * @private
+     */
+    function timeoutCheck() {
+      if (!isEnabled()) {
+        return;
+      }
+
+      if (pluginSupportsNativeEventsOnly() && lastTimeDownload && bufferedTime && currentTime) {
+        if (bufferedTime - currentTime < (_getSegmentLength() / 2 / 1000) && (_nowTimestamp() - lastTimeDownload) > _getSegmentLength() * 2.5) {
+          log('failover due to buffering issues');
+          failover();
+          return;
+        }
+      }
+
+      if (pluginSupportSegmentsData()) {
+        if (topLevelManifestFailure) {
+          if (_nowTimestamp() - startTime > config.manifestFailureTimeoutMs) {
+            log('failover due to manifest failure');
+            failover();
+            return;
+          }
+        }
+
+        if (bitratesFailedCount) {
+          if (_nowTimestamp() - startTime > _getTimeoutTimeMs()) {
+            log('failover due to timeout');
+            failover();
+            return;
+          }
+        }
+      }
+    }
+
+    if (OO.TEST_TEST_TEST) {
+      //expose to other part of the player for unit tests only
+      OO.exposeStaticApi('ha', _this);
+    }
+  };
+
+  return HAFailoverMechanism;
+
+});
+
 /*
  * Asset Controller
  */
@@ -16596,7 +18044,9 @@ window.LZW = {
       if (this.validate(asset)) {
         this.normalizeAsset(asset);
         this.currentAssetId = asset.id;
-        this.mb.publish(OO.EVENTS.ASSET_CHANGED, asset, params);
+        _.defer(_.bind(function() {
+          this.mb.publish(OO.EVENTS.ASSET_CHANGED, asset, params)
+        }, this));
 
         if (this.validateKeyframes(asset)) {
           this.mb.publish(OO.EVENTS.THUMBNAILS_FETCHED, {data: asset.content.keyFrames});
@@ -16721,11 +18171,49 @@ window.LZW = {
   });
 
 }(OO, OO._, OO.$));
+
 /*
  * Playback Controller
  */
 
 (function(OO, _, $) {
+  /**
+   * Events raised by the Ad Managers. Currently identical to IMA events since IMA is
+   * the only ad manager that reports them. These should be used as a base for other
+   * ad manager SDK events.
+   * @private
+   * @member AdManagerController#SDK_AD_EVENTS
+   */
+  var SDK_AD_EVENTS = {
+    AD_BREAK_READY :            "adBreakReady",
+    AD_CAN_PLAY :               "adCanPlay",
+    AD_METADATA :               "adMetadata",
+    ALL_ADS_COMPLETED :         "allAdsCompleted",
+    CLICK :                     "click",
+    COMPLETE :                  "complete",
+    CONTENT_PAUSE_REQUESTED :   "contentPauseRequested",
+    CONTENT_RESUME_REQUESTED :  "contentResumeRequested",
+    DURATION_CHANGE :           "durationChange",
+    EXPANDED_CHANGED :          "expandedChanged",
+    FIRST_QUARTILE :            "firstquartile",
+    IMPRESSION :                "impression",
+    INTERACTION :               "interaction",
+    LINEAR_CHANGED :            "linearChanged",
+    LOADED :                    "loaded",
+    LOG :                       "log",
+    MIDPOINT :                  "midpoint",
+    PAUSED :                    "pause",
+    RESUMED :                   "resume",
+    SKIPPABLE_STATE_CHANGED :   "skippableStateChanged",
+    SKIPPED :                   "skip",
+    STARTED :                   "start",
+    THIRD_QUARTILE :            "thirdquartile",
+    USER_CLOSE :                "userClose",
+    VIEWABLE_IMPRESSION :       "viewable_impression",
+    VOLUME_CHANGED :            "volumeChange",
+    VOLUME_MUTED :              "mute"
+  };
+
   /**
    * @class PlaybackController
    * @classdesc The playback controller main class.  This class is registered as a module with the player.
@@ -16735,6 +18223,14 @@ window.LZW = {
    */
   var PlaybackController = function(messageBus, id) {
     this.toString = function() {return 'playback-controller';};
+
+    //TODO: Move into constants. Until then, these values should match the
+    //ones defined in video_controller.js
+    this.IOS_PLAY_MODE_OPTIONS = {
+      INLINE: "inline",
+      FULLSCREEN: "fullscreen"
+    };
+
     this.mb = messageBus;
     this.id = id;
 
@@ -16748,13 +18244,35 @@ window.LZW = {
     this.metadataHasFetched = false;
     this.isFirstStream = true;
     this.playedAtLeastOnce = false;
+    this.hasPlayed = false;
     this.endScreenShown = false;
+    this.mobileContinuousPlayDisabled = {};
+    this.previousWasOoyalaAd = false;
+    this.initialPlayHasOccurred = false;
+    this.initialPlaybackHasStarted = false;
+    this.currentBitrate = -1;
+    this.mainVideoElementCreated = false;
+    this.prerollsDone = false;
+    this.currentPodSize = 0;
+    this.finalPreroll = false;
+    this.reachedPrerollThresholdForPreloading = false;
+    this.preloaded = false;
+    this.requestedThumbnails = false;
+    this.totalPrerollPods = 0;
+    this.currentPrerollPod = 0;
+    this.fiveSecBitrateTimer = null;
+    this.thirtySecBitrateTimer = null;
 
     // properties
     this.playerParams = null;
-    this.shouldPreload = true;
+    this.shouldPreload = false;
     this.initialTime = 0;
+    this.playerCreatedTime = -1;
     this.closedCaptions = null;
+    this.autoplayed = false;
+    this.contentStarted = false;
+    this.elementId = null;
+    this.iosPlayMode = this.IOS_PLAY_MODE_OPTIONS.FULLSCREEN;
 
     // Default values for initialBitrate Override.
     // bitrateProperty.level a fraction from 0 to 1 from max_bitrate to choose, or "auto" to defer to video plugin ABR
@@ -16769,9 +18287,17 @@ window.LZW = {
       "isBitrateOverridden" : false
     };
 
+    this.isVr = false;
+    this.isVideoTypeChanged = false;
+
+    // Determines which event to use when preloading main content during preroll.
+    // Should be either FIRST_QUARTILE, MIDPOINT or THIRD_QUARTILE.
+    this.PRELOAD_THRESHOLD_EVENT = SDK_AD_EVENTS.THIRD_QUARTILE;
+
     // subscribes
     this.mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'playback', _.bind(this.playerCreated, this));
     this.mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'playback', _.bind(this.embedCodeChanged, this));
+    this.mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED_AFTER_OOYALA_AD, 'playback', _.bind(this.embedCodeChanged, this));
     this.mb.subscribe(OO.EVENTS.SET_ASSET, 'playback', _.bind(this.setAsset, this));
     this.mb.subscribe(OO.EVENTS.CONTENT_TREE_FETCHED, 'playback', _.bind(this.contentTreeFetched, this));
     this.mb.subscribe(OO.EVENTS.METADATA_FETCHED, 'playback', _.bind(this.metadataFetched, this));
@@ -16786,6 +18312,8 @@ window.LZW = {
                       _.bind(this.vcVideoElementCreated, this));
     this.mb.subscribe(OO.EVENTS.VC_VIDEO_ELEMENT_IN_FOCUS, 'playback',
                       _.bind(this.videoControllerVideoElementInFocus, this));
+    this.mb.subscribe(OO.EVENTS.VC_VIDEO_ELEMENT_DISPOSED, 'playback',
+                      _.bind(this.vcVideoElementDisposed, this));
     this.mb.subscribe(OO.EVENTS.VC_PLAYED, 'playback', _.bind(this.vcPlayed, this));
     this.mb.subscribe(OO.EVENTS.VC_PLAYING, 'playback', _.bind(this.vcPlaying, this));
     this.mb.subscribe(OO.EVENTS.VC_CAN_PLAY, 'playback', _.bind(this.vcCanPlay, this));
@@ -16796,8 +18324,16 @@ window.LZW = {
     this.mb.subscribe(OO.EVENTS.VC_WILL_PLAY, 'playback', _.bind(this.vcWillPlay, this));
     this.mb.subscribe(OO.EVENTS.REPLAY, 'playback', _.bind(this.replay, this));
     this.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'playback', _.bind(this.playbackReady, this));
+    this.mb.subscribe(OO.EVENTS.BITRATE_CHANGED, 'playback', _.bind(this.bitrateChanged, this));
     this.mb.subscribe(OO.EVENTS.BITRATE_INFO_AVAILABLE, 'playback', _.bind(this.bitrateInfoAvailable, this));
     this.mb.subscribe(OO.EVENTS.SET_TARGET_BITRATE, 'playback', _.bind(this.setTargetBitrate, this));
+
+    //Ad events
+    this.mb.subscribe(OO.EVENTS.AMC_ALL_READY, "playback", _.bind(this.onAmcAllReady, this));
+    this.mb.subscribe(OO.EVENTS.AMC_PREROLLS_DONE, "playback", _.bind(this.onAmcPrerollsDone, this));
+    this.mb.subscribe(OO.EVENTS.SDK_AD_EVENT, "playback", _.bind(this.onSdkAdEvent, this));
+    this.mb.subscribe(OO.EVENTS.WILL_PLAY_SINGLE_AD, "playback", _.bind(this.onWillPlaySingleAd, this));
+    this.mb.subscribe(OO.EVENTS.AD_POD_STARTED, "playback", _.bind(this.onAdPodStarted, this));
 
     // TODO: Can we deprecate this event?
     this.mb.subscribe(OO.EVENTS.WILL_RESUME_MAIN_VIDEO, 'playback', _.bind(this.willResume, this));
@@ -16821,7 +18357,20 @@ window.LZW = {
       var streams = {};
       for (var i = 0; i < playbackAuth.streams.length; i++) {
         var deliveryType = playbackAuth.streams[i].delivery_type;
+        //In the case of youtube there is only one playbackAuth.streams object i.e only one stream hence the number of iteration is one and the object won't be lost or recreated.
+        if(deliveryType == "youtube")
+        {
+          streams = {
+            "deliveryType": deliveryType,
+            "youtube":{
+              "url": playbackAuth.streams[i].youtube_id
+            }
+          }
+          return streams;
+        }
         if (!playbackAuth.streams[i].url || !deliveryType) continue;
+
+        if (playbackAuth.streams[i].drm && _.isEmpty(playbackAuth.streams[i].drm)) continue;
 
         var drmData = playbackAuth.streams[i].drm || {};
 
@@ -16875,10 +18424,20 @@ window.LZW = {
       return streams;
     },
 
-    assetChanged: function(event, asset){
+    assetChanged: function(event, asset) {
+      this.setAutoPlayParam();
+
       if (this.bitrateOverrideTimer) {
         clearTimeout(this.bitrateOverrideTimer);
         this.bitrateOverrideTimer = null;
+      }
+      if (this.fiveSecBitrateTimer) {
+        clearTimeout(this.fiveSecBitrateTimer);
+        this.fiveSecBitrateTimer = null;
+      }
+      if (this.thirtySecBitrateTimer) {
+        clearTimeout(this.thirtySecBitrateTimer);
+        this.thirtySecBitrateTimer = null;
       }
       this.chosenBitrateIndex = "auto";
       this.isBitrateOverrideReady = {
@@ -16900,9 +18459,9 @@ window.LZW = {
      * @method PlaybackController#checkDataReady
      * @protected
      */
-    checkDataReady: function() {
+    checkDataReady: function(ooyalaAds) {
       if (this.contentTree != null && this.metadataHasFetched && this.authorization != null) {
-        this.dataReady();
+        this.dataReady(ooyalaAds);
 
         // TODO: consider making a timeout to fire playback ready in case the video element is never created
         // Note that having the video element never created while not raising an error event is not an
@@ -16916,16 +18475,46 @@ window.LZW = {
      * @protected
      * @fires OO.EVENTS.VC_CREATE_VIDEO_ELEMENT
      */
-    dataReady: function() {
-      var mainVideoId = OO.VIDEO.MAIN;
+    dataReady: function(ooyalaAds) {
+      var mainVideoId = ooyalaAds? OO.VIDEO.ADS : OO.VIDEO.MAIN;
+
       this.playbackElements[mainVideoId] = { "streams": this.streams };
       this.currentPlaybackElement = mainVideoId;
       this.publishClosedCaptionInfo(mainVideoId, this.closedCaptions);
-      var platform = this.playerParams? this.playerParams.platform : void 0;
+      var platform = this.playerParams ? this.playerParams.platform : void 0;
+      var crossorigin = this.playerParams ? this.playerParams.crossorigin : void 0;
+      var pcode = this.playerParams ? this.playerParams.pcode : void 0;
       var params = {
         "closedCaptions": this.playbackElements[mainVideoId].closedCaptions,
-        "platform": platform
+        "platform": platform,
+        "crossorigin": crossorigin,
+        "authenticationData": { "pcode": pcode },
+        // Obtain bit_wrapper configuration options from either the global player params
+        // (i.e. set by Valhalla using OO.__internal.playerParams) or the page-level params
+        "pluginParams": _.extend({}, OO.playerParams, this.playerParams)
+        // ^^ IMPORTANT!
+        // If the user sets their own 'bit-wrapper' property it will override the internal
+        // 'bit-wrapper' property set by Valhalla which contains the location of the Bitmovin
+        // files. There is currently no use case for the user adding 'bit-wrapper' to their config
+        // for a purpose other than setting the Bitmovin files location, so this is currently not a problem.
+        // This might change in the future though.
       };
+
+      if (this.isVr) {
+        var vrParams = this.getPlayerVrParams();
+        // Extend BitWrapper plugin parameters with VR source settings.
+        // NOTE:
+        // Existing player params will override VR params. The extend below is shallow,
+        // so nested properties will also be overriden/lost if not properly specified.
+        // TODO:
+        // Find a more generic way of setting plugin settings without referencing BitWrapper specifcially.
+        params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER] = _.extend(
+          {},
+          vrParams,
+          params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER]
+        );
+      }
+
       this.mb.publish(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, mainVideoId, this.streams, null, params);
     },
 
@@ -16943,14 +18532,31 @@ window.LZW = {
       this.currentEmbedCode = null;
       this.endScreenShown = false;
 
-      // Clear out initialTime on all subsequent stream loads
-      if (!this.isFirstStream) {
-        this.initialTime = 0;
-      }
-      this.isFirstStream = false;
+      this.mainVideoElementCreated = false;
+      this.prerollsDone = false;
+      this.currentPodSize = 0;
+      this.finalPreroll = false;
+      this.reachedPrerollThresholdForPreloading = false;
+      this.preloaded = false;
+      this.totalPrerollPods = 0;
+      this.currentPrerollPod = 0;
 
-      // state
+      // Clear out initialTime on all subsequent stream loads
+      if (!this.playerParams || (!this.previousWasOoyalaAd && !this.playerParams.ooyalaAds)) {
+        if (!this.isFirstStream) {
+          this.initialTime = 0;
+        }
+      }
+      this.autoplayed = false;
+      this.contentStarted = false;
+      this.requestedThumbnails = false;
+      this.isFirstStream = false;
       this.playedAtLeastOnce = false;
+      if (this.playerParams && this.playerParams.ooyalaAds) {
+        this.previousWasOoyalaAd = true;
+      } else {
+        this.previousWasOoyalaAd = false;
+      }
     },
 
     /**
@@ -16960,9 +18566,53 @@ window.LZW = {
      * @fires OO.EVENTS.VC_PRELOAD;
      */
     preloadStream: function() {
-      // preload the stream
-      if (this.shouldPreload) {
+      // preload the stream if the following conditions are met:
+      // 1. the "preload" page level parameter is set to true (tracked by this.shouldPreload)
+      //    OR if we are autoplaying
+      // 2. we have not already preloaded this stream
+      // 3. the main video element has been created
+      // 4. Either we have been notified that prerolls have finished, or we have reached
+      //    the preload threshold for preloading (default is 3rd quartile of the final preroll)
+      if ((this.shouldPreload || this.shouldAutoplay()) && !this.preloaded && this.mainVideoElementCreated &&
+          (this.prerollsDone || this.reachedPrerollThresholdForPreloading)) {
+        this.preloaded = true;
         this.mb.publish(OO.EVENTS.VC_PRELOAD, this.currentPlaybackElement);
+      }
+    },
+
+    /**
+     * Checks to see if we should trigger autoplay based on environment
+     * and page level parameters.
+     * @method PlaybackController#shouldAutoplay
+     * @protected
+     */
+    shouldAutoplay: function() {
+      var autoPlay = !this.playerParams ? false :
+        (this.playerParams.autoPlay === 'true' || this.playerParams.autoPlay === true ||
+        this.playerParams.autoplay === 'true' || this.playerParams.autoplay === true);
+
+      // When a video element is disposed (such as when switching from one video plugin to another)
+      // we shouldn't attempt to auto play it on mobile, otherwise browser restrictions might cause it to get stuck
+      var mobileContinuousPlayDisabled = this.mobileContinuousPlayDisabled[this.currentPlaybackElement];
+      var mobileContinuousPlay = !mobileContinuousPlayDisabled && autoPlay && this.hasPlayed;
+
+      var autoplayOoyalaAds = false;
+      // In order to make auto play of ooyala ad without user gesture,
+      // mobileContinuousPlay should be always set to true if ooyalaAds is true
+      if (this.playerParams && this.playerParams.ooyalaAds) {
+        autoplayOoyalaAds = true;
+      }
+
+      //On iPhone, we don't want to autoplay unless we are playing inline since autoplay is not supported
+      //outside of inline playback
+      //Due to how mobile continuous ads and ooyala ads work (they have an embed code change and expect autoplay true),
+      //we will allow them to autoplay since a user click has already happened or they are muted
+      if (OO.isIphone && this.iosPlayMode !== this.IOS_PLAY_MODE_OPTIONS.INLINE && !mobileContinuousPlay && !autoplayOoyalaAds) {
+        return false;
+      } else if (mobileContinuousPlay || ((this.playedAtLeastOnce === false && autoPlay) || autoplayOoyalaAds)) {
+        return true;
+      } else {
+        return false;
       }
     },
 
@@ -16973,12 +18623,33 @@ window.LZW = {
      * @fires OO.EVENTS.INITIAL_PLAY
      */
     triggerAutoplay: function() {
-      var autoPlay = !this.playerParams ? false :
-                     (this.playerParams.autoPlay === 'true' || this.playerParams.autoPlay === true ||
-                      this.playerParams.autoplay === 'true' || this.playerParams.autoplay === true);
+      if (this.shouldAutoplay()) {
+        this.autoplayed = true;
+        this.mb.publish(OO.EVENTS.INITIAL_PLAY, Date.now(), this.autoplayed);
+      }
+    },
 
-      if (this.playedAtLeastOnce == false && autoPlay && OO.allowAutoPlay) {
-        this.mb.publish(OO.EVENTS.INITIAL_PLAY);
+    /**
+     * Sets and normalizes the autoPlay param according to the playerParams that were passed,
+     * as well as the current controller state. This will normally be called by
+     * embedCodeChanged or assetChanged in order to reset this value when a new video is set.
+     * @private
+     * @method PlaybackController#setAutoPlayParam
+     */
+    setAutoPlayParam: function() {
+      if (!this.playerParams) {
+        return;
+      }
+      this.playerParams.autoPlay = (this.playerParams.autoPlay === 'true' || this.playerParams.autoPlay === true ||
+                                    this.playerParams.autoplay === 'true' || this.playerParams.autoplay === true);
+
+      // The only time we want autoplay to be false after the initial content has played is when playerParams.autoPlay is false
+      // and is playerParams.autoPlayUpNextVideosOnly is defined and false.
+      if (this.initialPlayHasOccurred) {
+        if (typeof this.playerParams.autoPlayUpNextVideosOnly === 'undefined' || this.playerParams.autoPlayUpNextVideosOnly === 'true' ||
+          this.playerParams.autoPlayUpNextVideosOnly === true) {
+          this.playerParams.autoPlay = true;
+        }
       }
     },
 
@@ -17006,23 +18677,23 @@ window.LZW = {
      * to pause the stream if visibility changes.
      * @method PlaybackController#playerCreated
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} elementId The element id of the player instance
      * @param {object} params Page-level player parameters
+     * @param {object} persistentSettings Parsed local settings
+     * @param {string} embedCode The asset / embed code
+     * @param {number} createdTime Timestamp for when the player was created
      * @fires OO.EVENTS.PAUSE
      */
-    playerCreated: function(eventname, elementId, params) {
+    playerCreated: function(eventName, elementId, params, persistentSettings, embedCode, createdTime) {
+      this.elementId = elementId;
       this.playerParams = params;
+      this.playerCreatedTime = createdTime;
 
       if (typeof this.playerParams === "object") {
         // Set HTML5 locale
         if (this.playerParams["locale"] !== undefined) {
           OO.setLocale(this.playerParams["locale"]);
-        }
-
-        // Let page-level parameters override our default value for shouldPreload from true to false only
-        if (this.playerParams["preload"] === false) {
-          this.shouldPreload = false;
         }
 
         // Save initial time
@@ -17031,6 +18702,19 @@ window.LZW = {
           if (!isNaN(time) && time > 0) {
             this.initialTime = time;
           }
+        }
+
+        // Preloading is pointless when initialTime is set because it is applied right before the PLAY event,
+        // which means that we would be preloading the wrong part of the video (i.e. the beginning)
+        if (this.playerParams["preload"] === false || this.initialTime) {
+          this.shouldPreload = false;
+        } else if (this.playerParams["preload"] === true) {
+          this.shouldPreload = true;
+        }
+
+        //ios playback options
+        if (this.playerParams["iosPlayMode"] !== undefined) {
+          this.iosPlayMode = this.playerParams["iosPlayMode"];
         }
       }
 
@@ -17051,11 +18735,61 @@ window.LZW = {
     },
 
     /**
+     * Requests thumbnails.
+     * @method PlaybackController#fetchThumbnails
+     * @protected
+     */
+    fetchThumbnails: function() {
+      if (!this.requestedThumbnails) {
+        this.requestedThumbnails = true;
+        var urlParams = {
+          server: OO.SERVER.API,
+          embedCode: this.currentEmbedCode
+        };
+        $.ajax({
+          url: OO.URLS.THUMBNAILS(urlParams),
+          type: 'GET',
+          dataType: 'json',
+          cache: true,
+          success: _.bind(this.thumbnailsFetched, this),
+          error: _.bind(this._thumbnailsFailed, this)
+        });
+      }
+    },
+
+    /**
+     * Callback for thumbnails API response.
+     * @method Api#_thumbnailsFetched
+     * @param data The data from the AJAX request success
+     * @private
+     */
+    thumbnailsFetched: function(data){
+      if (data && data.data && !_.isEmpty(data.data.thumbnails)) {
+        this.mb.publish(OO.EVENTS.THUMBNAILS_FETCHED, data);
+      }
+    },
+
+    /**
+     * Error callback for thumbnails API.
+     * @method Api#_thumbnailsFailed
+     * @param request The request object
+     * @param status The text status
+     * @param error The error thrown
+     * @private
+     */
+    _thumbnailsFailed: function(request, status, error){
+      OO.log("Failed to fetch thumbnails")
+    },
+
+    /**
      * Called when playback is created.
      * @method PlaybackController#playbackReady
      * @protected
      */
     playbackReady: function() {
+      if (!this.shouldAutoplay()) {
+        this.fetchThumbnails();
+      }
       this.triggerAutoplay();
     },
 
@@ -17085,7 +18819,7 @@ window.LZW = {
      * @method PlaybackController#bitrateInfoAvailable
      * @protected
      */
-    bitrateInfoAvailable: function (eventname, params) {
+    bitrateInfoAvailable: function (eventName, params) {
       if (params && params.bitrates && this.bitrateProperty.level != "auto") {
         // Form and sort array of bitrates
         var bitrateArray = [];
@@ -17142,7 +18876,7 @@ window.LZW = {
      * @method PlaybackController#videoControllerVideoElementInFocus
      * @protected
      */
-    videoControllerVideoElementInFocus: function(eventname, id) {
+    videoControllerVideoElementInFocus: function(eventName, id) {
       this.isBitrateOverrideReady.isMainVideoElementInFocus = (id == OO.VIDEO.MAIN);
       this.publishInitialBitrateOverride();
     },
@@ -17152,7 +18886,7 @@ window.LZW = {
      * @method PlaybackController#setTargetBitrate
      * @protected
      */
-    setTargetBitrate: function (eventname, param, timer) {
+    setTargetBitrate: function (eventName, param, timer) {
       // Set a timer to disable bitrate Override, once duration is reached.
       if (!!timer && timer.setTimer) {
         this.bitrateOverrideTimer = setTimeout(
@@ -17168,34 +18902,64 @@ window.LZW = {
     },
 
     /**
+     * Called when BITRATE_CHANGED is published.
+     * @method PlaybackController#bitrateChanged
+     * @protected
+     */
+    bitrateChanged: function(eventName, params) {
+      this.currentBitrate = params.bitrate;
+    },
+
+    /**
      * Called when authorization has been fetched.  Checks if the player is ready.
      * @method PlaybackController#authorizationFetched
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {object} params Authorization data
      */
-    authorizationFetched: function(eventname, params) {
+    authorizationFetched: function(eventName, params, ooyalaAds) {
       this.authorization = params;
       this.streams = this.getStreams(params);
-      this.checkDataReady();
+      this.checkDataReady(ooyalaAds);
     },
 
     /**
      * Called when the content metadata has been fetched.  Checks if the player is ready.
      * @method PlaybackController#contentTreeFetched
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {object} tree Movie metadata
+     * @param ooyalaAds {boolean}
      */
-    contentTreeFetched: function(eventname, tree) {
+    contentTreeFetched: function(eventName, tree, ooyalaAds) {
       this.contentTree = tree;
+
       if (tree) {
         this.closedCaptions = {
           "closed_captions": tree.closed_captions,
           "closed_captions_vtt": tree.closed_captions_vtt
         };
       }
-      this.checkDataReady();
+
+      var isVr = !!this.hasVrParams();
+      this.isVideoTypeChanged = this.isVr !== isVr;
+
+      if (this.isVideoTypeChanged) {
+        this.mb.publish(OO.EVENTS.VIDEO_TYPE_CHANGED);
+        this.isVr = isVr;
+        this.recreateUi(isVr);
+      }
+
+      if (isVr) {
+        var vrParams = this.getPlayerVrParams();
+
+        this.mb.publish(OO.EVENTS.VIDEO_VR, {
+          videoId: ooyalaAds ? OO.VIDEO.ADS : OO.VIDEO.MAIN,
+          source: (vrParams || {}).source
+        });
+      }
+
+      this.checkDataReady(ooyalaAds);
     },
 
     /**
@@ -17251,19 +19015,112 @@ window.LZW = {
      * Called when the playback metadata has been fetched.  Checks if the player is ready.
      * @method PlaybackController#metadataFetched
      * @protected
+     * @param event {string} eventName The name of the event raised
+     * @param metadata {object} metadata from backlot
+     * @param ooyalaAds {boolean}
      */
-    metadataFetched: function() {
+    metadataFetched: function(event, metadata, ooyalaAds) {
       this.metadataHasFetched = true;
-      this.checkDataReady();
+      this.checkDataReady(ooyalaAds);
+    },
+
+    /**
+     * @description Check if contentTree has movie attributes and vr360type
+     * @private
+     * @method PlaybackController#hasVrParams
+     * @returns {boolean} true if vr360type == "mono" or mobile, else return false
+     */
+    hasVrParams: function () {
+      var vr360type = this.contentTree &&
+        this.contentTree.movie_attributes &&
+        this.contentTree.movie_attributes.vr360type;
+
+      //ToDo:supported only mode "mono"
+      return vr360type === 'mono';
+    },
+
+    /**
+     * @description if metadata has vr params RECREATING_UI event need to be published
+     * @private
+     * @param isVr
+     * @returns {boolean}
+     */
+    recreateUi: function(isVr) {
+      if (isVr) {
+        var persistentSettings = {"closedCaptionOptions":{}};
+        this.mb.publish(OO.EVENTS.RECREATING_UI, this.elementId, this.playerParams, persistentSettings);
+        return true;
+      }
+      return false;
+    },
+
+    /**
+     * Builds and returns the Bitmovin VR source config object using values extracted from the
+     * content tree and other default settings. Necessary for Bitmovin VR360 playback.
+     * TODO:
+     * Decouple this logic from BitWrapper/Bitmovin. Parameters that are specific to a certain
+     * plugin should be generated at the plugin level.
+     * @method PlaybackController#getPlayerVrParams
+     * @protected
+     */
+    getPlayerVrParams: function () {
+      var vrParams = {
+        stereo: OO.PLAYER_VR.DEFAULT_SETTINGS.STEREO,
+        contentType: OO.PLAYER_VR.DEFAULT_SETTINGS.CONTENT_TYPE,
+        startPosition: OO.PLAYER_VR.DEFAULT_SETTINGS.START_POSITION,
+        viewWindow: OO.PLAYER_VR.DEFAULT_SETTINGS.VIEW_WINDOW
+      };
+
+      if (this.hasVrParams()) {
+        var formattedVrParams = null;
+        vrParams = this._correctParametersName(vrParams);
+
+        if (vrParams) {
+          formattedVrParams = {
+            source: {
+              vr: vrParams
+            }
+          };
+        }
+        return formattedVrParams;
+      } else {
+        return null;
+      }
+    },
+
+    /**
+     * Validates property names for correct plugins operation
+     * @param vrParams parameters for vr 360
+     * @return {object} updated object with valid property names
+     * @private
+     */
+    _correctParametersName: function(vrParams){
+      switch (this.contentTree.movie_attributes.vr360type) {
+        case 'stereo_lr':
+          vrParams.stereo = true;
+          vrParams.contentType = 'sbs';
+          break;
+        case 'stereo_tb':
+          vrParams.stereo = true;
+          vrParams.contentType = 'tab';
+          break;
+        default:
+          break;
+      }
+
+      return vrParams;
     },
 
     /**
      * Called when playback is started.  Triggers intention to start playback of the main video.
      * @method PlaybackController#initialPlay
      * @protected
+     * @param {string} eventName The name of the event raised
+     * @param {number} unixTimeMs The unix timestamp of the initial playtime
      * @fires OO.EVENTS.WILL_PLAY_FROM_BEGINNING
      */
-    initialPlay: function() {
+    initialPlay: function(eventName, unixTimeMs) {
+      this.initialPlayHasOccurred = true;
       if (this.willPlayFromBeginning) {
         this.mb.publish(OO.EVENTS.WILL_PLAY_FROM_BEGINNING);
       }
@@ -17286,42 +19143,63 @@ window.LZW = {
      */
     onWillPlayFromBeginning: function() {
       this.mb.publish(OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT, this.currentPlaybackElement);
-      this.mb.publish(OO.EVENTS.VC_SET_INITIAL_TIME, OO.VIDEO.MAIN, this.initialTime);
+      if (!this.playerParams.ooyalaAds) {
+        this.mb.publish(OO.EVENTS.VC_SET_INITIAL_TIME, OO.VIDEO.MAIN, this.initialTime);
+      }
       this.mb.publish(OO.EVENTS.PLAY);
-      //this.mb.publish(OO.EVENTS.PLAY, this.currentPlaybackElement);
     },
 
     /**
      * Called when the video element has been created.  Triggers preloading and autoplay.
      * @method PlaybackController#vcVideoElementCreated
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {object} elementParams Properties of the video element including its domId and supported encodings
      * @fires OO.EVENTS.PLAYBACK_READY
      */
-    vcVideoElementCreated: function(eventname, elementParams) {
+    vcVideoElementCreated: function(eventName, elementParams) {
       if (this.currentPlaybackElement && (elementParams["videoId"] === this.currentPlaybackElement)) {
-        this.mb.publish(OO.EVENTS.PLAYBACK_READY);
+        if (this.currentPlaybackElement === OO.VIDEO.MAIN) {
+          this.mainVideoElementCreated = true;
+        }
+
+        var timeSincePlayerCreated = new Date().valueOf() - this.playerCreatedTime;
+        this.mb.publish(OO.EVENTS.PLAYBACK_READY, timeSincePlayerCreated, {
+          willAutoplay: this.shouldAutoplay()
+        });
         this.preloadStream();
       }
+    },
+
+    /**
+     * Called when a video element has been disposed.
+     * @method PlaybackController#vcVideoElementDisposed
+     * @protected
+     * @param {string} eventName The name of the event raised
+     * @param {string} videoId The id of the video that was disposed
+     */
+    vcVideoElementDisposed: function(eventName, videoId) {
+      // On mobile web, we can't programmatically trigger a 'play' on a video element
+      // that hasn't been previously started by a user gesture. If the element was just re-created,
+      // it is a sure sign that it hasn't been played before and we need to make sure that we
+      // don't attempt to autoplay it by mistake (on Android this will freeze the video)
+      this.mobileContinuousPlayDisabled[videoId] = true;
     },
 
     /**
      * Called when the stream is changed.  Resets playback data and disposes any existing playback elements.
      * @method PlaybackController#embedCodeChanged
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {object} embedCode The new embed code
      * @param {object} params The player parameters
-     * @fires OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT
      */
-    embedCodeChanged: function(eventname, embedCode, params) {
+    embedCodeChanged: function(eventName, embedCode, params) {
       // TODO: Only do all of this if the embed code actually changed?
 
-      var autoPlay = !this.playerParams ? false :
-               (this.playerParams.autoPlay === 'true' || this.playerParams.autoPlay === true ||
-                this.playerParams.autoplay === 'true' || this.playerParams.autoplay === true);
+      this.playerParams = typeof params === 'object' ? params : {};
 
+      this.setAutoPlayParam();
       this.resetStreamData();
       this.currentEmbedCode = embedCode;
       if (this.bitrateOverrideTimer) {
@@ -17335,21 +19213,11 @@ window.LZW = {
         "isBitrateOverridden" : false
       };
 
-      if (!params) this.playerParams = {};
-      else this.playerParams = params;
-
       if (this.playerParams['locale'] !== undefined) {
         OO.setLocale(this.playerParams['locale']);
       }
 
-      this.playerParams.autoPlay = autoPlay; // autoPlay should be preserved across videos in a series.
       this.willPlayFromBeginning = true;
-
-      // Destroy any existing playback elements
-      for (var element in this.playbackElements) {
-        if (!element) continue;
-        this.mb.publish(OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT, element);
-      }
     },
 
     /**
@@ -17357,24 +19225,17 @@ window.LZW = {
      * Sets the locale based on player parameters.
      * @method PlaybackController#setAsset
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {object} asset The new asset object
      * @param {object} params The player parameters
-     * @fires OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT
      */
-    setAsset: function(eventname, asset, params) {
+    setAsset: function(eventName, asset, params) {
       this.resetStreamData();
       this.playerParams = params;
       this.willPlayFromBeginning = true;
 
       if (this.playerParams['locale'] !== undefined) {
         OO.setLocale(this.playerParams['locale']);
-      }
-
-      // Destroy any existing playback elements
-      for (var element in this.playbackElements) {
-        if (!element) continue;
-        this.mb.publish(OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT, element);
       }
     },
 
@@ -17392,42 +19253,95 @@ window.LZW = {
      * Called when the video controller reports playback failure.  Raises playback error events.
      * @method PlaybackController#vcPlayFailed
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} videoId The id of the video element on which playback failed
      * @param {string} mediaErrorCode The error code raised by the video controller
      * @fires OO.EVENTS.PLAY_FAILED
      * @fires OO.EVENTS.ERROR
      */
-    vcPlayFailed: function(eventname, videoId, mediaErrorCode) {
+    vcPlayFailed: function(eventName, videoId, errorDetails) {
+
       if (!this.currentPlaybackElement || (videoId !== this.currentPlaybackElement)) return;
 
-      this.mb.publish(OO.EVENTS.PLAY_FAILED, mediaErrorCode);
-      mediaErrorCode = parseInt(mediaErrorCode);
       var mediaErrorAborted = !!window.MediaError ? window.MediaError.MEDIA_ERR_ABORTED : 1;
       var mediaErrorNetwork = !!window.MediaError ? window.MediaError.MEDIA_ERR_NETWORK : 2;
       var mediaErrorSourceNotSupported = !!window.MediaError ? window.MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED : 4;
+      //Ooyala extension to window.MediaError codes indicating DRM error
+      var mediaErrorDrm = 6;
+
+      this.mb.publish(OO.EVENTS.PLAY_FAILED, errorDetails.mediaErrorCode);
+      var mediaErrorCode = parseInt(errorDetails.mediaErrorCode);
+      var mediaErrorMessage;
+      switch(mediaErrorCode){
+        case -1:
+          mediaErrorMessage = "An unknown error has occurred.";
+          break;
+        case 0:
+          mediaErrorMessage = "No stream found.";
+          break;
+        case 1:
+          mediaErrorMessage = "Aborted by user.";
+          break;
+        case 2:
+          mediaErrorMessage = "A network error occurred retrieving the video source.";
+          break;
+        case 3:
+          mediaErrorMessage = "Error decoding source.";
+          break;
+        case 4:
+          mediaErrorMessage = "Source is unsupported.";
+          break;
+        case 5:
+          mediaErrorMessage = "Source could not be decrypted.";
+          break;
+        case 6:
+          mediaErrorMessage = "A DRM server error has occurred.";
+          break;
+      }
+
+      var ooyalaErrorCode;
+      var ooyalaErrorMessage;
       // TODO: Should mediaErrorAborted associate to it's own message?
       if (mediaErrorCode === mediaErrorAborted) {
-        this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.PLAYBACK.GENERIC });
+        ooyalaErrorCode = OO.ERROR.PLAYBACK.GENERIC;
+        ooyalaErrorMessage = "Could not play the content.";
       } else if (mediaErrorCode === mediaErrorNetwork) {
-        this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.PLAYBACK.NETWORK });
+        ooyalaErrorCode = OO.ERROR.PLAYBACK.NETWORK;
+        ooyalaErrorMessage = "The network connection was temporarily lost.";
       } else if (mediaErrorCode === mediaErrorSourceNotSupported) {
-        this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.PLAYBACK.GENERIC });
-      } else if (mediaErrorCode === 6) {
-        this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.API.SAS.ERROR_DRM_RIGHTS_SERVER_ERROR });
+        ooyalaErrorCode = OO.ERROR.PLAYBACK.GENERIC;
+        ooyalaErrorMessage = "Could not play the content.";
+      } else if (mediaErrorCode === mediaErrorDrm) {
+        ooyalaErrorCode = OO.ERROR.API.SAS.ERROR_DRM_RIGHTS_SERVER_ERROR;
+        ooyalaErrorMessage = "DRM server error.";
       } else {
         if (this.contentTree) {
           switch(this.contentTree.content_type) {
             case "Video":
-              this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.PLAYBACK.STREAM });
+              ooyalaErrorCode = OO.ERROR.PLAYBACK.STREAM;
+              ooyalaErrorMessage = "This video is not encoded for your device.";
               break;
             case "LiveStream":
-              this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.PLAYBACK.LIVESTREAM });
+              ooyalaErrorCode = OO.ERROR.PLAYBACK.LIVESTREAM;
+              ooyalaErrorMessage = "Live stream is off air.";
               break;
             default:
-              this.mb.publish(OO.EVENTS.ERROR, { code: OO.ERROR.PLAYBACK.GENERIC });
+              ooyalaErrorCode = OO.ERROR.PLAYBACK.GENERIC;
+              ooyalaErrorMessage = "Could not play the content.";
           }
         }
+      }
+      errorDetails.ooyalaErrorCode = ooyalaErrorCode;
+      errorDetails.ooyalaErrorMessage = ooyalaErrorMessage;
+      errorDetails.mediaErrorMessage = mediaErrorMessage;
+      this.mb.publish(OO.EVENTS.ERROR, {code: ooyalaErrorCode});
+      if (errorDetails.playhead > 0)
+      {
+        this.mb.publish(OO.EVENTS.PLAYBACK_MIDSTREAM_ERROR, errorDetails);
+      }
+      else
+      {
+        this.mb.publish(OO.EVENTS.PLAYBACK_START_ERROR, errorDetails);
       }
     },
 
@@ -17435,16 +19349,35 @@ window.LZW = {
      * Called when the video controller encountered an error configuring a video element.  Raises error if
      * the video element was a main video element.
      * @protected
-     * @param {string} eventname The name of the event raised.
+     * @param {string} eventName The name of the event raised.
      * @param {string} videoId The id of the video element which encountered a video controller error.
      * @param {object} errorDetails The details of the error including the error code.
      * @fires OO.EVENTS.ERROR
      */
-    vcError: function(eventname, videoId, errorDetails) {
+    vcError: function(eventName, videoId, error) {
       if (!this.currentPlaybackElement || (videoId !== this.currentPlaybackElement)) {
         return;
       }
 
+      var errorDetails = {};
+      if (error.ooyalaErrorCode ===  OO.ERROR.VC.UNSUPPORTED_ENCODING){
+        error.ooyalaErrorMessage = "This device does not have an available decoder for this stream type.";
+        errorDetails.code = error.ooyalaErrorCode;
+      } else if(error.ooyalaErrorCode ===  OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT){
+        error.ooyalaErrorMessage = "A video element to play the given stream could not be created.";
+        errorDetails.code = error.ooyalaErrorCode;
+      } else{
+        errorDetails = error;
+      }
+
+      if (error.playhead > 0)
+      {
+        this.mb.publish(OO.EVENTS.PLAYBACK_MIDSTREAM_ERROR, error);
+      }
+      else
+      {
+        this.mb.publish(OO.EVENTS.PLAYBACK_START_ERROR, error);
+      }
       this.mb.publish(OO.EVENTS.ERROR, errorDetails);
     },
 
@@ -17453,7 +19386,7 @@ window.LZW = {
      * the video element was a main video element.
      * @method PlaybackController#vcWillPlay
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} videoId The id of the video element which reported willPlay
      * @fires OO.EVENTS.WILL_PLAY
      */
@@ -17495,11 +19428,11 @@ window.LZW = {
      * Called when the video controller reports playback completion.  Raises played event.
      * @method PlaybackController#vcPlayed
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} videoId The id of the video element which reported played
      * @fires OO.EVENTS.PLAYED
      */
-    vcPlayed: function(eventname, videoId) {
+    vcPlayed: function(eventName, videoId) {
       if (!this.currentPlaybackElement || (videoId !== this.currentPlaybackElement)) return;
 
       this.endScreenShown = true;
@@ -17511,17 +19444,47 @@ window.LZW = {
      * Called when the video controller reports playback in progress.  Raises playing event.
      * @method PlaybackController#vcPlaying
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} videoId The id of the video element which reported playing
      * @fires OO.EVENTS.PLAYING
      */
-    vcPlaying: function(eventname, videoId) {
+    vcPlaying: function(eventName, videoId) {
       if (!this.currentPlaybackElement || (videoId !== this.currentPlaybackElement)) return;
+
+      if (!this.initialPlaybackHasStarted){
+        this.initialPlaybackHasStarted = true;
+        this.mb.publish(OO.EVENTS.BITRATE_INITIAL, this.currentBitrate);
+        //TODO: ensure these timers are cleared if embed code changes
+        this.fiveSecBitrateTimer = setTimeout(
+          function(pbc)
+          {
+            pbc.mb.publish(OO.EVENTS.BITRATE_FIVE_SEC, pbc.currentBitrate);
+          }
+        , 5000, this);
+        this.thirtySecBitrateTimer = setTimeout(
+          function(pbc)
+          {
+            pbc.mb.publish(OO.EVENTS.BITRATE_STABLE, pbc.currentBitrate);
+          }
+        , 30000, this);
+      }
+
+      if (videoId === OO.VIDEO.MAIN) {
+        if (this.autoplayed && !this.contentStarted) {
+          this.fetchThumbnails();
+        }
+        this.contentStarted = true;
+      }
+
+      this.hasPlayed = true;
+      // Once a video has been played by the user, we are allowed to trigger
+      // "play" programmatically in order to achieve continuous playback on mobile
+      this.mobileContinuousPlayDisabled[videoId] = false;
       // used to check this.userRequest before raising
       this.mb.publish(OO.EVENTS.PLAYING);
     },
 
-    vcCanPlay: function(eventname, videoId) {
+    vcCanPlay: function(eventName, videoId) {
       if (this.currentPlaybackElement === videoId) {
         this.mb.publish(OO.EVENTS.CAN_PLAY);
       }
@@ -17531,11 +19494,11 @@ window.LZW = {
      * Called when the video controller reports playback paused.  Raises paused event.
      * @method PlaybackController#vcPaused
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} videoId The id of the video element which reported paused
      * @fires OO.EVENTS.PAUSED
      */
-    vcPaused: function(eventname, videoId) {
+    vcPaused: function(eventName, videoId) {
       if (!this.currentPlaybackElement || (videoId !== this.currentPlaybackElement)) return;
       this.mb.publish(OO.EVENTS.PAUSED);
     },
@@ -17544,12 +19507,12 @@ window.LZW = {
      * Called when the video controller reports video seeked.  Raises seeked event.
      * method PlaybackController#vcSeeked
      * @protected
-     * @param {string} eventname The name of the event raised
+     * @param {string} eventName The name of the event raised
      * @param {string} videoId The id of the video element which reported paused
      * @param {number} playhead The current time of the video after seeking
      * @fires OO.EVENTS.SEEKED
      */
-    vcSeeked: function(eventname, videoId, playhead) {
+    vcSeeked: function(eventName, videoId, playhead) {
       if (!this.currentPlaybackElement || (videoId !== this.currentPlaybackElement)) return;
       this.mb.publish(OO.EVENTS.SEEKED, playhead);
     },
@@ -17561,8 +19524,82 @@ window.LZW = {
      */
     played: function() {
       this.playedAtLeastOnce = true;
+      this.preloaded = false;
       this.preloadStream(); // re-initiate the playback ready for replay.
       this.triggerLoopPlay();
+    },
+
+    /**
+     * Callback to the AMC_ALL_READY message bus event. Checks to see if we can preload the stream.
+     * @method PlaybackController#onAmcAllReady
+     * @protected
+     * @param {string} eventName The name of the event
+     * @param {object} params Ad manager controller params
+     */
+    onAmcAllReady: function(eventName, params) {
+      if (params) {
+        this.totalPrerollPods = params.prerolls;
+        if (!this.totalPrerollPods) {
+          this.prerollsDone = true;
+          this.preloadStream();
+        }
+      }
+    },
+
+    /**
+     * Callback to the AMC_PREROLLS_DONE message bus event. Checks to see if we can preload the stream.
+     * @method PlaybackController#onAmcPrerollsDone
+     * @protected
+     */
+    onAmcPrerollsDone: function() {
+      this.prerollsDone = true;
+      this.preloadStream();
+    },
+
+    /**
+     * Callback to the SDK_AD_EVENT message bus event. Checks to see if we can preload the stream.
+     * @method PlaybackController#onSdkAdEvent
+     * @protected
+     * @param {string} eventName Core message bus event name
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {string} adEventName The name of this event from the ad plugin
+     * @param {object} adEventData An object containing details of the ad event. This may vary
+     *                               between ad plugin to ad plugin.
+     */
+    onSdkAdEvent: function(event, adPluginName, adEventName, adEventData) {
+      var thresholdEvent = (OO.playerParams || {}).preloadThresholdEvent || this.PRELOAD_THRESHOLD_EVENT;
+      if (this.finalPreroll && adEventName === thresholdEvent) {
+        this.reachedPrerollThresholdForPreloading = true;
+        this.preloadStream();
+      }
+    },
+
+    /**
+     * Callback to the AD_POD_STARTED message bus event. Keeps track of
+     * how many ads there are in an ad pod.
+     * @method PlaybackController#onAdPodStarted
+     * @protected
+     * @param {string} event The event name
+     * @param {number} numberOfAds The number of ads in the ad pod
+     */
+    onAdPodStarted: function(event, numberOfAds) {
+      this.currentPodSize = numberOfAds;
+      this.currentPrerollPod++;
+    },
+
+    /**
+     * Callback to the WILL_PLAY_SINGLE_AD message bus event. Checks to see if
+     * the current ad is the final ad in an ad pod
+     * @method PlaybackController#onWillPlaySingleAd
+     * @protected
+     * @param {string} event The event name
+     * @param {object} properties The ad properties
+     */
+    onWillPlaySingleAd: function(event, properties) {
+      if (properties && this.currentPrerollPod === this.totalPrerollPods &&
+          properties.indexInPod === this.currentPodSize && !this.contentStarted) {
+        this.finalPreroll = true;
+      }
     }
   });
 
@@ -17632,7 +19669,9 @@ window.LZW = {
      * @param {object} videoPlugin The video plugin object to be registered.
      */
     plugin: function(videoPlugin) {
-      if (!this.validate(videoPlugin)) return;
+      if (!this.validate(videoPlugin)) {
+        return;
+      }
       log("Registering video plugin:", videoPlugin.name);
       for (var index = 0; index < videoPlugin.encodings.length; index++) {
         var encoding = videoPlugin.encodings[index];
@@ -17777,6 +19816,7 @@ window.LZW = {
    * @param electedPlugin The plugin from which the video element is built
    */
   var VideoControllerInterface = function(vtc, videoId, electedPlugin) {
+    this.videoId = videoId;
     /**
      * Event types accepted by the video controller from video plugins for the <code>notify()</code> method.
      * See VideoController#EVENTS for the full list of events and associated parameters.
@@ -17789,11 +19829,13 @@ window.LZW = {
      * Notifies the Video Controller of an event from the video.
      * @method VideoControllerInterface#notify
      * @public
-     * @param {string} eventname The event name (see VideoController#EVENTS).
+     * @param {string} eventName The event name (see VideoController#EVENTS).
      * @param {object} eventparams The event parameters.
      *                             See VideoController#EVENTS for the required parameters for each event.
      */
-    this.notify = _.bind(vtc.notify, vtc, videoId, electedPlugin);
+    this.notify = _.bind(function(eventName, eventparams){
+      return vtc.notify(this.videoId, electedPlugin, eventName, eventparams);
+    }, this);
 
     /**
      * Notifies the Video Controller that the video element is not ready to receive play commands.  This
@@ -17803,7 +19845,7 @@ window.LZW = {
      * @method VideoControllerInterface#markNotReady
      * @public
      */
-    this.markNotReady = _.bind(vtc.markNotReady, vtc, videoId);
+    this.markNotReady = _.bind(vtc.markNotReady, vtc, this.videoId);
 
     /**
      * Notifies the Video Controller that the video element is ready to receive play commands.  This function
@@ -17811,7 +19853,7 @@ window.LZW = {
      * @method VideoControllerInterface#markReady
      * @public
      */
-    this.markReady = _.bind(vtc.markReady, vtc, videoId);
+    this.markReady = _.bind(vtc.markReady, vtc, this.videoId);
 
     // temp placeholder, required by bitmovin plugin
     this.PLUGIN_MAGIC = '087d2ef5-9d39-43ed-a57a-16a312c87c0b';
@@ -17832,6 +19874,13 @@ window.LZW = {
     // constants
     var READY_TIMEOUT = 3000;
 
+    //TODO: Move into constants. Until then, these values should match the
+    //ones defined in playback_controller.js
+    this.IOS_PLAY_MODE_OPTIONS = {
+      INLINE: "inline",
+      FULLSCREEN: "fullscreen"
+    };
+
     // module variables
     var mb = messageBus;
     var readyTimer = null;
@@ -17848,6 +19897,12 @@ window.LZW = {
     var ccMode = OO.CONSTANTS.CLOSED_CAPTIONS.SHOWING;
     this.elementId = null;
     this.currentPlayhead = 0;
+    this.initialPlayTime = -1;
+    this.hasPlayedAd = false;
+    this.isVideoTypeChanged = false;
+    this.startPositionVr = 0;
+    this.isVr = false;
+    this.initialPlayHasStarted = false;
 
     this.toString = function() {return 'video-controller';};
 
@@ -17876,8 +19931,7 @@ window.LZW = {
       this.parentContainer = params.parentContainer || (rootElement && rootElement.find(".innerWrapper")) || null;
       this.wrapper = params.wrapper;
       this.sharedObjectToInstance = params.sharedObjectToInstance;
-      this.isControllingObject = (params.isControllingObject === undefined) ? true :
-                                                                              params.isControllingObject;
+      this.isControllingObject = (params.isControllingObject === undefined) ? true : params.isControllingObject;
     };
 
     /**
@@ -17908,6 +19962,8 @@ window.LZW = {
      * @property {boolean} playing True if the video is current playing
      * @property {boolean} disableNativeSeek True if the video element should disable seeks that come from the
      *                                       native video element.
+     * @property {boolean} primedForUnmutedAutoPlayback True if the video element has been primed for unmuted auto-
+     *                                                  playback, false otherwise.
      */
     var videoInstance = function(params) {
       this.plugin = params.plugin && params.plugin.name;
@@ -17924,6 +19980,7 @@ window.LZW = {
       this.params = params.params || {};
       this.playing = false;
       this.disableNativeSeek = false;
+      this.primedForUnmutedAutoPlayback = false;
     };
 
     // state variables
@@ -17932,12 +19989,16 @@ window.LZW = {
     var errorTimer = null;
     var shouldEmitErrors = true;
     var unemittedErrors = [];
-    var currentVolume = null;
+    var currentVolume = 1;
+    var currentMuteState = false;
+    var mutingForAutoplay = false;
+    var playbackVideoAfterMute = null;
+    var savedMainVolume = null;
     var isPlaybackReady = false;
-
-    // Determine whether or not to preload based on platform
-    // TODO (neeraj): do we only need to default false on specific versions?
-    var canPreload = !(OO.isChrome || OO.isIos || OO.isAndroid || OO.isSafari || OO.isFirefox);
+    var csaiMode = false;
+    var autoplayed = false;
+    var iosPlayMode = this.IOS_PLAY_MODE_OPTIONS.FULLSCREEN;
+    var isHAFailoverMechanismEnabled = false;
 
     /**
      * Event types accepted by the Video Controller from video plugins for the notify API
@@ -18087,12 +20148,18 @@ window.LZW = {
        * @type {string}
        * @description <code>VideoController.EVENTS.VOLUME_CHANGE ('volumechange')</code>:
        *   The stream has changed volume.
-       *   It should meet the following guidelines:<br />
-       *    - It should be raised with volume '0' when muted<br />
-       *    - It should be raised when unmuted<br />
        *   Expected params: {volume:number}
        */
       VOLUME_CHANGE: "volumechange",
+
+      /**
+       * @constant VideoController.EVENTS.MUTE_STATE_CHANGE
+       * @type {string}
+       * @description <code>VideoController.EVENTS.MUTE_STATE_CHANGE ('mutestatechange')</code>:
+       *   The stream has changed muted state>
+       *   Expected params: {muted:boolean}
+       */
+      MUTE_STATE_CHANGE: "mutestatechange",
 
       /**
        * @constant VideoController.EVENTS.BUFFERING
@@ -18235,12 +20302,80 @@ window.LZW = {
        *    - The data field contains the tag data<br />
        *   Expected params: [{type:string, data:[object|string]}]
        */
-      METADATA_FOUND: "metadataFound"
+      METADATA_FOUND: "metadataFound",
+
+      /**
+       * @constant VideoController.EVENTS.PLUGIN_LOADED
+       * @type {string}
+       * @description <code>VideoController.EVENTS.PLUGIN_LOADED ('pluginLoaded')</code>:
+       *   The video plugin wrapper has been loaded and registered.
+       *    - The name field contains the name of the plugin loaded <br />
+       *    - The time field contains the time taken to load the plugin
+       *        in milliseconds<br />
+       *   Expected params: [{name:string, time:number}]
+       */
+      PLUGIN_LOADED: "pluginLoaded",
+
+      /**
+       * @constant VideoController.EVENTS.TOUCH_MOVE
+       * @description <code>VideoController.EVENTS.TOUCH_MOVE ('touchMove')</code>:
+       * Set video viewing direction
+       * Gets 3 params:
+       *  - yaw - rotation around the vertical axis
+       *  - roll - rotation around the front-to-back axis
+       *  - pitch - rotation around the side-to-side axis
+       * type Expected params: [{yaw:number, roll: number, pitch: number}]
+       */
+      TOUCH_MOVE: "touchMove",
+      /**
+       * @constant VideoController.EVENTS.CHECK_VR_DIRECTION
+       * @description <code>VideoController.EVENTS.CHECK_VR_DIRECTION ('checkVrDirection')</code>:
+       * Gets current video viewing direction and pass this value
+       */
+      CHECK_VR_DIRECTION: "checkVrDirection",
+
+      /**
+       * @constant VideoController.EVENTS.ON_DOWNLOAD_FINISHED
+       * @type {string}
+       * @description <code>VideoController.EVENTS.ON_DOWNLOAD_FINISHED ('onDownloadFinished')</code>:
+       *   Download of segment/manifest was finished.
+       *   Expected params: [{type:string, data:[object]}]
+       */
+      ON_DOWNLOAD_FINISHED: "onDownloadFinished",
+
+      /**
+       * @constant VideoController.EVENTS.ON_SEGMENT_LOADED
+       * @type {string}
+       * @description <code>VideoController.EVENTS.ON_SEGMENT_LOADED ('onSegmentLoaded')</code>:
+       *   Segment was loaded.
+       *   Expected params: [{type:string, data:[object]}]
+       */
+      ON_SEGMENT_LOADED: "onSegmentLoaded",
+
+      /**
+       * @constant VideoController.EVENTS.UNMUTED_PLAYBACK_FAILED
+       * @type {string}
+       * @description <code>VideoController.EVENTS.UNMUTED_PLAYBACK_FAILED ('umutedPlaybackFailed')</code>:
+       *   The video attempted to play unmuted but failed to do so.
+       *   Expected params: [error:[object]}]
+       */
+      UNMUTED_PLAYBACK_FAILED: "umutedPlaybackFailed",
+
+      /**
+       * @constant VideoController.EVENTS.UNMUTED_PLAYBACK_SUCCEEDED
+       * @type {string}
+       * @description <code>VideoController.EVENTS.UNMUTED_PLAYBACK_SUCCEEDED ('unmutedPlaybackSucceeded')</code>:
+       *   The video attempted to play unmuted and succeeded.
+       *   Expected params: []
+       */
+      UNMUTED_PLAYBACK_SUCCEEDED: "unmutedPlaybackSucceeded"
     };
 
     var SETTINGS = {
       ENCODING_PRIORITY: "encodingPriority",
       INITIAL_VOLUME: "initialVolume",
+      PAUSE_ON_LIVE_ADS: "pauseOnLiveAds",
+      IOS_PLAY_MODE: "iosPlayMode"
     };
 
     /**
@@ -18253,21 +20388,25 @@ window.LZW = {
       DEFAULT: "default",
       PAGE: "pageLevel",
       BACKLOT: "backlot",
-      BACKDOOR: "backdoor"
+      BACKDOOR: "backdoor",
+      OOYALA_ADS: "ooyalaAds"
     };
     var encodingPriority = {};
     encodingPriority[settingLevels.DEFAULT] = [OO.VIDEO.ENCODING.DRM.DASH,
                                                OO.VIDEO.ENCODING.DRM.HLS,
+                                               OO.VIDEO.ENCODING.DASH,
                                                OO.VIDEO.ENCODING.HLS,
                                                OO.VIDEO.ENCODING.AKAMAI_HD2_VOD_HLS,
                                                OO.VIDEO.ENCODING.AKAMAI_HD2_HLS,
-                                               OO.VIDEO.ENCODING.DASH,
                                                OO.VIDEO.ENCODING.MP4,
+                                               OO.VIDEO.ENCODING.YOUTUBE,
                                                OO.VIDEO.ENCODING.HDS,
                                                OO.VIDEO.ENCODING.WEBM,
                                                OO.VIDEO.ENCODING.IMA,
                                                OO.VIDEO.ENCODING.PULSE];
+    encodingPriority[settingLevels.OOYALA_ADS] = [OO.VIDEO.ENCODING.MP4];
     var chosenEncodingPriority = settingLevels.DEFAULT;
+    var formerChosenEncodingPriority = null; // Record of the last set encoding priority if there was one.
 
     var initialCss = { "width":"100%", "height":"100%", "position":"absolute", "visibility":"hidden",
                        "z-index":OO.CSS.VIDEO_Z_INDEX };
@@ -18279,8 +20418,11 @@ window.LZW = {
 
     var initialize = _.bind(function() {
       mb.subscribe(OO.EVENTS.PLAYER_CREATED, 'vtc', playerCreated);
+      mb.subscribe(OO.EVENTS.AD_SDK_IMPRESSION, 'vtc', adSdkImpression);
+      mb.subscribe(OO.EVENTS.INITIAL_PLAY, 'vtc', initialPlay);
       mb.subscribe(OO.EVENTS.METADATA_FETCHED, 'vtc', metadataFetched);
       mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'vtc', embedCodeChanged);
+      mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED_AFTER_OOYALA_AD, 'vtc', embedCodeChanged);
       mb.subscribe(OO.EVENTS.ASSET_CHANGED, 'vtc', assetChanged);
       mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'vtc', playbackReady);
       mb.subscribe(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, 'vtc', vcCreateVideoElement);
@@ -18297,11 +20439,13 @@ window.LZW = {
       mb.subscribe(OO.EVENTS.VC_PRIME_VIDEOS, 'vtc', vcPrimeVideos);
       mb.subscribe(OO.EVENTS.PLAY, 'vtc', play);
       mb.subscribe(OO.EVENTS.VC_PLAY, 'vtc', vcPlay);
+      mb.subscribe(OO.EVENTS.PLAY_VIDEO_ELEMENT, 'vtc', playVideoElement);
       mb.subscribe(OO.EVENTS.PAUSE, 'vtc', pause);
       mb.subscribe(OO.EVENTS.VC_PAUSE, 'vtc', vcPause);
       mb.subscribe(OO.EVENTS.SEEK, 'vtc', seek);
       mb.subscribe(OO.EVENTS.VC_SEEK, 'vtc', vcSeek);
       mb.subscribe(OO.EVENTS.CHANGE_VOLUME, 'vtc', changeVolume);
+      mb.subscribe(OO.EVENTS.CHANGE_MUTE_STATE, 'vtc', changeMuteState);
       mb.subscribe(OO.EVENTS.PAGE_UNLOAD_REQUESTED, 'vtc', pageUnloadRequested);
       mb.subscribe(OO.EVENTS.DISABLE_SEEKING, 'vtc', disableSeeking);
       mb.subscribe(OO.EVENTS.ENABLE_SEEKING, 'vtc', enableSeeking);
@@ -18309,13 +20453,22 @@ window.LZW = {
       mb.subscribe(OO.EVENTS.SET_TARGET_BITRATE, 'vtc', setTargetBitrate);
       mb.subscribe(OO.EVENTS.DESTROY, 'vtc', _.bind(this.onDestroy, this));
       mb.subscribe(OO.EVENTS.LIVE_BUTTON_CLICKED, 'vtc', onLiveClicked);
+      mb.subscribe(OO.EVENTS.HA_FAILOVER_ERROR, 'vtc', onHAFailoverError);
+      mb.subscribe(OO.EVENTS.HA_ENABLED, 'vtc', onHAEnabled);
+      mb.subscribe(OO.EVENTS.VC_RELOAD_AND_PLAY, 'vtc', onReloadAndPlay);
+      mb.subscribe(OO.EVENTS.TOGGLE_STEREO_VR, 'vtc', toggleStereoVr);
+      mb.subscribe(OO.EVENTS.TOUCH_MOVE, 'vtc', touchMove);
+      mb.subscribe(OO.EVENTS.CHECK_VR_DIRECTION, 'vtc', checkVrDirection);
+      mb.subscribe(OO.EVENTS.MOVE_VR_TO_DIRECTION, 'vtc', moveVrToDirection);
+      mb.subscribe(OO.EVENTS.VIDEO_VR, 'vtc', setVideoVr);
+      mb.subscribe(OO.EVENTS.VIDEO_TYPE_CHANGED, 'vtc', onVideoTypeChanged);
     }, this);
 
     // ********************
     // Playback setup
     // ********************
 
-    var playerCreated = _.bind(function(eventname, elementId, params) {
+    var playerCreated = _.bind(function(eventName, elementId, params, persistentSettings, embedCode, createdTime) {
       this.elementId = elementId;
       rootElement = $("#" + elementId);
       pageLevelParams = params;
@@ -18332,6 +20485,16 @@ window.LZW = {
         if (pageLevelParams[SETTINGS.INITIAL_VOLUME] !== undefined){
           currentVolume = parseFloat(pageLevelParams[SETTINGS.INITIAL_VOLUME]);
         }
+
+        //csai
+        if (pageLevelParams[SETTINGS.PAUSE_ON_LIVE_ADS] !== undefined) {
+          csaiMode = !pageLevelParams[SETTINGS.PAUSE_ON_LIVE_ADS];
+        }
+
+        //ios playback options
+        if (pageLevelParams[SETTINGS.IOS_PLAY_MODE] !== undefined) {
+          iosPlayMode = pageLevelParams[SETTINGS.IOS_PLAY_MODE];
+        }
       }
 
       OO.debug_tools = OO.debug_tools || {};
@@ -18341,7 +20504,38 @@ window.LZW = {
       OO.debug_tools[elementId].video = videoDebugging;
     }, this);
 
-    var metadataFetched = _.bind(function(eventname, backlotMetadata) {
+    /**
+     * @method VideoController#adSdkImpression
+     * @description Callback for OO.EVENTS.AD_SDK_IMPRESSION.
+     * Used to set the hasPlayedAd in the video controller, which
+     * is passed to the OO.EVENTS.INITIAL_PLAY_STARTING event to indicate
+     * an ad has played before the initial video playback began.
+     *
+     * @private
+     */
+    var adSdkImpression = _.bind(function(){
+      this.hasPlayedAd = true;
+    }, this);
+
+    /**
+     * @method VideoController#onHAFailoverError
+     * @description Callback for OO.EVENTS.HA_FAILOVER_ERROR.
+     * In case if HA will failed to reload manifest, we will trigger error.
+     *
+     * @fires OO.EVENTS.VC_ERROR with error code OO.ERROR.PLAYBACK.LIVESTREAM
+     * @private
+     */
+    var onHAFailoverError = _.bind(function() {
+      mb.publish(OO.EVENTS.VC_ERROR, this.focusVideoId, {
+        code: OO.ERROR.PLAYBACK.LIVESTREAM
+      });
+    }, this);
+
+    var onHAEnabled = _.bind(function(eventName, enabled){
+      isHAFailoverMechanismEnabled = !!enabled;
+    }, this);
+
+    var metadataFetched = _.bind(function(eventName, backlotMetadata) {
       // TODO: Check if encoding priority is set at backdoor level (it will be a string)
       // If so, add it to encodingPriority[settingLevels.BACKDOOR], and update chosenSteamPriority to
       //    settingLevels.BACKDOOR if it was settingLevels.DEFAULT
@@ -18358,19 +20552,34 @@ window.LZW = {
           chosenEncodingPriority = settingLevels.BACKLOT;
         }
       }
+
+      isHAFailoverMechanismEnabled = false;
     }, this);
 
-    var embedCodeChanged = _.bind(function() {
+    var embedCodeChanged = _.bind(function(eventName, embedCode, params) {
+      this.isVr = false;
+      this.isVideoTypeChanged = false;
       // Remove backlot settings because they are specific to the movie
       encodingPriority[settingLevels.BACKLOT] = null;
 
       // Update the chosenEncodingPriority if it was set to backlot
-      if (chosenEncodingPriority === settingLevels.BACKLOT) {
-        chosenEncodingPriority = encodingPriority[settingLevels.BACKDOOR] ?
-                               settingLevels.BACKDOOR : settingLevels.DEFAULT;
+      if (params && params.ooyalaAds) {
+        if (chosenEncodingPriority !== settingLevels.OOYALA_ADS) {
+          formerChosenEncodingPriority = chosenEncodingPriority;
+        }
+        chosenEncodingPriority = settingLevels.OOYALA_ADS;
+      } else {
+        if (chosenEncodingPriority === settingLevels.BACKLOT) {
+          chosenEncodingPriority = encodingPriority[settingLevels.BACKDOOR] ?
+            settingLevels.BACKDOOR : settingLevels.DEFAULT;
+        } else if (chosenEncodingPriority === settingLevels.OOYALA_ADS) {
+          chosenEncodingPriority = encodingPriority[formerChosenEncodingPriority] ?
+            formerChosenEncodingPriority : settingLevels.DEFAULT;
+        }
       }
 
       isPlaybackReady = false;
+      autoplayed = false;
     }, this);
 
     var assetChanged = _.bind(function() {
@@ -18381,8 +20590,53 @@ window.LZW = {
       isPlaybackReady = true;
     }, this);
 
+    /**
+     * @method VideoController#initialPlay
+     * @description Callback for OO.EVENTS.INITIAL_PLAY.
+     * Sets the initial play time and if the video was autoplayed.
+     * @param {string} eventName The name of the event that triggered this function
+     * @param {number} unitTimeMs The unix timestamp of the initial playtime
+     * @param {boolean} wasAutoplayed True if the video was autoplayed, false otherwise
+     *
+     * @private
+     */
+    var initialPlay = _.bind(function(eventName, unixTimeMs, wasAutoplayed) {
+      isPlaybackReady = true;
+      this.initialPlayTime = unixTimeMs;
+      autoplayed = wasAutoplayed;
+      //Load the video here on initial play if not autoplayed and we require muted autoplay.
+      //Since this video was not autoplayed, we are on the user click thread and loading
+      //the video is enough to ensure that a future play request will work without being muted
+      if (!wasAutoplayed) {
+        loadVideoForUnmutedAutoplay(OO.VIDEO.MAIN);
+        loadVideoForUnmutedAutoplay(OO.VIDEO.ADS);
+      }
+    }, this);
+
+    /**
+     * Loads a video element. Should be called on a user click thread to be able to allow for unmuted
+     * automatic playback in the future.
+     * @private
+     * @method VideoController#loadVideoForUnmutedAutoplay
+     * @param {string} videoId The id of the video to load
+     */
+    var loadVideoForUnmutedAutoplay = _.bind(function(videoId) {
+      if (this.activeInstances[videoId] && _isInControl(videoId) && !this.activeInstances[videoId].primedForUnmutedAutoPlayback) {
+        _setVideoStream(videoId, this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream, this.activeInstances[videoId].isLive);
+        _safeFunctionCall(this.activeInstances[videoId].element, "load", [true]);
+        this.activeInstances[videoId].primedForUnmutedAutoPlayback = true;
+      }
+    }, this);
+
     var onLiveClicked = _.bind(function() {
       _callIfInControl(this.focusVideoId, "onLiveClick");
+    }, this);
+
+    /**
+     * Set flag about changing video type
+     */
+    var onVideoTypeChanged = _.bind(function() {
+      this.isVideoTypeChanged = true;
     }, this);
 
     // ********************
@@ -18394,15 +20648,16 @@ window.LZW = {
      * This is a callback to OO.EVENTS.VC_CREATE_VIDEO_ELEMENT
      * @private
      * @method VideoController#vcCreateVideoElement
-     * @param {string} eventname The name of the event that triggered this function
+     * @param {string} eventName The name of the event that triggered this function
      * @param {string} videoId The id to use for the new element
      * @param {object} streams An object with the encoding types as the keys and stream urls and drm object as the values
      * @param {object} parentContainer The parent container of the new element
      * @param {object} params An object with optional parameters to set on the new element
+     * @param {boolean} isPlaylist - true if it is a playlist
      * @fires OO.EVENTS.VC_ERROR
      * @fires OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT
      */
-    var vcCreateVideoElement = _.bind(function(eventname, videoId, streams, parentContainer, params) {
+    var vcCreateVideoElement = _.bind(function(eventName, videoId, streams, parentContainer, params) {
       // Get the list of possible plugins
       var validPlugins;
       var currentController;
@@ -18423,25 +20678,25 @@ window.LZW = {
                                            _getEncodingPriorities());
 
       if (!chosenEncoding) {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {code: OO.ERROR.VC.UNSUPPORTED_ENCODING});
+        mb.publish(OO.EVENTS.VC_ERROR, videoId, {ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING, playhead: this.currentPlayhead});
         return;
       }
       log("For video '" + videoId + "', selected encoding '" + chosenEncoding + "', with stream url " +
-          streams[chosenEncoding]);
+          streams[chosenEncoding].url);
 
       // Check if the element already exists and if the element supports the chosen encoding
       var wasInFocus = !!(this.focusVideoId && (this.focusVideoId === videoId));
       if (this.activeInstances[videoId] && this.activeInstances[videoId].element) {
         if (validPlugins[this.activeInstances[videoId].plugin] &&
-            _.contains(this.activeInstances[videoId].element.supportedEncodings, chosenEncoding)) {
+            _.contains(this.activeInstances[videoId].element.supportedEncodings, chosenEncoding) &&
+            !this.isVideoTypeChanged) {
           // There is another element with the same videoId that supports the chosen stream and is in the
           // filtered list of plugins
           log("Element already existed and supports chosen encoding.  Setting new video url.");
+          this.activeInstances[videoId].disableNativeSeek = false;
           _setVideoStream(videoId, chosenEncoding, streams[chosenEncoding], streams.isLive);
-          if (params) {
-            _setClosedCaptions(videoId, params.closedCaptions);
-            _setCrossorigin(videoId, params.crossorigin);
-          }
+          // set params, closedCaptions, crossorigin
+          _setVideoParams(videoId, params);
           // Secure content
           _setSecureContent(videoId, streams[chosenEncoding].contentMetadata);
 
@@ -18456,6 +20711,12 @@ window.LZW = {
           _notifyElementCreated(videoId);
           return;
         } else {
+          //if we are in a playlist and video type changed
+          if (this.isVideoTypeChanged) {
+            //save settings for new video in a playlist
+            // set params, closedCaptions, crossorigin
+            _setVideoParams(videoId, params);
+          }
           // There is another element with the same videoId but which doesn't have support for the current stream
           // Destroy the current element at videoId
           log("Element already existed but does not support chosen encoding.  Destroying exising element.");
@@ -18475,8 +20736,18 @@ window.LZW = {
         electedPlugin = validPlugins[possiblePlugins[0]];
       }
 
+      //If content vr, then use the bitmovin plugin.
+      var checkUseBitmovin = this.isVr &&
+        videoId === OO.VIDEO.MAIN &&
+        validPlugins[OO.VIDEO_PLAYERS.BIT_WRAPPER];
+
+      if (!!checkUseBitmovin) {
+        //TODO we can reactivate this section of code once we have a better way to detect if the stream is VR instead of forcing it here.
+        electedPlugin = validPlugins[OO.VIDEO_PLAYERS.BIT_WRAPPER];
+      }
+
       if (!electedPlugin) {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {code: OO.ERROR.VC.UNSUPPORTED_ENCODING});
+        mb.publish(OO.EVENTS.VC_ERROR, videoId, {ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING, playhead: this.currentPlayhead});
         return;
       }
 
@@ -18494,8 +20765,16 @@ window.LZW = {
         if (wasInFocus) {
           mb.publish(OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT, videoId);
         }
+        //update config streams required
+        if(videoId === OO.VIDEO.MAIN || videoId === OO.VIDEO.RELOAD){
+          mb.publish(OO.EVENTS.HA_CONFIG_UPDATE, {
+            focusVideoId:videoId, streams:streams,
+            chosenEncoding:chosenEncoding,
+            plugin:electedPlugin.name
+          });
+        }
       } else {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {code: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT});
+        mb.publish(OO.EVENTS.VC_ERROR, videoId, {ooyalaErrorCode: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT, playhead: this.currentPlayhead});
       }
     }, this);
 
@@ -18635,6 +20914,138 @@ window.LZW = {
     }, this);
 
     /**
+     * Callback function for event OO.EVENTS.VC_PLAYING
+     * Used only while reloading of manifest. Reloading of manifest can be triggered by
+     * OO.EVENTS.VC_RELOAD_AND_PLAY
+     *
+     * @private
+     * @method VideoController#_onVCPlayingRP
+     * @param  {string} event                     Event name
+     * @param  {string} videoId                   Video ID that is playing
+     * @fires OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT
+     * @fires OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT
+     */
+    var _onVCPlayingRP = _.bind(function(event, videoId) {
+
+      if (videoId === OO.VIDEO.RELOAD) {
+        var tmpElement = this.activeInstances[OO.VIDEO.MAIN].element;
+
+        //swapping elements between old video element instance and new
+        this.activeInstances[OO.VIDEO.MAIN] = $.extend({}, this.activeInstances[OO.VIDEO.RELOAD]);
+        this.activeInstances[OO.VIDEO.MAIN].vtcInterface.videoId = OO.VIDEO.MAIN;
+
+        this.activeInstances[OO.VIDEO.RELOAD].element = tmpElement;
+
+        //trick to make dispose element and focus element work correctly
+        var oldFocusId = this.focusVideoId;
+        this.focusVideoId = OO.VIDEO.RELOAD;
+
+        //focusing old video element back.
+        //Because we swapped elements, element with updated manifest will be in focus.
+        mb.publish(OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT, OO.VIDEO.MAIN);
+
+        //disposing new video element
+        mb.publish(OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT, OO.VIDEO.RELOAD);
+
+        //unsubscribe
+        mb.unsubscribe(OO.EVENTS.VC_PLAYING, 'vtc_t', _onVCPlayingRP);
+        mb.unsubscribe(OO.EVENTS.VC_VIDEO_ELEMENT_CREATED, 'vtc_t', _onVideoElementCreatedRP);
+      }
+    }, this);
+
+
+    /**
+     * Callback function for event OO.EVENTS.VC_VIDEO_ELEMENT_CREATED
+     * Used only while reloading of manifest. Reloading of manifest can be triggered by
+     * OO.EVENTS.VC_RELOAD_AND_PLAY
+     *
+     * @private
+     * @method VideoController#_onVideoElementCreatedRP
+     * @param  {string} event           Event name
+     * @param  {object} createdElement  Video element that was created
+     * @fires OO.EVENTS.VC_PLAY
+     */
+    var _onVideoElementCreatedRP = _.bind(function(event, createdElement) {
+
+      if (createdElement.videoId === OO.VIDEO.RELOAD) {
+        mb.subscribe(OO.EVENTS.VC_PLAYING, 'vtc_t', _onVCPlayingRP);
+
+        //trying to play freashly created video element
+        mb.publish(OO.EVENTS.VC_PLAY, OO.VIDEO.RELOAD);
+      }
+    }, this);
+
+    /**
+     * Reload and Play. Reloads stream without losing playback. Old manifest will continue to play
+     * and will be replaced once new manifest starts playing.
+     * Triggered by OO.EVENTS.VC_RELOAD_AND_PLAY
+     *
+     * @method VideoController#reloadAndPlay
+     *
+     * @param {string} eventName Name of event.
+     * @param {object} streams Object that contains different encoding playback urls. Like {"hls":{"url":"http://example.com/1.m3u8"}}
+     *
+     * @fires OO.EVENTS.VC_WILL_RELOAD
+     * @fires OO.EVENTS.VC_PLAY
+     * @fires OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT
+     * @fires OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT
+     * @fires OO.EVENTS.VC_RELOAD
+     *
+     * @private
+     */
+
+    var onReloadAndPlay = _.bind(function(eventName, streams) {
+      if (!this.focusVideoId ||
+        !this.activeInstances ||
+        !this.activeInstances[this.focusVideoId] ||
+        !this.activeInstances[this.focusVideoId].element ||
+        !streams ||
+        !streams[this.activeInstances[this.focusVideoId].encoding]) {
+        log('invalid data for reload and play');
+        return;
+      }
+
+      if (this.focusVideoId !== OO.VIDEO.MAIN) {
+        log('not supported videoId for reload', this.focusVideoId);
+        return;
+      }
+
+      mb.publish(OO.EVENTS.VC_WILL_RELOAD_AND_PLAY);
+
+      var chosenEncoding = this.activeInstances[this.focusVideoId].encoding;
+
+      if (streams[chosenEncoding]) {
+        streams[chosenEncoding].url = increaseCountForTryParam(streams[chosenEncoding].url);
+      }
+
+      if (OO.isIos || OO.isSafari) {
+        log('Trying to hard reload for ios or safari');
+
+        mb.publish(OO.EVENTS.VC_UPDATE_ELEMENT_STREAM, this.focusVideoId, streams[chosenEncoding].url);
+
+        //work around for ios and safari
+        //for some weird reason publishing play right after set url is not working.
+        //in case if we delay it for at least 1 ms we can see playback.
+        //Looks like ios and safari need some time to propagate new url
+        //Also this is not related to our MessageBus, because same result when using native methods.
+        setTimeout(function() {
+          mb.publish(OO.EVENTS.PLAY, this.focusVideoId);
+        }, 1);
+
+        return;
+      }
+
+      mb.subscribe(OO.EVENTS.VC_VIDEO_ELEMENT_CREATED, 'vtc_t', _onVideoElementCreatedRP);
+
+      // it is better to not publish OO.EVENTS.VC_CREATE_VIDEO_ELEMENT.
+      // almost all components will not properly handle new element that
+      // is not OO.VIDEO.MAIN or OO.VIDEO.ADS
+      // creating video element silently and then swap it.
+      // mb.publish(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, OO.VIDEO.RELOAD, streams, null, allParams)
+      vcCreateVideoElement(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, OO.VIDEO.RELOAD, streams, this.activeInstances[this.focusVideoId].parentContainer, this.activeInstances[this.focusVideoId].params);
+    }, this);
+
+    /**
      * Creates a video element and instance.
      * @private
      * @method VideoController#_createInstance
@@ -18651,6 +21062,48 @@ window.LZW = {
     var _createInstance = _.bind(function(electedPlugin, videoId, parentContainer, encoding, stream, isLive, params) {
       if (!electedPlugin || !videoId) return;
 
+
+      //PLAYER-2148 workaround for HAFailoverMechanism
+      if (electedPlugin.name === OO.VIDEO_PLAYERS.BIT_WRAPPER && isHAFailoverMechanismEnabled){
+        var _self = this;
+        params = params || {};
+        params.pluginParams = params.pluginParams || {};
+        params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER] = params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER] || {};
+
+        params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER].network = params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER].network || {};
+        params.pluginParams[OO.VIDEO_PLAYERS.BIT_WRAPPER].network.retryHttpRequest = function(type, response) {
+          var responseStatus = 404;
+          if (response && response.request && response.request.status){
+            responseStatus = response.request.status;
+          }
+
+          var eventparams = {
+            type: 'onDownloadFinished',
+            timestamp: Date.now(),
+            httpStatus: responseStatus,
+            url: response ? response.url || '' : '',
+            size: 0,
+            downloadTime: 0,
+            //attempt must be > 1 && success = false in order to trigger HAFailoverMechanism
+            //if retry was executed it means at least one attempt already happened and it failed
+            attempt: 2,
+            success: false,
+            maxAttempts:  type === 'media/video' ? 3 : Infinity,
+            mimeType: type === 'media/video' ? 'video/mp4' : null,
+            downloadType: type
+          };
+
+          _self.notify(videoId, electedPlugin, _self.EVENTS.ON_DOWNLOAD_FINISHED, eventparams);
+
+          // delay the retry by 1 second
+          return new Promise(function(resolve) {
+            setTimeout(function() {
+              resolve(response.request);
+            }, 1000);
+          });
+        };
+      }
+
       // Check if device limitations require that elements be shared
       if (_checkIfElementSharingRequired(electedPlugin)) {
         // Get the instance of the existing video element that the new element should share with
@@ -18665,7 +21118,7 @@ window.LZW = {
                                                  instanceToShare);
             }
             else {
-              mb.publish(OO.EVENTS.VC_ERROR, videoId, {code: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT});
+              mb.publish(OO.EVENTS.VC_ERROR, videoId, {ooyalaErrorCode: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT, playhead: this.currentPlayhead});
             }
             return;
           }
@@ -18825,6 +21278,7 @@ window.LZW = {
       if (params) {
         _setClosedCaptions(videoId, params.closedCaptions);
         _setCrossorigin(videoId, params.crossorigin);
+        vtcInterface.authenticationData = params.authenticationData;
       }
 
       // Create the shared element
@@ -18885,6 +21339,14 @@ window.LZW = {
       if (params) {
         _setClosedCaptions(videoId, params.closedCaptions);
         _setCrossorigin(videoId, params.crossorigin);
+        vtcInterface.authenticationData = params.authenticationData;
+      }
+
+      // Set the stream if we're creating a shared video for main and playback is not ready.
+      // Otherwise the stream won't be set for the main video
+      if (videoId === OO.VIDEO.MAIN && !isPlaybackReady) {
+        _prepareInstanceForAction(videoId);
+        _setVideoStream(videoId, encoding, stream, isLive);
       }
 
       // Secure content
@@ -18914,17 +21376,25 @@ window.LZW = {
         this.activeInstances[videoId].element = element;
       }
 
+      var pluginParams = {};
+
       if (params) {
         _setClosedCaptions(videoId, params.closedCaptions);
         _setCrossorigin(videoId, params.crossorigin);
+        vtcInterface.authenticationData = params.authenticationData;
+        pluginParams = params.pluginParams || {};
       }
 
+      var electedPluginParams = pluginParams[electedPlugin.name] || {};
+      //if inline playback is enabled then pass the parameter along to the plugin.
+      electedPluginParams.iosPlayMode = iosPlayMode;
       // Create the real element
       element.wrapper = electedPlugin.create(element.parentContainer,
                                              element.domId,
                                              vtcInterface,
                                              initialCss,
-                                             this.elementId);
+                                             this.elementId,
+                                             electedPluginParams);
       // Set the stream
       _setVideoStream(videoId, encoding, stream, isLive);
 
@@ -18932,23 +21402,37 @@ window.LZW = {
       _setSecureContent(videoId, stream.contentMetadata);
     }, this);
 
-    var vcVideoElementCreated = _.bind(function(eventname, elementParams) {
-      // Set current volume
-      if (typeof currentVolume === "number") {
-        mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, elementParams["videoId"]);
+    /**
+     * Mutes a video so that it can auto-playback.
+     * @private
+     * @method VideoController#muteForAutoPlayback
+     * @param {string} videoId The id of the video to mute
+     * @param {boolean} startPlayback True for the player to start playback after muting, false otherwise
+     */
+    var muteForAutoPlayback = _.bind(function(videoId, startPlayback) {
+      var muted = true;
+      mutingForAutoplay = true;
+      if (startPlayback) {
+        playbackVideoAfterMute = videoId;
       }
-      _changeCrossorigin(elementParams["videoId"]);
+      mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, true, videoId);
+      return muted;
+    }, this);
+
+    var vcVideoElementCreated = _.bind(function(eventName, elementParams) {
+      var videoId = elementParams["videoId"];
+      _changeCrossorigin(videoId);
     }, this);
 
     /**
      * Disposes an entire video instance as well as a non-shared element.
      * @private
      * @method VideoController#vcDisposeVideoElement
-     * @param {string} eventname The name of the event that triggered this instance disposal.
+     * @param {string} eventName The name of the event that triggered this instance disposal.
      * @param {string} videoId The name of the disposed video instance.
      * @fires OO.EVENTS.VC_VIDEO_ELEMENT_DISPOSED
      */
-    var vcDisposeVideoElement = _.bind(function(eventname, videoId) {
+    var vcDisposeVideoElement = _.bind(function(eventName, videoId) {
       if (!videoId) return;
 
       // Remove focus
@@ -18961,23 +21445,28 @@ window.LZW = {
       _handoffElementControl(videoId);
 
       // Delete the instance
-      var element = this.activeInstances[videoId].element;
-      delete this.activeInstances[videoId];
+      if (this.activeInstances[videoId]) {
+        var element = this.activeInstances[videoId].element;
+        delete this.activeInstances[videoId];
 
-      // Destroy orphaned elements
-      if (element && !_hasInstances(element)) {
-        // If not associated with virtual instances, destroy the element
-        _safeFunctionCall(element, "destroy", []);
-        activeElements = _.without(activeElements, element);
-        element = null;
+        // Destroy orphaned elements
+        if (element && !_hasInstances(element)) {
+          // If not associated with virtual instances, destroy the element
+          _safeFunctionCall(element, "destroy", []);
+          activeElements = _.without(activeElements, element);
+          element = null;
+        }
       }
-
       // Delete the instance and notify
-      mb.publish(OO.EVENTS.VC_VIDEO_ELEMENT_DISPOSED, videoId);
+      if (!this.isVideoTypeChanged) {
+        mb.publish(OO.EVENTS.VC_VIDEO_ELEMENT_DISPOSED, videoId);
+      }
     }, this);
 
     var _hasInstances = _.bind(function(element) {
-      if (!element) return false;
+      if (!element) {
+        return false;
+      }
       for (var instance in this.activeInstances) {
         if (this.activeInstances[instance] &&
             this.activeInstances[instance].element &&
@@ -18987,7 +21476,7 @@ window.LZW = {
       return false;
     }, this);
 
-    var willPlayAds = _.bind(function(eventname, params) {
+    var willPlayAds = _.bind(function(eventName, params) {
       // Remove the closed captions prior to ad play on iOS
       if (OO.isIos && params && params.duration > 0) {
         setClosedCaptionsLanguage('', '', {"mode": ccMode});
@@ -18999,7 +21488,7 @@ window.LZW = {
     // Element focus
     // ********************
 
-    var vcFocusVideoElement = _.bind(function(eventname, videoId) {
+    var vcFocusVideoElement = _.bind(function(eventName, videoId, ooyalaAds) {
       // If already in focus
       if (videoId && (this.focusVideoId === videoId)) {
         mb.publish(OO.EVENTS.VC_VIDEO_ELEMENT_IN_FOCUS, videoId);
@@ -19008,8 +21497,19 @@ window.LZW = {
 
       // Defocus currently focused element
       // Don't necessarily need to do null check here
+      //csai
       if (this.focusVideoId) {
-        _removeFocusFromElement(this.focusVideoId);
+        //if csai mode, the currently focused element is main, main video is live, and sharing is not required
+        if (csaiMode && this.focusVideoId === OO.VIDEO.MAIN && this.activeInstances[this.focusVideoId] &&
+          this.activeInstances[this.focusVideoId].isLive &&
+          !_checkIfElementSharingRequired(registeredPlugins[this.activeInstances[this.focusVideoId].plugin])) {
+          //just mute the volume, so we can continue receiving ID3 tags in the background
+          savedMainVolume = currentVolume === null ? 1 : currentVolume;
+          _callIfInControl(this.focusVideoId, "setVolume", [0, currentMuteState]);
+        } else {
+          //else go with default behavior
+          _removeFocusFromElement(this.focusVideoId);
+        }
       }
       this.focusVideoId = null;
 
@@ -19019,8 +21519,22 @@ window.LZW = {
       }
       this.focusVideoId = videoId;
 
-      _prepareInstanceForAction(videoId);
+      //csai
+      if (this.focusVideoId === OO.VIDEO.MAIN && savedMainVolume !== null) {
+        _callIfInControl(this.focusVideoId, "setVolume", [savedMainVolume, currentMuteState]);
+      }
 
+      /* PBF-790: In case of ooyala ads, _takeElementControl() is not called when ad is done playing in devices.
+         Found that isControllingElement of main element is set to true when ad finishes playing.
+         Tried setting the isControllingElement of main to false when ad starts playing on EMBED_CODE_CHANGED
+         event in AMC but it didn't work. As we are not sure on the root cause of the problem below is the
+         workaround to switch the control from ad element to main once ad is done playing in devices
+      */
+      if (ooyalaAds && videoId === OO.VIDEO.MAIN) {
+        this.activeInstances[videoId].isControllingElement = false;
+      }
+
+      _prepareInstanceForAction(videoId);
       // Focus the element
       var css = { "visibility": "visible" };
       if (OO.isIos) {
@@ -19049,6 +21563,11 @@ window.LZW = {
         return;
       }
 
+      //csai
+      if (this.focusVideoId === OO.VIDEO.ADS && savedMainVolume !== null) {
+        _callIfInControl(OO.VIDEO.MAIN, "setVolume", [savedMainVolume, currentMuteState]);
+      }
+
       // Send the 'transition' parameter to indicate that the video is going into hiding
       // The skin should use this field to know not to show the pause animation
       mb.publish(OO.EVENTS.VC_PAUSE, videoId, "transition");
@@ -19072,11 +21591,13 @@ window.LZW = {
     // Plugin control apis
     // ********************
 
-    var adsPlayed = _.bind(function(eventname) {
-      _safeFunctionCall(this.activeInstances[this.focusVideoId].element, "onAdsPlayed");
+    var adsPlayed = _.bind(function(eventName) {
+      if (this.activeInstances[this.focusVideoId]) {
+        _safeFunctionCall(this.activeInstances[this.focusVideoId].element, "onAdsPlayed");
+      }
     }, this);
 
-    var vcSetVideoStreams = _.bind(function(eventname, videoId, streams, isLive) {
+    var vcSetVideoStreams = _.bind(function(eventName, videoId, streams, isLive) {
       if (!(videoId && this.activeInstances && this.activeInstances[videoId] &&
             this.activeInstances[videoId].element)) {
         return;
@@ -19101,24 +21622,27 @@ window.LZW = {
 
       // If none are selected, raise an error
       if (!chosenEncoding) {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {code: OO.ERROR.VC.UNSUPPORTED_ENCODING});
+        mb.publish(OO.EVENTS.VC_ERROR, videoId, {ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING, playhead: this.currentPlayhead});
         return;
       }
 
       _setVideoStream(videoId, chosenEncoding, streams[chosenEncoding], isLive || this.activeInstances[videoId].isLive);
     }, this);
 
-    var vcPreload = _.bind(function(eventname, videoId) {
-      if (canPreload) {
-        _callIfInControl(videoId, "load", [true]);
-      }
-    }, this);
-
-    var vcReload = _.bind(function(eventname, videoId) {
+    var vcPreload = _.bind(function(eventName, videoId) {
+      OO.log("VTC: Video preload called.");
+      // [PLAYER-1323]
+      // Preload might be called after the video is already playing. We should avoid
+      // setting the rewind parameter to true so that the event just gets ignored if
+      // the video is already playing.
       _callIfInControl(videoId, "load", [false]);
     }, this);
 
-    var vcSetInitialTime = _.bind(function(eventname, videoId, initialTime) {
+    var vcReload = _.bind(function(eventName, videoId) {
+      _callIfInControl(videoId, "load", [false]);
+    }, this);
+
+    var vcSetInitialTime = _.bind(function(eventName, videoId, initialTime) {
       if (this.activeInstances && this.activeInstances[videoId] && this.activeInstances[videoId].element) {
         // NOTE: Each video technology may handle this differently.
         _safeFunctionCall(this.activeInstances[videoId].element, "setInitialTime", [initialTime]);
@@ -19128,18 +21652,43 @@ window.LZW = {
     var vcPrimeVideos = _.bind(function() {
       // Prime each video element to enable api-controlled video playback on devices
       for (var videoId in this.activeInstances) {
-        _callIfInControl(videoId, "primeVideoElement", []);
+        if (_isInControl(videoId)) {
+          _safeFunctionCall(this.activeInstances[videoId].element, "primeVideoElement", []);
+          this.activeInstances[videoId].primedForUnmutedAutoPlayback = true;
+        }
       }
     }, this);
 
-    var play = _.bind(function() {
+    //added videoId so we can specify which element we want play.
+    //used in HA functionality to start a playback before swapping video elements
+    //if videoId is not provided, currently focused video ID will be used instead
+    var play = _.bind(function(event, videoId) {
       // TODO: May need to take url as a parameter
-      mb.publish(OO.EVENTS.VC_PLAY, this.focusVideoId);
+      mb.publish(OO.EVENTS.VC_PLAY, videoId || this.focusVideoId);
     }, this);
 
-    var vcPlay = _.bind(function(eventname, videoId, url) {
+    var vcPlay = _.bind(function(eventName, videoId, url) {
       if (!(this.activeInstances && this.activeInstances[videoId])) {
         return;
+      }
+
+      if (!this.activeInstances[videoId].playing) {
+        // Set current volume
+        if (typeof currentVolume === "number") {
+          mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, videoId);
+        }
+        // attempt to restore user mute state
+        mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, currentMuteState, videoId);
+      } else {
+        //if we're transitioning from a video element that needed to be muted (such as a midroll),
+        //we'll need to restore the proper mute state and current volume here
+        if (typeof currentVolume === "number") {
+          mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, videoId);
+        }
+
+        //TODO: Restore mute state of the video based on its current mute state rather than
+        //the current mute state of the player
+        mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, currentMuteState, videoId);
       }
 
       if (url) {
@@ -19154,7 +21703,9 @@ window.LZW = {
 
       // This value may be null in the case where a module will be controlling the url manually
       // This is true for freewheel
-      if (this.activeInstances[videoId].stream && this.activeInstances[videoId].stream.url) {
+      var checkInstance = this.activeInstances[videoId].stream && this.activeInstances[videoId].stream.url
+        && this.activeInstances[videoId].plugin !== OO.VIDEO_PLAYERS.BIT_WRAPPER;
+      if (checkInstance) {
         _setVideoStream(videoId, this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream, this.activeInstances[videoId].isLive);
         // If we don't sent playing to true here, then if we lose element control before playing is raised
         // we may not keep our current position.  This happens when switching to an ad after seeking if
@@ -19162,31 +21713,55 @@ window.LZW = {
         this.activeInstances[videoId].playing = true;
       }
 
-      // Focus the video element?
+      mb.publish(OO.EVENTS.PLAY_VIDEO_ELEMENT, videoId);
+    }, this);
+
+    var playVideoElement = _.bind(function(event, videoId) {
+      if (!(this.activeInstances && this.activeInstances[videoId])) {
+        return;
+      }
       _safeFunctionCall(this.activeInstances[videoId].element, "play", []);
     }, this);
 
-    var pause = _.bind(function() {
-      mb.publish(OO.EVENTS.VC_PAUSE, this.focusVideoId);
+    var pause = _.bind(function(event, videoId) {
+      mb.publish(OO.EVENTS.VC_PAUSE, videoId || this.focusVideoId);
     }, this);
 
-    var vcPause = _.bind(function(eventname, videoId) {
+    var vcPause = _.bind(function(eventName, videoId) {
       _callIfInControl(videoId, "pause", []);
+
+      //It is necessary to stop the rotation of the camera
+      moveVrToDirection(eventName, videoId, false);
     }, this);
 
-    var seek = _.bind(function(eventname, time, videoIdIn) {
+    var touchMove = _.bind(function(event, videoId, yaw, roll,  pitch) {
+      var currentVideoId = videoId;
+      if (!!videoId) {
+        currentVideoId = OO.VIDEO.MAIN;
+      };
+      _callIfInControl(currentVideoId, "setVrViewingDirection", [{yaw: yaw, roll: roll, pitch: pitch}]);
+    }, this);
+
+    var checkVrDirection = _.bind(function(event, videoId) {
+      var isVideoMoving = _callIfInControl(videoId, "getIsVideoMoving", []);
+      var getViewingDirectionFuncName = isVideoMoving ? "getVrViewingDirection" : "getCurrentDirection";
+      var viewingDirection = _callIfInControl(videoId, getViewingDirectionFuncName, []) || {yaw: 0, roll: 0, pitch: 0};
+      mb.publish(OO.EVENTS.VR_DIRECTION_CHANGED, viewingDirection.yaw, viewingDirection.roll,  viewingDirection.pitch);
+    });
+
+    var seek = _.bind(function(eventName, time, videoIdIn) {
       var videoId = videoIdIn || this.focusVideoId;
       mb.publish(OO.EVENTS.VC_SEEK, videoId, time);
     }, this);
 
-    var vcSeek = _.bind(function(eventname, videoId, time) {
+    var vcSeek = _.bind(function(eventName, videoId, time) {
       if (videoId && this.activeInstances[videoId] && this.activeInstances[videoId].element &&
-          this.activeInstances[videoId].element.wrapper) {
+        this.activeInstances[videoId].element.wrapper) {
         _callIfInControl(videoId, "seek", [time]);
       }
     }, this);
 
-    var changeVolume = _.bind(function(eventname, newVolume, videoId) {
+    var changeVolume = _.bind(function(eventName, newVolume, videoId) {
       if (typeof(newVolume) !== "number" || newVolume < 0 || newVolume > 1) {
         log("Can not assign volume with invalid value", newVolume);
         return;
@@ -19194,20 +21769,91 @@ window.LZW = {
 
       currentVolume = newVolume;
       if (videoId) {
-        _callIfInControl(videoId, "setVolume", [currentVolume]);
+        _callIfInControl(videoId, "setVolume", [currentVolume, currentMuteState]);
       } else {
         // Change the volume on all active elements
-        for (var index=0; index < activeElements.length; index++) {
-          _safeFunctionCall(activeElements[index], "setVolume", [currentVolume]);
+        for (var index = 0; index < activeElements.length; index++) {
+          _safeFunctionCall(activeElements[index], "setVolume", [currentVolume, currentMuteState]);
         }
       }
+    }, this);
+
+    var changeMuteState = _.bind(function(eventName, muted, videoId, fromUser) {
+      var oldMuteState = currentMuteState;
+      currentMuteState = muted;
+
+      if (autoplayed && !muted && oldMuteState && fromUser) {
+        //if unmuting preroll during muted autoplay, load the content so that we can transition into content
+        //unmuted without an additional click
+        //do not load if we are sharing video elements as that will disrupt the ad
+        var sharing = this.activeInstances && this.activeInstances[OO.VIDEO.MAIN] && this.activeInstances[OO.VIDEO.MAIN].plugin &&
+                      _checkIfElementSharingRequired(registeredPlugins[this.activeInstances[OO.VIDEO.MAIN].plugin]);
+        if (!this.initialPlayHasStarted) {
+          if (!sharing) {
+            loadVideoForUnmutedAutoplay(OO.VIDEO.MAIN);
+          }
+
+          if (OO.isAndroid) {
+            //Workaround for PLAYER-2166. We don't currently have an easy way to handle IMA on Android
+            //because they do not share video elements and Android requires initial play() calls to be on the user click thread.
+            //We will prime the content on a user click here so that the content can start without a user click unmuted.
+            var isIMA = this.activeInstances && this.activeInstances[OO.VIDEO.ADS] &&
+              this.activeInstances[OO.VIDEO.ADS].plugin === "GoogleIMAVideoTech";
+
+            if (isIMA) {
+              mb.publish(OO.EVENTS.VC_PRIME_VIDEOS);
+            }
+          }
+        }
+
+        //Unmuting on a user click is enough for Safari 11 to autoplay IMA ads unmuted based on investigation.
+        //This line will allow IMA ads to autoplay midrolls unmuted if user unmuted during content
+        _callIfInControl(OO.VIDEO.ADS, "unmute", [fromUser]);
+      }
+
+      if (!muted) {
+        mutingForAutoplay = false;
+      }
+
+      if (videoId) {
+        if (muted) {
+          _callIfInControl(videoId, "mute");
+        } else {
+          _callIfInControl(videoId, "unmute", [fromUser]);
+        }
+      } else {
+        // Change the mute state on all active elements
+        for (var index=0; index < activeElements.length; index++) {
+          if (muted) {
+            _safeFunctionCall(activeElements[index], "mute");
+          } else {
+            _safeFunctionCall(activeElements[index], "unmute", [fromUser]);
+          }
+        }
+      }
+    }, this);
+
+    var setVideoVr = _.bind(function (eventName, params) {
+      this.isVr = true;
+      if (params && params.source && params.source.vr && params.source.vr.startPosition) {
+        this.startPositionVr = params.source.vr.startPosition;
+      }
+      _callIfInControl(OO.VIDEO.MAIN, "setVrViewingDirection", [{yaw: this.startPositionVr}]);
+    }, this);
+
+    var toggleStereoVr = _.bind(function () {
+      activeElements.forEach(function (el) { _safeFunctionCall(el, "toggleStereoVr", []) });
+    }, this);
+
+    var moveVrToDirection = _.bind(function (eventName, videoId, rotate, direction) {
+      _callIfInControl(videoId, "moveVrToDirection", [rotate, direction]);
     }, this);
 
     var pageUnloadRequested = _.bind(function() {
       _delayErrorPublishing();
     }, this);
 
-    var enableSeeking = _.bind(function(eventname, videoId) {
+    var enableSeeking = _.bind(function(eventName, videoId) {
       if (videoId && this.activeInstances[videoId]) {
         this.activeInstances[videoId].disableNativeSeek = false;
         if (this.activeInstances[videoId].isControllingElement &&
@@ -19219,7 +21865,7 @@ window.LZW = {
       }
     }, this);
 
-    var disableSeeking = _.bind(function(eventname, videoId) {
+    var disableSeeking = _.bind(function(eventName, videoId) {
       if (videoId && this.activeInstances[videoId]) {
         this.activeInstances[videoId].disableNativeSeek = true;
         if (this.activeInstances[videoId].isControllingElement &&
@@ -19242,8 +21888,8 @@ window.LZW = {
       if (this.focusVideoId && captionParams.mode == OO.CONSTANTS.CLOSED_CAPTIONS.DISABLED) {
         _callIfInControl(this.focusVideoId, "setClosedCaptionsMode", [captionParams.mode]);
       } else if (this.activeInstances[this.focusVideoId]) {
-        // March 2016 iPhone and iPad use their native video players so we must let them also render the captions, instead of our skin.
-        if (captionParams.mode == OO.CONSTANTS.CLOSED_CAPTIONS.HIDDEN && (OO.isIphone || (OO.isIpad && captionParams.isFullScreen))) {
+        // iPhone and iPad use their native video players when fullscreen so we must let them also render the captions, instead of our skin.
+        if (captionParams.mode == OO.CONSTANTS.CLOSED_CAPTIONS.HIDDEN && ((OO.isIphone || OO.isIpad) && captionParams.isFullScreen)) {
           captionParams.mode = OO.CONSTANTS.CLOSED_CAPTIONS.SHOWING;
         }
 
@@ -19283,7 +21929,7 @@ window.LZW = {
      * @protected
      * @param {string} videoId The id of the video element
      * @param {string} plugin The plugin name
-     * @param {string} eventname The event name as found in VideoController#EVENTS
+     * @param {string} eventName The event name as found in VideoController#EVENTS
      * @param {object} eventparams The event parameters.
      *                             Refer to VideoController#EVENTS for required parameters for each event.
      * @fires OO.EVENTS.VC_WILL_PLAY
@@ -19303,10 +21949,11 @@ window.LZW = {
      * @fires OO.EVENTS.FULLSCREEN_CHANGED
      * @fires OO.EVENTS.CLOSED_CAPTIONS_INFO_AVAILABLE
      * @fires OO.EVENTS.ASSET_DIMENSION
+     * @fires OO.EVENTS.HA_FAILOVER_NOW
      */
-    this.notify = function(videoId, plugin, eventname, eventparams) {
+    this.notify = function(videoId, plugin, eventName, eventparams) {
       var params = eventparams || {};
-      switch(eventname) {
+      switch(eventName) {
         case this.EVENTS.PLAY:
           mb.publish(OO.EVENTS.VC_WILL_PLAY, videoId, params["url"]);
           break;
@@ -19314,6 +21961,26 @@ window.LZW = {
           mb.publish(OO.EVENTS.VC_CAN_PLAY, videoId);
           break;
         case this.EVENTS.PLAYING:
+          OO.log("Video Id on play: " + videoId);
+          if(!this.initialPlayHasStarted && videoId === OO.VIDEO.MAIN){
+            this.initialPlayHasStarted = true;
+            var drm = this.activeInstances[videoId].stream.drm;
+            var drm_type = "none";
+            for (var key in drm){
+              if (drm[key] && !_.isEmpty(drm[key])){
+                drm_type = key;
+              }
+            }
+            var pluginUsed = this.activeInstances[videoId].element.plugin;
+            mb.publish(OO.EVENTS.INITIAL_PLAY_STARTING,  Date.now() - this.initialPlayTime,
+              autoplayed, this.hasPlayedAd, this.currentPlayhead,
+              pluginUsed, plugin.technology,
+              this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream.url,
+              drm_type,this.activeInstances[videoId].isLive);
+          }
+          if (this.activeInstances[videoId]) {
+            this.activeInstances[videoId].playing = true;
+          }
           mb.publish(OO.EVENTS.VC_PLAYING, videoId); // this used to have the stream url as a parameter
           break;
         case this.EVENTS.ENDED:
@@ -19327,7 +21994,10 @@ window.LZW = {
           if (this.activeInstances[videoId]) {
             this.activeInstances[videoId].playing = false;
           }
-          _handleErrors(params["errorcode"], videoId);
+          if(params["errorcode"] == 0){
+            mb.publish(OO.EVENTS.HA_FAILOVER_NOW);
+          }
+          _handleErrors(params, videoId);
           break;
         case this.EVENTS.SEEKING:
           mb.publish(OO.EVENTS.VC_SEEKING, videoId);
@@ -19344,14 +22014,32 @@ window.LZW = {
         case this.EVENTS.TIME_UPDATE:
           if (typeof params["duration"] !== "number") return;
           if (typeof params["currentTime"] !== "number") return;
+          var currentLiveTime;
+          if (this.activeInstances[videoId].isLive) {
+            currentLiveTime = params["currentLiveTime"];
+          }
           mb.publish(OO.EVENTS.PLAYHEAD_TIME_CHANGED, params["currentTime"], params["duration"],
-                     params["buffer"], params["seekRange"], videoId);
+                     params["buffer"], params["seekRange"], videoId, currentLiveTime);
           break;
         case this.EVENTS.VOLUME_CHANGE:
           mb.publish(OO.EVENTS.VOLUME_CHANGED, params["volume"], videoId);
           break;
+        case this.EVENTS.MUTE_STATE_CHANGE:
+          //Detect native mute/unmute icon here on iOS Safari and go through the same flow
+          //as if the click was on our skin mute/unmute icon
+          if (OO.isIos && currentMuteState !== params["muted"]) {
+            mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, params["muted"], videoId, true);
+          } else {
+            mb.publish(OO.EVENTS.MUTE_STATE_CHANGED, params["muted"], videoId, mutingForAutoplay);
+          }
+
+          if(playbackVideoAfterMute === videoId && params["muted"] === true) {
+            playbackVideoAfterMute = null;
+            mb.publish(OO.EVENTS.PLAY_VIDEO_ELEMENT, videoId);
+          }
+          break;
         case this.EVENTS.BUFFERING:
-          mb.publish(OO.EVENTS.BUFFERING, params["url"], videoId);
+          mb.publish(OO.EVENTS.BUFFERING, params["url"], videoId, this.currentPlayhead);
           break;
         case this.EVENTS.BUFFERED:
           mb.publish(OO.EVENTS.BUFFERED, params["url"], videoId);
@@ -19366,7 +22054,7 @@ window.LZW = {
                      params["buffer"], params["seekRange"], videoId);
           break;
         case this.EVENTS.WAITING:
-          mb.publish(OO.EVENTS.BUFFERING, params["url"], videoId);
+          mb.publish(OO.EVENTS.BUFFERING, params["url"], videoId, this.currentPlayhead);
           break;
         case this.EVENTS.FULLSCREEN_CHANGED:
           mb.publish(OO.EVENTS.FULLSCREEN_CHANGED, params["isFullScreen"], params["paused"], videoId);
@@ -19424,6 +22112,30 @@ window.LZW = {
             mb.publish(OO.EVENTS.VC_TAG_FOUND, videoId, eventparams["type"], eventparams["data"]);
           }
           break;
+        case this.EVENTS.PLUGIN_LOADED:
+          if (eventparams["name"] && eventparams["time"]) {
+            mb.publish(OO.EVENTS.PLUGIN_LOADED, OO.PLUGINS.VIDEO, eventparams["name"], eventparams["time"]);
+          }
+          break;
+        case this.EVENTS.ON_DOWNLOAD_FINISHED:
+          mb.publish(OO.EVENTS.HA_NOTIFY, 'requestCompleted', eventparams);
+          break;
+        case this.EVENTS.ON_SEGMENT_LOADED:
+          mb.publish(OO.EVENTS.HA_NOTIFY, 'segmentLoaded', eventparams);
+          break;
+        case this.EVENTS.UNMUTED_PLAYBACK_FAILED:
+          OO.log("Play promise failed, attempting muted autoplay");
+          if (autoplayed) {
+            muteForAutoPlayback(videoId, true);
+          }
+          break;
+        case this.EVENTS.UNMUTED_PLAYBACK_SUCCEEDED:
+          if (videoId === OO.VIDEO.MAIN && autoplayed) {
+            for (var index=0; index < activeElements.length; index++) {
+              _safeFunctionCall(activeElements[index], "notifyUnmutedContentAutoPlaybackSucceeded");
+            }
+          }
+          break;
       }
     };
 
@@ -19459,7 +22171,6 @@ window.LZW = {
       if (readyTimer === null && elementsNotReady.length === 0) {
         return;
       }
-
       if (!videoId) {
         elementsNotReady = [];
       } else {
@@ -19526,19 +22237,36 @@ window.LZW = {
     };
 
     /**
+     * Checks to see if a video instance is in control of the video element.
+     * When a virtual instance has control, the instance managing real element does not (and vice versa).
+     * @private
+     * @method VideoController#_isInControl
+     * @param {string} videoId The id of the video instance to check
+     * @returns {boolean} True if the video is in control, false otherwise
+     */
+    var _isInControl = _.bind(function(videoId) {
+      if (!this.activeInstances[videoId] ||
+          !this.activeInstances[videoId].element ||
+          !this.activeInstances[videoId].isControllingElement) {
+        return false;
+      }
+      return true;
+    }, this);
+
+    /**
      * Calls a function on a video element if the videoInstance is controlling the video element.
-     * When a virtual instance has control, the instance managing real element does not (and vica versa).
+     * When a virtual instance has control, the instance managing real element does not (and vice versa).
      * @private
      * @method VideoController#_callIfInControl
      * @param {string} videoId The id of the video instance to call a function on
      * @param {string} func The function to call on the video instance
      * @param {object} params A list of the parameters to pass to the function
-     * @returns {*} The return value of the function that was run or null
+     * @returns {*} The return value of the function that was run or undefined
      */
     var _callIfInControl = _.bind(function(videoId, func, params) {
-      if (!this.activeInstances[videoId] ||
-          !this.activeInstances[videoId].element ||
-          !this.activeInstances[videoId].isControllingElement) return;
+      if (!_isInControl(videoId)) {
+        return;
+      }
       return _safeFunctionCall(this.activeInstances[videoId].element, func, params);
     }, this);
 
@@ -19631,7 +22359,9 @@ window.LZW = {
      */
     var _handoffElementControl = _.bind(function(videoId) {
       var oldController = this.activeInstances[videoId];
-      if (!oldController.isControllingElement) return;
+      if (!oldController || !oldController.isControllingElement) {
+        return;
+      }
 
       // Find an instance not currently in control
       var newController = null;
@@ -19894,12 +22624,17 @@ window.LZW = {
       this.activeInstances[videoId].playing = false;
       this.activeInstances[videoId].stream = stream;
       this.activeInstances[videoId].encoding = encoding;
+      this.activeInstances[videoId].isLive = !!isLive;
 
       if (stream.drm && !_.isEmpty(stream.drm) && _isSupportedDRMEncoding(encoding)) {
         _callIfInControl(videoId, "setDRM", [stream.drm]);
       }
       _callIfInControl(videoId, "setPlatform", [this.activeInstances[videoId].params.platform, encoding]);
-      return _callIfInControl(videoId, "setVideoUrl", [stream.url, encoding, isLive || false]);
+      if(pageLevelParams && pageLevelParams["adobe-ads"]) {
+        return _callIfInControl(videoId, "setVideoUrl", [stream.url, encoding, isLive || false, pageLevelParams["adobe-ads"]]);
+      } else {
+        return _callIfInControl(videoId, "setVideoUrl", [stream.url, encoding, isLive || false]);
+      }
     }, this);
 
     /**
@@ -19929,6 +22664,22 @@ window.LZW = {
     }, this);
 
     /**
+     * Saves the params, closed captions object, crossorigin to the instance.
+     * @private
+     * @method VideoController#_setVideoParams
+     * @param {string} videoId The id of the video instance
+     * @param {object} params - params of the video
+     */
+    var _setVideoParams = _.bind(function(videoId, params) {
+      if (!this.activeInstances[videoId]) return;
+      if (params) {
+        this.activeInstances[videoId].params = params;
+        _setClosedCaptions(videoId, params.closedCaptions);
+        _setCrossorigin(videoId, params.crossorigin);
+      }
+    }, this);
+
+    /**
      * Sets the video stream secureContent
      * @private
      * @method VideoController#_setSecureContent
@@ -19951,26 +22702,41 @@ window.LZW = {
      *   Ooyala Extensions:
      *   NO_STREAM = 0
      *   UNKNOWN = -1
+     *   DRM_ERROR = 6
      * @method VideoController#_handleErrors
      * @param {object} code The error code
      * @param {string} videoId The id of the video
      * @fires OO.EVENTS.PAGE_PROBABLY_UNLOADING
      * @fires OO.EVENTS.VC_PLAY_FAILED
      */
-    var _handleErrors = _.bind(function(code, videoId) {
+    var _handleErrors = _.bind(function(errorParams, videoId) {
+      var eventData = {
+                    mediaErrorCode: errorParams.errorcode,
+                    pluginErrorCode: errorParams.pluginErrorCode,
+                    pluginErrorMessage: errorParams.pluginErrorMessage,
+                    playhead: this.currentPlayhead
+                  }
+
+      var drmInfo = {};
+      // If the errorcode is 6 (DRM_ERROR) add any relevant drm info
+      if(errorParams.errorcode === 6){
+        drmInfo = this.activeInstances[videoId].stream.drm;
+      }
+      eventData.drm = drmInfo;
+
       if (shouldEmitErrors) {
         _emitErrors();
       } else {
         // The error occurred when the page was probably unloading.
         // Happens more often on low bandwidth.
-        OO.d("Error not emitted: " + code);
+        OO.d("Error not emitted: " + errorParams.errorcode);
         // TODO: Store the videoId
-        unemittedErrors.push(code);
+        unemittedErrors.push(eventData);
         mb.publish(OO.EVENTS.PAGE_PROBABLY_UNLOADING);
         return;
       }
 
-      mb.publish(OO.EVENTS.VC_PLAY_FAILED, videoId, JSON.stringify(code));
+      mb.publish(OO.EVENTS.VC_PLAY_FAILED, videoId, eventData);
     }, this);
 
     /**
@@ -19986,7 +22752,7 @@ window.LZW = {
       // TODO: Get the videoId
       var videoId = "";
       _.each(unemittedErrors, function(e) {
-        mb.publish(OO.EVENTS.VC_PLAY_FAILED, videoId, JSON.stringify(e));
+        mb.publish(OO.EVENTS.VC_PLAY_FAILED, videoId, e);
       });
       unemittedErrors = [];
     }, this);
@@ -20020,6 +22786,33 @@ window.LZW = {
     };
 
     /**
+     * Increment number for try query param
+     * If not exist in url, it will append it.
+     * Count starts with 1.
+     * @param {string} url URL that needs to be modified
+     * @return {string} modified url
+     * @private
+     */
+
+    var increaseCountForTryParam = function (url){
+      url = url || '';
+      var reg = new RegExp(/[&\?]try=(\d*)/);
+      var result = reg.exec(url);
+      var toParse = result ? result[1]: 0;
+      var count = ((parseInt(toParse, 10) || 0) + 1);
+
+      if (url.indexOf('try=') !== -1){
+        return url.replace(/try=(\d*)/, 'try=' + count);
+      }
+
+      if (url.indexOf('?') !== -1){
+        return url + '&try=1';
+      }
+
+      return url + '?try=1';
+    };
+
+    /**
      * Validates a bitrate object before published to message bus.
      * Bitrate object needs the following properties:
      *   id: a String that uniquely identifies the object
@@ -20031,9 +22824,11 @@ window.LZW = {
      * @private
      */
     var _validateBitrate = function(bitrate) {
-      if (!bitrate) return false;
+      if (!bitrate) {
+        return false;
+      }
       var idValid = (bitrate.id !== undefined && typeof bitrate.id === "string");
-      var bitrateValid = (bitrate.bitrate !== undefined && typeof bitrate.bitrate === "number");
+      var bitrateValid = (bitrate.bitrate !== undefined && (typeof bitrate.bitrate === "number" || typeof bitrate.bitrate === "string"));
       var heightValid = (bitrate.height !== undefined && typeof bitrate.height === "number");
       var widthValid = (bitrate.width !== undefined && typeof bitrate.width === "number");
       return (idValid && bitrateValid && heightValid && widthValid);
@@ -20078,87 +22873,68 @@ window.LZW = {
   });
 }(OO, OO._, OO.$));
 
-/*
- * Metadata Controller
- */
+(function(OO,_,$) {
+  /*
+  * ValhallaCacheModule used to temporary store data, in memory.
+  * Publicly accessible via interface OO.cache
+  * Internally accessible via OO.publicApi.cache or OO.__internal.publicApi.cache
+  */
+  var ValhallaCacheModule = function() {
+    var cache = {};
+    /*
+    * Save data to ValhallaCacheModule
+    * @param {string} key - Storage key like 'my_data'
+    * @param {object} data - Object to store, can be anything
+    * @return {bool}
+    */
+    this.set = function (key, data){
+      if (key && data){
+        cache[key] = data;
+      }
+    };
+    /*
+    * Get data that stored in ValhallaCacheModule
+    * @param {string} key - Storage key to pull like 'my_data'
+    * @param {bool} remove - Remove data from cache, before returning it back. Helps if you want to access your data only once
+    * @return {object} Object that was stored in ValhallaCacheModule. If not exist will be null
+    */
+    this.get = function (key, remove){
+      var result = cache[key] || null;
+      if(remove){
+        this.remove(key);
+      }
+      return result;
+    };
 
- (function(OO, _, $) {
-  /**
-   * @class MetadataController
-   * @classdesc The Metadata controller main class.  This class is registered as a module with the player.
-   * @private
-   * @param {object} messageBus The player message bus
-   * @param {string} id The ID of the player module
-   */
-  var MetadataController = function(messageBus, id) {
-    this.toString = function() {return 'metadata-controller';};
-    this.mb = messageBus;
-    this.id = id;
-    this.metadataFetched = false;
-    this.metadata = null;
+    /*
+    * Check if data exists in ValhallaCacheModule
+    * @param {string} key - Storage key to check like 'my_data'
+    * @return {bool} True if data exist, false if not
+    */
+    this.exists = function (key) {
+      return !!cache[key];
+    };
 
-    this.mb.subscribe(OO.EVENTS.METADATA_FETCHED, 'metadata', _.bind(this.onMetadataFetched, this));
-    this.mb.subscribe(OO.EVENTS.SET_EMBED_CODE, 'metadata', _.bind(this.onSetEmbedCode, this));
+    /*
+    * Remove data that stored in ValhallaCacheModule
+    * @param {string} key - Storage key to remove like 'my_data'
+    * @return {bool} True if removed, false if not or data wasn't there
+    */
+    this.remove = function (key) {
+      if(this.exists(key)){
+        return delete cache[key];
+      }
+      return false;
+    };
+
+    this.flushAll = function(){
+      cache = {};
+    }
   };
 
-  _.extend(MetadataController.prototype, {
-    /**
-     * Called when the metadata API is fetched. Parse Thumbnail metadata setting from API response.
-     * This is customer specific metadata format that we know of.
-     * This method will need to be replaced by calling a separate general purpose API for thumbnail.
-     * @method MetadataController#onMetadataFetched
-     * @param {string} eventName The name of the event for which this callback is called
-     * @param {object} metadata Backlot metadata
-     */
-    onMetadataFetched: function(eventName, metadata) {
-      this.metadataFetched = true;
-      this.metadata = metadata;
-    },
+  var serverCache = new ValhallaCacheModule();
 
-    /**
-     * Called when the embed code has been set. This happens after an external ID has been
-     * translated to an Ooyala embed code so we don't need special handling for that case.
-     * @method MetadataController#onSetEmbedCode.
-     * @param {string} eventName The name of the event for which this callback is called
-     * @param {object} embedCode the embedCode to be played
-     */
-    onSetEmbedCode: function(eventName, embedCode) {
-      this.metadataFetched = false;
-      this.metadata = null;
-      var urlParams = {
-        server: OO.SERVER.API,
-        embedCode: embedCode
-      };
-      $.ajax({
-        url: OO.URLS.THUMBNAILS(urlParams),
-        type: 'GET',
-        dataType: 'json',
-        cache: true,
-        success: _.bind(this._thumbnailsFetched, this),
-        error: _.bind(this._thumbnailsFailed.bind, this)
-      });
-    },
-
-    _thumbnailsFetched: function(data){
-      if (data && data.data && !_.isEmpty(data.data.thumbnails)) {
-        this.mb.publish(OO.EVENTS.THUMBNAILS_FETCHED, data);
-      }
-    },
-
-    // Deploying this code before the backend is done, this allows for graceful
-    // fallback to the ESPN specific use case
-    _thumbnailsFailed: function(request, status, error){
-      if (this.metadataFetched) {
-        this.onMetadataFetched("", this.metadata);
-      }
-    }
-
-  });
-
-  OO.registerModule('metadataController', function(messageBus, id) {
-    return new MetadataController(messageBus, id);
-  });
-
+  OO.exposeStaticApi('cache', serverCache);
 }(OO, OO._, OO.$));
 (function(OO,_,$){
   /*
@@ -20169,9 +22945,12 @@ window.LZW = {
     this.mb = messageBus;
     this.id = id;
     this.params = params || {};
+    this.ooyalaAds = false;
 
     this.contentTree = {};
     this.metadata = {};
+    this.skinMetadata = {};
+    this.attributes = {};
     this.sasResponse = {};
     this.authToken = OO.localStorage.getItem("oo_auth_token");
 
@@ -20180,6 +22959,9 @@ window.LZW = {
     this._metadataAjax = null;
     this._sasAjax = null;
 
+    //assign cache interface to local var, in case if not defined replace with placeholder
+    this.valhallaCache = OO.publicApi.cache || {get:function(){}, exists:function(){}};
+
     OO.StateMachine.create({
       initial:'Init',
       messageBus:this.mb,
@@ -20187,7 +22969,9 @@ window.LZW = {
       target:this,
       events:[
         {name:OO.EVENTS.SET_EMBED_CODE,                     from:'*',                                          to:'Init'},
+        {name:OO.EVENTS.SET_EMBED_CODE_AFTER_OOYALA_AD,     from:'*',                                          to:'Init'},
         {name:OO.EVENTS.EMBED_CODE_CHANGED,                 from:'Init',                                       to:'WaitingForAPIResponse'},
+        {name:OO.EVENTS.EMBED_CODE_CHANGED_AFTER_OOYALA_AD, from:'Init',                                       to:'WaitingForAPIResponse'},
 
         {name:OO.EVENTS.WILL_FETCH_CONTENT_TREE,            from:'WaitingForAPIResponse'},
         {name:OO.EVENTS.WILL_FETCH_METADATA,                from:'WaitingForAPIResponse'},
@@ -20201,41 +22985,76 @@ window.LZW = {
 
   _.extend(ApiModule.prototype, {
 
-    onSetEmbedCode: function(event, embedCode, options) {
+   /*
+    * @private
+    */
+    _processSetEmbedCode: function(event, embedCode, options) {
       // store parameters
       this.rootEmbedCode = embedCode;
       this.adSetCode = options ? options.adSetCode : undefined;
       this.embedToken = (options && options.embedToken) || this.embedToken;
       this.authToken = (options && options.authToken) || this.authToken;
+    },
+
+    onSetEmbedCode: function(event, embedCode, options) {
+      // store parameters
+      this._processSetEmbedCode(event, embedCode, options);
       this.mb.publish(OO.EVENTS.EMBED_CODE_CHANGED, embedCode, options);
     },
 
-    onEmbedCodeChanged: function(event, embedCode) {
+    onSetEmbedCodeAfterOoyalaAd: function(event, embedCode, options) {
+      // store parameters
+      this._processSetEmbedCode(event, embedCode, options);
+      this.mb.publish(OO.EVENTS.EMBED_CODE_CHANGED_AFTER_OOYALA_AD, embedCode, options);
+    },
+
+   /*
+    * @private
+    */
+    _processOnEmbedCodeChanged: function(event, embedCode, params) {
       // store parameters
       this.currentEmbedCode = embedCode;
+      var requestParams = {};
+      if (params && params.ooyalaAds) {
+        requestParams = params;
+      }
 
       this._abort(this._contentAjax);
       this._abort(this._metadataAjax);
       this._abort(this._sasAjax);
 
+      if (!_.isEmpty(this.adSetCode)) {
+        _.extend(requestParams, { adSetCode: this.adSetCode });
+      }
+      if (!_.isEmpty(this.embedToken)) {
+        _.extend(requestParams, { embedToken: this.embedToken });
+      }
+
       // start server request
       var request = {
         embedCode: this.currentEmbedCode,
         pcode: OO.playerParams.pcode || "unknown",
-        playerBrandingId : OO.playerParams.playerBrandingId || "unknown",
-        params: {}
+        playerBrandingId : OO.playerParams.playerBrandingId || "unknown"
       };
-
-      if (!_.isEmpty(this.adSetCode)) {
-        _.extend(request.params, { adSetCode: this.adSetCode });
-      }
-      if (!_.isEmpty(this.embedToken)) {
-        _.extend(request.params, { embedToken: this.embedToken });
-      }
 
       // Note(bz): Temporary call to fetch player xml until we move to player api
       var apiRequest = _.extend({}, request, { server: OO.SERVER.API });
       var authRequest = _.extend({}, request, { server: OO.SERVER.AUTH });
+
+      apiRequest.params = _.clone(requestParams);
+      authRequest.params = _.clone(requestParams);
+
+      if (params && !params.ooyalaAds && typeof params.dynamicFilters === 'string') {
+        authRequest.params.dynamicFilters = params.dynamicFilters;
+        //trim out whitespace on ends of filters if necessary
+        if (authRequest.params.dynamicFilters.indexOf(' ') >= 0) {
+          var filters = authRequest.params.dynamicFilters.split(',');
+          _.each(filters, function(element, index, list) {
+            filters[index] = element.trim();
+          });
+          authRequest.params.dynamicFilters = filters.join(',');
+        }
+      }
 
       //always publish the metadata event, but only html5 should publish the others.
       this.mb.publish(OO.EVENTS.WILL_FETCH_METADATA, apiRequest);
@@ -20246,14 +23065,34 @@ window.LZW = {
       }
     },
 
+    onEmbedCodeChangedAfterOoyalaAd: function(event, embedCode, params) {
+      this._processOnEmbedCodeChanged(event, embedCode, params);
+    },
+
+    onEmbedCodeChanged: function(event, embedCode, params) {
+      this._processOnEmbedCodeChanged(event, embedCode, params);
+    },
+
     // Ooyala API Calls
 
     /*
      *  Content Tree
      */
     onWillFetchContentTree: function(event, request) {
+      if (request.params && request.params.ooyalaAds) {
+        this.ooyalaAds = request.params.ooyalaAds;
+      } else {
+        this.ooyalaAds = false;
+      }
+
+      if(this.valhallaCache.exists(OO.CONSTANTS.VALHALLA_CACHE_CONTENT_TREE_KEY)){
+        OO.log("Using valhallaCache to populate contentTree");
+        this._onContentTreeFetched(this.valhallaCache.get(OO.CONSTANTS.VALHALLA_CACHE_CONTENT_TREE_KEY, true));
+        return;
+      }
+
       if (typeof this.contentTree[this.currentEmbedCode] != "undefined") {
-        this.mb.publish(OO.EVENTS.CONTENT_TREE_FETCHED, this.contentTree[this.currentEmbedCode]);
+        this.mb.publish(OO.EVENTS.CONTENT_TREE_FETCHED, this.contentTree[this.currentEmbedCode], this.ooyalaAds);
       } else {
         this._contentAjax = $.ajax({
           url: OO.URLS.CONTENT_TREE(request) + "?" + $.param(request.params),
@@ -20261,7 +23100,11 @@ window.LZW = {
           dataType: 'json',
           crossDomain: true,
           success: _.bind(this._onContentTreeFetched, this),
-          error: _.bind(this._onApiError, this)
+          error: function(apiModule) {
+            return function(xhr, status, error) {
+              apiModule._onApiError(xhr, status, "Error in Content Tree request. " + error, this.url);
+            };
+          }(this)
         });
       }
     },
@@ -20279,16 +23122,15 @@ window.LZW = {
         }, this));
       }
 
-      var supportedContentType = ["Video", "VideoAd", "LiveStream", "Channel", "MultiChannel"];
+      var supportedContentType = ["Video", "VideoAd", "LiveStream", "Channel", "MultiChannel","Youtube"];
       if (this.contentTree[this.currentEmbedCode]) {
         var hostedAtURL = safe_response.content_tree[this.currentEmbedCode].hostedAtURL;
         if (hostedAtURL == "" || hostedAtURL == null) {
           safe_response.content_tree[this.currentEmbedCode].hostedAtURL = document.URL;
         }
-
         var contentIsSupportedInHtml5 = supportedContentType.indexOf(this.contentTree[this.currentEmbedCode].content_type) >= 0;
         if (contentIsSupportedInHtml5) {
-          this.mb.publish(OO.EVENTS.CONTENT_TREE_FETCHED, this.contentTree[this.currentEmbedCode], this.currentEmbedCode);
+          this.mb.publish(OO.EVENTS.CONTENT_TREE_FETCHED, this.contentTree[this.currentEmbedCode], this.ooyalaAds);
         } else {
           this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.CONTENT_TREE });
         }
@@ -20302,9 +23144,21 @@ window.LZW = {
      *  Metadata
      */
     onWillFetchMetadata: function(event, request) {
+      if (request.params && request.params.ooyalaAds) {
+        this.ooyalaAds = request.params.ooyalaAds;
+      } else {
+        this.ooyalaAds = false;
+      }
+
+      if(this.valhallaCache.exists(OO.CONSTANTS.VALHALLA_CACHE_METADATA_KEY)){
+        OO.log("Using valhallaCache to populate metadata");
+        this._onMetadataFetched(this.valhallaCache.get(OO.CONSTANTS.VALHALLA_CACHE_METADATA_KEY, true));
+        return;
+      }
+
       // send the metadata request
       if (typeof this.metadata[this.currentEmbedCode] != "undefined") {
-        this.mb.publish(OO.EVENTS.METADATA_FETCHED, this.metadata[this.currentEmbedCode]);
+        this.mb.publish(OO.EVENTS.METADATA_FETCHED, this.metadata[this.currentEmbedCode], this.ooyalaAds);
       } else {
         this._metadataAjax = $.ajax({
           url: OO.URLS.METADATA(request) + "&" + $.param(request.params),
@@ -20312,7 +23166,11 @@ window.LZW = {
           dataType: 'json',
           crossDomain: true,
           success: _.bind(this._onMetadataFetched, this),
-          error: _.bind(this._onApiError, this)
+          error: function(apiModule) {
+            return function(xhr, status, error) {
+              apiModule._onApiError(xhr, status, "Error in Metadata request. " + error, this.url);
+            };
+          }(this)
         });
       }
     },
@@ -20323,6 +23181,9 @@ window.LZW = {
       this._metadataAjax = null;
 
       if (safeResponse.errors && safeResponse.errors.code == 0) {
+        this.skinMetadata = safeResponse.skin;
+        this.attributes = safeResponse.attributes;
+
         _.each(safeResponse.metadata, _.bind(function(value, embedCode){
           this.metadata[embedCode] = safeResponse.metadata[embedCode];
 
@@ -20331,7 +23192,15 @@ window.LZW = {
           this.metadata[embedCode].modules = _.extend(this.metadata[embedCode].modules, this.params.modules || {});
         }, this));
       }
-      this.mb.publish(OO.EVENTS.METADATA_FETCHED, this.metadata[this.currentEmbedCode] || {});
+      this.mb.publish(OO.EVENTS.METADATA_FETCHED, this.metadata[this.currentEmbedCode] || {}, this.ooyalaAds);
+
+      if (this.skinMetadata) {
+        this.mb.publish(OO.EVENTS.SKIN_METADATA_FETCHED, this.skinMetadata);
+      }
+
+      if (this.attributes) {
+        this.mb.publish(OO.EVENTS.ATTRIBUTES_FETCHED, this.attributes);
+      }
 
       if (safeResponse.errors && safeResponse.errors.player_movie_mismatch &&
         typeof(window.console) != "undefined" && typeof(window.console.log) == "function") {
@@ -20343,11 +23212,28 @@ window.LZW = {
      *  SAS
      */
     onWillFetchAuthorization: function(event, request) {
+      if (request.params && request.params.ooyalaAds) {
+        this.ooyalaAds = request.params.ooyalaAds;
+      } else {
+        this.ooyalaAds = false;
+      }
+
+      if(this.valhallaCache.exists(OO.CONSTANTS.VALHALLA_CACHE_SAS_KEY)){
+        OO.log("Using valhallaCache to populate sasResponse");
+        this._onAuthorizationFetched(this.valhallaCache.get(OO.CONSTANTS.VALHALLA_CACHE_SAS_KEY, true));
+        return;
+      }
+
       if (this.sasResponse[this.currentEmbedCode] && this.sasResponse[this.currentEmbedCode].code == 0) {
-        this.mb.publish(OO.EVENTS.AUTHORIZATION_FETCHED, this.sasResponse[this.currentEmbedCode]);
+        this.mb.publish(OO.EVENTS.AUTHORIZATION_FETCHED, this.sasResponse[this.currentEmbedCode], this.ooyalaAds);
       } else {
         //add additional params for SAS
-        this._sendSasRequest(request, _.bind(this._onAuthorizationFetched, this), _.bind(this._onApiError, this));
+        this._sendSasRequest(request, _.bind(this._onAuthorizationFetched, this),
+          function(apiModule) {
+            return function(xhr, status, error) {
+              apiModule._onApiError(xhr, status, "Error in SAS request. " + error, this.url);
+            };
+          }(this));
       }
     },
 
@@ -20385,7 +23271,7 @@ window.LZW = {
 
       // Always publish the Authorization Response for Flash and only publish this on success for HTML5
       if (code == 0) {
-        this.mb.publish(OO.EVENTS.AUTHORIZATION_FETCHED, this.sasResponse[this.currentEmbedCode]);
+        this.mb.publish(OO.EVENTS.AUTHORIZATION_FETCHED, this.sasResponse[this.currentEmbedCode], this.ooyalaAds);
         return;
       }
       if (!_.isString(code)) {
@@ -20398,7 +23284,8 @@ window.LZW = {
       } else if (_.contains(codes, '3')) {
         this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.SAS.GEO });
       } else if (_.contains(codes, '4')) {
-        this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.SAS.FUTURE });
+        var start_timestamp = this.sasResponse[this.currentEmbedCode].retry;
+        this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.SAS.FUTURE, flight_start_time : start_timestamp});
       } else if (_.contains(codes, '5')) {
         this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.SAS.PAST });
       } else if (_.contains(codes, '13')) {
@@ -20412,8 +23299,8 @@ window.LZW = {
       }
     },
 
-    onWillFetchAdAuthorization: function(event, request) {
-      this._sendSasRequest(request, _.bind(this._onAdAuthorizationFetched, this));
+    onWillFetchAdAuthorization: function(event, request, errorCallback) {
+      this._sendSasRequest(request, _.bind(this._onAdAuthorizationFetched, this), errorCallback);
     },
 
     _onAdAuthorizationFetched: function(response) {
@@ -20439,8 +23326,10 @@ window.LZW = {
         $.extend(request.params, { auth_token: this.authToken });
       }
 
+      var requestUrl = OO.URLS.SAS(request) + "?" + $.param(request.params);
+
       this._sasAjax = $.ajax({
-        url: OO.URLS.SAS(request) + "?" + $.param(request.params),
+        url: requestUrl,
         type: 'GET',
         dataType: 'json',
         xhrFields: {
@@ -20459,11 +23348,12 @@ window.LZW = {
       this._aborting = false;
     },
 
-    _onApiError: function(xhr, status, error) {
+    _onApiError: function(xhr, status, error, url) {
       if (this._aborting) { return; }
 
-      OO.d(error, status, xhr);
-      this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.NETWORK, xhrStatus : status });
+      OO.d(error, status, xhr, url);
+      this.mb.publish(OO.EVENTS.ERROR, { code : OO.ERROR.API.NETWORK, xhrStatus : status, description : error, url : url });
+      this.mb.publish(OO.EVENTS.API_ERROR, xhr.status, error, url );
     },
 
     __placeholder: true
@@ -20508,7 +23398,7 @@ OO.plugin("Channels", function(OO, _, $, W) {
         _.bind(this._checkTreeForChannel, this));
     },
 
-    _checkTreeForChannel: function(eventName, tree) {
+    _checkTreeForChannel: function(eventName, tree, ooyalaAds) {
       var supportedContentType = ["Channel", "MultiChannel"];
 
       //if i get a tree from V3, it will have contenttype
@@ -20538,7 +23428,7 @@ OO.plugin("Channels", function(OO, _, $, W) {
         return false;
       }
 
-      return [tree];
+      return [tree, ooyalaAds];
     },
 
 
@@ -20716,11 +23606,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       this.ajax = null;
       if (!response.message || response.message != "OK" || !response.signature) {
         this._onHeartbeatError(OO.ERROR.API.SAS.INVALID_HEARTBEAT);
-      }
-      else if (!response.expires || response.expires < new Date().getTime()/1000) {
-        this._onHeartbeatError(OO.ERROR.API.SAS.INVALID_HEARTBEAT);
-      }
-      else {
+      } else {
         this.retries = 3;
         if (response.auth_token != null) {
           this.authToken = response.auth_token;
@@ -20769,8 +23655,32 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
  */
 
 (function(OO, _, $){
+  /**
+   * The ad manager controller has finished playing postrolls. This is still fired with a postroll count of 0.
+   *
+   *
+   * @event OO.EVENTS#AMC_ALL_ADS_DONE
+   */
   OO.EVENTS.AMC_ALL_ADS_DONE               = 'adManagerControllerAllAdsDone';
+
+  /**
+   * The ad manager controller has finished playing prerolls. This is still fired with a preroll count of 0.
+   *
+   *
+   * @event OO.EVENTS#AMC_PREROLLS_DONE
+   */
   OO.EVENTS.AMC_PREROLLS_DONE              = 'adManagerControllerPrerollsDone';
+
+  /**
+   * The ad manager controller has finished initializing. The handler is called with an object
+   * of the following structure:
+   *
+   * <ul>
+   *   <li>prerolls: The number of prerolls the ad manager controller has detected in its timeline</li>
+   * </ul>
+   *
+   * @event OO.EVENTS#AMC_ALL_READY
+   */
   OO.EVENTS.AMC_ALL_READY                  = 'adManagerControllerAllReady';
  /**
   * A set of ads from an ad manager has started. This may be followed by multiple WILL_PLAY_SINGLE_AD/SINGLE_AD_PLAYED events.
@@ -20867,12 +23777,14 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
   // Timeouts
   var MAX_AD_MANAGER_LOAD_TIMEOUT = 3000;
-  var MAX_AD_LOAD_TIMEOUT = 5000;
+  var MAX_AD_LOAD_TIMEOUT = 25000;
   var MAX_VIDEO_RELOAD_TIMEOUT = 2000;
   var DEFAULT_VIDEO_SKIP_BUTTON_TIME = 5;
 
   // Maximum duration for ad request before timeout
-  var MAX_AD_REQUEST_TIMEOUT = 2000;
+  var MAX_AD_REQUEST_TIMEOUT = 8000;
+
+  var POSTROLL_POSITION = 1000000000; //same number used in backlot
 
   /**
    * The list of registered ad managers.
@@ -20885,13 +23797,15 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
   // Settings to store in adManagerSettings.  These could come from the page or the server.
   var SETTINGS = {
     PAUSE_AD_ON_CLICK: "pauseAdOnClick",
+    AD_MANAGER_LOAD_TIMEOUT: "adManagerLoadTimeout",
     AD_LOAD_TIMEOUT: "adLoadTimeout",
     DISPLAY_CUE_POINTS: "displayCuePointMarkers",
     REPLAY_ADS: "replayAds",
     SHOW_NONLINEAR_CLOSE_BUTTON: "showNonLinearCloseButton",
     SHOW_LINEAR_AD_SKIP_BUTTON: "showLinearAdSkipButton",
     LINEAR_AD_SKIP_BUTTON_START_TIME: "linearAdSkipButtonStartTime",
-    ALLOW_AD_CLICK_THROUGH_ON_VIDEO: "allowAdClickThroughOnVideo"
+    ALLOW_AD_CLICK_THROUGH_ON_VIDEO: "allowAdClickThroughOnVideo",
+    PAUSE_ON_LIVE_ADS: "pauseOnLiveAds"
   };
 
   /**
@@ -21034,12 +23948,14 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     var exposedProperties = ["EVENTS", "ADTYPE", "AD_CANCEL_CODE", "AD_SETTINGS", "MAX_AD_REQUEST_TIMEOUT", "Ad", "ui",
         "platform", "adManagerSettings", "playerSettings", "backlotSettings", "pageSettings",
         "currentEmbedCode", "movieMetadata", "startTime", "movieDuration", "isLiveStream"];
-    var exposedFunctions =  ["updateMainStreamUrl","playAd", "addPlayerListener", "removePlayerListener", "loadAdModule",
+    var exposedFunctions =  ["updateMainStreamUrl","playAd", "addPlayerListener", "removePlayerListener", "loadAdModule","notify",
         "onAdManagerReady", "removeAdManager", "adsClicked", "raiseAdError", "appendToTimeline",
         "showCompanion", "forceAdToPlay", "adManagerWillControlAds", "adsClickthroughOpened",
         "adManagerDoneControllingAds", "notifyPodStarted", "notifyPodEnded", "notifyLinearAdStarted",
         "notifyLinearAdEnded", "notifyNonlinearAdStarted", "notifyNonlinearAdEnded", "hidePlayerUi", "isLastAdPlayed",
-        "sendURLToLoadAndPlayNonLinearAd", "showSkipVideoAdButton", "focusAdVideo", "getRegisteredAdManagers", "unregisterAdManager"];
+        "sendURLToLoadAndPlayNonLinearAd", "showSkipVideoAdButton", "showNonlinearAdCloseButton", "focusAdVideo", "getRegisteredAdManagers",
+        "unregisterAdManager", "onSdkAdEvent", "onAdSdkLoaded", "onAdSdkLoadFailure", "onAdRequest", "onAdRequestSuccess",
+        "onAdRequestEmpty","onAdRequestError", "onAdPlaybackError", "onAdCompleted","onAdSdkImpression", "reportPluginLoaded"];
 
     var exposed = _.union(exposedProperties, exposedFunctions);
 
@@ -21051,7 +23967,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         // exposes properties bound to the correct instance
         var getter = _.bind(function(key) {
             return this[key];
-          }, controller, exposed[i]);
+        }, controller, exposed[i]);
         Object.defineProperty(this, exposed[i], { get:getter });
       }
     }
@@ -21155,6 +24071,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       mb.subscribe(OO.EVENTS.VC_VIDEO_ELEMENT_DISPOSED, 'amcUi', _videoElementDisposed);
       mb.subscribe(OO.EVENTS.VC_VIDEO_ELEMENT_IN_FOCUS, 'amcUi', _videoElementInFocus);
       mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'amcUi', _embedCodeChanged);
+      mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED_AFTER_OOYALA_AD, 'amcUi', _embedCodeChangedAfterOoyalaAd);
     }, this);
 
     /**
@@ -21163,11 +24080,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * @method AdManagerControllerUi#destroy
      */
     this.destroy = function() {
-      _disposeElements();
+      _disposeElements(true);
       mb.unsubscribe(OO.EVENTS.VC_VIDEO_ELEMENT_CREATED, 'amcUi');
       mb.unsubscribe(OO.EVENTS.VC_VIDEO_ELEMENT_IN_FOCUS, 'amcUi');
       mb.unsubscribe(OO.EVENTS.VC_VIDEO_ELEMENT_DISPOSED, 'amcUi');
       mb.unsubscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'amcUi');
+      mb.unsubscribe(OO.EVENTS.EMBED_CODE_CHANGED_AFTER_OOYALA_AD, 'amcUi');
     };
 
     /**
@@ -21243,12 +24161,6 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     this.setupAndRegisterUi = function() {
       this.setupUiElements();
       this.registerUi();
-
-      // [PBW-1743] We need to create and "activate" the plugin video on a click so that we can control
-      // it with JS later on mobile
-      if (OO.isAndroid || OO.isIos) {
-        _primeHtml5Video();
-      }
     };
 
     /**
@@ -21257,7 +24169,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * allow video play on user interaction (such as Android and iOS).
      * @private
      */
-    var _primeHtml5Video = _.bind(function() {
+    this.prepAdVideoElement = function() {
       OO.log("AMC: Prepping player with a video element on load");
       var streams = {};
       streams[OO.VIDEO.ENCODING.MP4] = "";
@@ -21282,7 +24194,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       this.createAdVideoElement(streams,
                                 { "technology": restrictionTech,
                                   "features": restrictionFeatures });
-    }, this);
+    };
 
     /**
      * Creates the adVideoElement.
@@ -21306,11 +24218,11 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Saves the video element if it was created successfully.
      * @private
      * @method AdManagerControllerUi#_videoElementCreated
-     * @param {string} eventname The name of the event that triggered this callback
+     * @param {string} eventName The name of the event that triggered this callback
      * @param {object} elementParams The parameters of the element created including id, domId, parent,
      *                               video element, and supported encodings
      */
-    var _videoElementCreated = _.bind(function(eventname, elementParams) {
+    var _videoElementCreated = _.bind(function(eventName, elementParams) {
       if (elementParams["videoId"] === OO.VIDEO.MAIN) {
         this.ooyalaVideoElement = elementParams["videoElement"];
         var streamUrl = elementParams["streamUrl"];
@@ -21329,11 +24241,17 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Destroys any existing video elements associated with the AMF.
      * @private
      * @method AdManagerControllerUi#_disposeElements
+     * @param {boolean} forceDispose Forces dispose on platforms on which video elements are recycled
      * @fires OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT
      */
-    var _disposeElements = _.bind(function() {
+    var _disposeElements = _.bind(function(forceDispose) {
       if (this.adVideoElement) {
-        mb.publish(OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT, OO.VIDEO.ADS);
+        //We no longer want to dispose elements (unless forcefully)
+        //in order to preserve the original user click for non-muted playback
+        //and for mobile devices that require a user gesture to start playback
+        if (forceDispose) {
+          mb.publish(OO.EVENTS.VC_DISPOSE_VIDEO_ELEMENT, OO.VIDEO.ADS);
+        }
       }
     }, this);
 
@@ -21341,10 +24259,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Removes the ad video element from saved properties.
      * @private
      * @method AdManagerControllerUi#_videoElementDisposed
-     * @param {string} eventname The name of the event that triggered this callback
+     * @param {string} eventName The name of the event that triggered this callback
      * @param {string} videoId The video tech id of the element disposed
      */
-    var _videoElementDisposed = _.bind(function(eventname, videoId) {
+    var _videoElementDisposed = _.bind(function(eventName, videoId) {
       if (videoId === OO.VIDEO.ADS) {
         this.adVideoElement = null;
       }
@@ -21354,10 +24272,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Called when a video element is brought to focus.  Saves the focused element id.
      * @private
      * @method AdManagerControllerUi#_videoElementInFocus
-     * @param {string} eventname The name of the event that triggered this callback
+     * @param {string} eventName The name of the event that triggered this callback
      * @param {string} videoId The video tech id of the element in focus
      */
-    var _videoElementInFocus = _.bind(function(eventname, videoId) {
+    var _videoElementInFocus = _.bind(function(eventName, videoId) {
       elementInFocus = videoId;
       if (elementInFocus === OO.VIDEO.ADS) {
         for (var key in adManagers) {
@@ -21374,9 +24292,18 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * @method AdManagerControllerUi#_embedCodeChanged
      */
     var _embedCodeChanged = _.bind(function() {
-      _disposeElements();
     }, this);
 
+    /**
+     * Transitions the UI from ad video to content video.
+     * @private
+     * @method AdManagerControllerUi#_embedCodeChangedAfterOoyalaAd
+     */
+    var _embedCodeChangedAfterOoyalaAd = _.bind(function() {
+      if (OO.isAndroid || OO.isIos) {
+        mb.publish(OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT, OO.VIDEO.MAIN, "true");
+      }
+    }, this);
 
     ////// UI Transition Functions //////
 
@@ -21472,6 +24399,8 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     // Indicates whether or not the ad manager controller has been initialized
     var initialized      = false;
 
+    var ooyalaAdManager = {};
+
     // Player/page Properties
     this.adManagerSettings    = {};
     this.playerSettings       = {};
@@ -21489,15 +24418,17 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     this.movieDuration    = -1;
     this.isLiveStream     = false;
 
+    // Live Stream Properties for maintaining the playhead
+    this.liveStreamTimestamps = {};
+    this.timeMainVideoIdleMs  = 0;
+
     // Movie state Properties
     var currentPlayhead           = -1;
-    var maxPlayhead               = -1;
     var timeline                  = [];
     var repeatAds                 = [];
     var adQueue                   = [];
     var skipAdsOnSeek             = false;
     var seekToEndThreshold        = 0;
-    var lastAdIndex               = 0;
     var seeking                   = false;
     var seeked                    = false;
     var seekedPosition            = 0;
@@ -21507,6 +24438,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     this.ended                    = false;
     this.waitForPostrollToPlay    = true;
     var adManagersControllingAds  = {};
+    var csaiMode                  = false;
     //This flag is used when initialTime (customization) is greater than 0.
     //This is to prevent ads prior to initialTime from triggering when
     //the initial time seek is slightly less (milliseconds) than the initial time.
@@ -21518,6 +24450,8 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     // This is needed so that don't call AMC_PREROLLS_DONE if an ad was playing and was cancelled
     // when a new stream was loaded.
     var newStreamHandling         = false;
+
+    var amcPrerollsDoneCalled     = false;
 
     // UI Setup
     var uiSetup        = false;
@@ -21539,7 +24473,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     // AMC modules
     this.ui        = null;
     this.platform  = null;
-    this.interface = null;
+    this.amcInterface = null;
 
     // AMC Ad Managers
     this.adManagers = {};
@@ -21550,6 +24484,9 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     this.MAX_AD_MODULE_LOAD_TIMEOUT  = 5000;
     this.MAX_AD_REQUEST_TIMEOUT = MAX_AD_REQUEST_TIMEOUT;
 
+    // Ad Frequency
+    var VIDEO_COUNT_KEY = "OO Main Video Count";
+
     // Unit test helper
     this.testMode = false;
 
@@ -21559,57 +24496,66 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Events to which ad managers can subscribe. These events are not processed on the standard message bus.
      * @public
-     * @field OO.AdManagerController#EVENTS
+     * @member AdManagerController#EVENTS
      * @example
      * var amc = new AdManagerController(mb, id);
      * amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, callback);
      * @property {string} INITIAL_PLAY_REQUESTED Raised the first time playback is requested.
-     * @property {string} REPLAY_REQUESTED Raised when a stream is replayed
-     * @property {string} PLAY_STARTED Raised when the content video first begins to play
+     * @property {string} REPLAY_REQUESTED Raised when a stream is replayed.
+     * @property {string} PLAY_STARTED Raised when the content video first begins to play.
      * @property {string} PLAYHEAD_TIME_CHANGED Raised periodically during content playback, reporting the
-     *                    current position and duration
+     *                    current position and duration.
      * @property {string} AD_PLAYHEAD_TIME_CHANGED Raised periodically during ad playback, reporting the
-     *                    current position and duration
-     * @property {string} PAUSE Raised when the content video is paused
-     * @property {string} RESUME Raised when the content video is resumed
-     * @property {string} CONTENT_COMPLETED Raised when the content video completes
-     * @property {string} CONTENT_AND_ADS_COMPLETED Raised when the content video and all ads have completed playing
-     * @property {string} SIZE_CHANGED Raised when the size of the player is changed
-     * @property {string} CONTENT_CHANGED Raised when the content video is changed
-     * @property {string} FULLSCREEN_CHANGED Raised when the player enters and exits fullscreen mode
-     * @property {string} VOLUME_CHANGED Raised when the user requests a change in video volume
+     *                    current position and duration.
+     * @property {string} PAUSE Raised when the content video is paused.
+     * @property {string} RESUME Raised when the content video is resumed.
+     * @property {string} CONTENT_COMPLETED Raised when the content video completes.
+     * @property {string} CONTENT_AND_ADS_COMPLETED Raised when the content video and all ads have completed playing.
+     * @property {string} SIZE_CHANGED Raised when the size of the player is changed.
+     * @property {string} CONTENT_CHANGED Raised when the content video is changed.
+     * @property {string} FULLSCREEN_CHANGED Raised when the player enters and exits fullscreen mode.
+     * @property {string} VOLUME_CHANGED Raised when the user requests a change in video volume.
      * @property {string} AD_VOLUME_CHANGED Raised when the user requests a change in video volume against the
-     *                    OO.VIDEO.ADS element
-     * @property {string} MAIN_CONTENT_IN_FOCUS Raised when the main element has gained focus
-     * @property {string} VIDEO_TAG_FOUND Raised when an embedded tag has been found in the video stream
-     * @property {string} CONTENT_URL_CHANGED Raised when a url has been selected to stream from
+     *                    <code>OO.VIDEO.ADS</code> element.
+     * @property {string} MAIN_CONTENT_IN_FOCUS Raised when the main element has gained focus.
+     * @property {string} VIDEO_TAG_FOUND Raised when an embedded tag has been found in the video stream.
+     * @property {string} CONTENT_URL_CHANGED Raised when a url has been selected to stream from.
+     * @property {string} NONLINEAR_AD_DISPLAYED Raised when the UI has successfully rendered the nonlinear ad.
+     * @property {string} DEVICE_ID_SET Raised when the player generates a guid to identify the device or
+     *                    reads the stored guid from browser local storage. Reports the guid as the device id.
      */
     this.EVENTS = {
-      INITIAL_PLAY_REQUESTED :    "initialPlayRequested",
-      REPLAY_REQUESTED :          "replayRequested",
-      PLAY_STARTED :              "playStarted",
-      PLAYHEAD_TIME_CHANGED :     "playheadTimeChanged",
-      AD_PLAYHEAD_TIME_CHANGED :  "adPlayheadTimeChanged",
-      PAUSE :                     "pause",
-      RESUME :                    "resume",
-      CONTENT_COMPLETED :         "contentCompleted",
-      CONTENT_AND_ADS_COMPLETED : "contentAndAdsCompleted",
-      SIZE_CHANGED :              "sizeChanged",
-      CONTROLS_SHOWN :            "controlsShown",
-      CONTROLS_HIDDEN :           "controlsHidden",
-      CONTENT_CHANGED :           "contentChanged",
-      FULLSCREEN_CHANGED :        "fullscreenChanged",
-      VOLUME_CHANGED :            "volumeChanged",
-      AD_VOLUME_CHANGED :         "adVolumeChanged",
-      MAIN_CONTENT_IN_FOCUS :     "mainContentInFocus",
-      VIDEO_TAG_FOUND :           "videoTagFound",
-      CONTENT_URL_CHANGED :       "contentURLChanged"
+      INITIAL_PLAY_REQUESTED :          "initialPlayRequested",
+      REPLAY_REQUESTED :                "replayRequested",
+      PLAY_STARTED :                    "playStarted",
+      PLAYHEAD_TIME_CHANGED :           "playheadTimeChanged",
+      AD_PLAYHEAD_TIME_CHANGED :        "adPlayheadTimeChanged",
+      PAUSE :                           "pause",
+      RESUME :                          "resume",
+      CONTENT_COMPLETED :               "contentCompleted",
+      CONTENT_AND_ADS_COMPLETED :       "contentAndAdsCompleted",
+      SIZE_CHANGED :                    "sizeChanged",
+      CONTROLS_SHOWN :                  "controlsShown",
+      CONTROLS_HIDDEN :                 "controlsHidden",
+      CONTENT_CHANGED :                 "contentChanged",
+      FULLSCREEN_CHANGED :              "fullscreenChanged",
+      VOLUME_CHANGED :                  "volumeChanged",
+      AD_VOLUME_CHANGED :               "adVolumeChanged",
+      MAIN_CONTENT_IN_FOCUS :           "mainContentInFocus",
+      VIDEO_TAG_FOUND :                 "videoTagFound",
+      CONTENT_URL_CHANGED :             "contentURLChanged",
+      NONLINEAR_AD_DISPLAYED :          "nonlinearAdDisplayed",
+      WILL_FETCH_AD_AUTHORIZATION:      "willFetchAdAuthorization",
+      AMC_PREROLLS_DONE :               "amcPrerollsDone",
+      SET_EMBED_CODE :                  "setEmbedCode",
+      SET_EMBED_CODE_AFTER_OOYALA_AD :  "setEmbedCodeAfterOoyalaAd",
+      DEVICE_ID_SET :                   "deviceIdSet"
     };
 
     /**
      * States used internally for passing into _checkTimeline function.
      * @private
-     * @field OO.AdManagerController#STATES
+     * @member AdManagerController#STATES
      * @property {string} SEEKED The seeked state
      * @property {string} CONTENT_VIDEO_PLAYED The contentVideoPlayed state
      */
@@ -21621,7 +24567,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Defines possible ad types.
      * @public
-     * @field OO.AdManagerController#ADTYPE
+     * @member AdManagerController#ADTYPE
      * @example
      * var amc = new AdManagerController(mb, id);
      * var ad = new amc.Ad(position, duration, name, adObj, amc.ADTYPE.LINEAR_VIDEO);
@@ -21639,6 +24585,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       LINEAR_OVERLAY : "linearOverlay",
       NONLINEAR_OVERLAY : "nonlinearOverlay",
       LINEAR_VIDEO : "linearVideo",
+      NONLINEAR_VIDEO : "nonlinearVideo",
       COMPANION : "companion",
       AD_REQUEST: "adRequest",
       UNKNOWN_AD_REQUEST: "unknownAdRequest"
@@ -21647,7 +24594,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Defines ad cancellation codes.
      * @public
-     * @field OO.AdManagerController#AD_CANCEL_CODE
+     * @member AdManagerController#AD_CANCEL_CODE
      * @property {string} SKIPPED The ad was skipped by the user via the skip ad button
      * @property {string} TIMEOUT The ad timed out
      * @property {string} ERROR The ad threw an error
@@ -21661,6 +24608,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     };
 
     /**
+     * An ad that is forced to play immediately should be assigned this position.
+     * @type {Number}
+     */
+    this.FORCED_AD_POSITION = -1;
+
+    /**
      * @class Ad
      * @classdesc Represents an ad or a set of podded ads. This object contains a reference to the actual ad object provided by
      * the ad manager.
@@ -21672,7 +24625,9 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * var ad = new amc.Ad({position:10000, duration:7000, adManager:"example-ad-manager", ad:adObj,
      *                      adType:amc.ADTYPE.LINEAR_VIDEO});
      * @param adData {object} The ad data object describes the ad, it must contain the following fields:<br/>
-     *   <code>position {number}</code> The time, in seconds, in the video at which the ad(s) will play.<br />
+     *   <code>position {number}</code> The time in the video at which the ad(s) will play (Refer to positionType for time unit)<br />
+     *   <code>positionType {string}</code> How to interpret the ad position value. Either 'p' for percents(0-100) or 't' for time in seconds. Default is 't' if not specified.<br />
+     *   <code>mainContentDuration {number}</code> The time length, seconds, of the main video stream<br />
      *   <code>duration {number}</code> The duration of the ad(s) (seconds).<br />
      *   <code>adManager {string}</code> The name of the ad manager (<code>{adManager}.name</code>) that will play the ad.<br />
      *   <code>ad {object}</code> The ad object.<br />
@@ -21685,12 +24640,13 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * @property {boolean} isLinear <code>true</code> if the ad is linear, <code>false</code> otherwise.
      * @property {boolean} played <code>true</code> if the ad has been played during the current video, <code>false</code> otherwise.
      * @property {object} videoRestrictions An object that lists restrictions the ad manager has on the video plugin
+     * @property {boolean} isRequest True if this ad is only for an ad request and the ad isn't known
+     * @property {object} streams An object containing keys for the stream format and values that are the urls for those streams
      *   used.  ex. {"technology":OO.VIDEO.TECHNOLOGY.HTML5, "features":[OO.VIDEO.FEATURE.VIDEO_OBJECT_OPEN]}
      */
     this.Ad = function(adData) {
-      if (!adData) adData = {};
+      adData = adData || {};
       this.id = _.uniqueId(adData['adManager'] + "_");
-      this.position = adData['position'] || 0;
       this.duration = adData['duration'] || 0;
       this.adManager = adData['adManager'];
       this.ad = adData['ad'] || {};
@@ -21702,6 +24658,45 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       this.streams = adData['streams'] || {};
       this.played = false;
       this.videoRestrictions = adData['videoRestrictions'];
+
+      //setup the ad position.
+      var positionType = 't';
+      //only change to percent position type if specified otherwise, assume it's time
+      if (adData.positionType === 'p') {
+        positionType = 'p';
+      }
+
+      var adDataPosition = +adData['position']
+      if (_.isNumber(adDataPosition) && _.isFinite(adDataPosition)) {
+        this.position = adDataPosition;
+      } else {
+        this.position = 0;
+      }
+
+      switch (positionType) {
+        case 'p':
+          //the movie duration may be rounded or off by a little, so we want to
+          //insure that ads that are supposed to be postrolls actually play as postrolls and don't get skipped over.
+          if (this.position >= 100) {
+            this.position = POSTROLL_POSITION;
+          } else {
+            //convert the number from percentage to actual time stamp.
+            var movieDuration = adData['mainContentDuration'];
+            if (_.isFinite(movieDuration) && movieDuration > 0)
+            {
+              this.position = (this.position / 100) * movieDuration;
+            }
+            else {
+              OO.log("Creating a Ad instance with movieDuration = 0");
+              this.position = 0;
+            }
+          }
+          break;
+        case 't':
+        default:
+          //do nothing
+          break;
+      };
     };
 
     var states_noLinearAdPlaying = ['Init', 'Ready', 'Playback', 'Reload', 'Overlay'];
@@ -21743,46 +24738,43 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     var _tryInit = _.bind(function() {
       if (initialized || !pageSettingsRaised || !backlotSettingsRaised || !movieMetadataRaised) return;
       initialized = true;
-      if (this.testMode) {
-        _declareAllReadyOnTimeout();
-      } else {
-        _.delay(_.bind(_declareAllReadyOnTimeout, this), MAX_AD_MANAGER_LOAD_TIMEOUT);
-      }
 
       // Parse global metadata locally
-      for (var setting in SETTINGS) {
-        if (typeof this.pageSettings[SETTINGS[setting]] != "undefined") {
-          this.adManagerSettings[SETTINGS[setting]] = this.pageSettings[SETTINGS[setting]];
+      var settings = _.values(SETTINGS);
+      for (var i = 0; i < settings.length; i++) {
+        var setting = settings[i];
+        if (typeof this.pageSettings[setting] !== "undefined") {
+          this.adManagerSettings[setting] = this.pageSettings[setting];
         }
       }
 
+      var metadataMap = {};
       // Send the metadata to the ad managers
-      for (var key in this.adManagers) {
-        var manager = this.adManagers[key];
-        if (manager) {
+      var adManagerNames = _.keys(this.adManagers);
+      for (var i = 0; i < adManagerNames.length; i++) {
+        var adManagerName = adManagerNames[i];
+        var adManagerClass = this.adManagers[adManagerName];
+        if (adManagerClass) {
           // Merge the backlot and page level data where page level gets precedence
-          var metadata = OO.getInnerProperty(this.backlotSettings, ["modules", key, "metadata"]) || {};
-          metadata = _.extend(metadata, OO.getInnerProperty(this.pageSettings, [key]));
+          var metadata = OO.getInnerProperty(this.backlotSettings, ["modules", adManagerName, "metadata"]) || {};
+          metadata = _.extend(metadata, OO.getInnerProperty(this.pageSettings, [adManagerName]));
 
           // Note: For now the amc must parse ad-manager specific settings
           //       We should only support setting these settings globally and this code should be removed
-          for (var setting in SETTINGS) {
-             if (typeof metadata[SETTINGS[setting]] != "undefined") {
+          for (var j = 0; j < settings.length; j++) {
+            setting = settings[j];
+            if (typeof metadata[setting] !== "undefined") {
+              // Question: Doesn't this mean that if there are backlot settings from multiple ad managers that
+              // whoever is last in the for-loop iteration get's its settings applied? Consider a multiple ad managers
+              // on a page scenario.
+              this.adManagerSettings[setting] = metadata[setting];
+            }
+          }
 
-               // Exception: For IMA, allow provider page settings to override ad manager page settings
-               // TODO: Take this control of out of the amc and put it in the google ad manager
-               if ((manager.name == "google-ima-ads-manager") &&
-                   (this.adManagerSettings[SETTINGS[setting]] != null)) {
-                 return;
-               }
-
-               this.adManagerSettings[SETTINGS[setting]] = metadata[SETTINGS[setting]];
-             }
-           }
-
-          _safeFunctionCall(manager, "loadMetadata", [metadata,
-                                                      OO.getInnerProperty(this.backlotSettings, ["base"]) || {},
-                                                      this.movieMetadata]);
+          metadataMap[adManagerName] = {
+            metadata: metadata,
+            adManagerClass: adManagerClass
+          };
         }
       }
 
@@ -21808,16 +24800,65 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       this.adManagerSettings[SETTINGS.ALLOW_AD_CLICK_THROUGH_ON_VIDEO] =
         (typeof this.adManagerSettings[SETTINGS.ALLOW_AD_CLICK_THROUGH_ON_VIDEO] == "undefined") ?
           true : _stringToBoolean(this.adManagerSettings[SETTINGS.ALLOW_AD_CLICK_THROUGH_ON_VIDEO]);
+      this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT] =
+        (!_isValidTimeout(this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT]) ?
+          null : this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT] * 1000);
+      this.adManagerSettings[SETTINGS.AD_MANAGER_LOAD_TIMEOUT] =
+        (!_isValidTimeout(this.adManagerSettings[SETTINGS.AD_MANAGER_LOAD_TIMEOUT]) ?
+          null : this.adManagerSettings[SETTINGS.AD_MANAGER_LOAD_TIMEOUT] * 1000);
+
+      // Update timeout constants if the property in adManagerSettings is still valid
+      if (_isValidTimeout(this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT])) {
+        MAX_AD_LOAD_TIMEOUT = this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT];
+      }
+      if (_isValidTimeout(this.adManagerSettings[SETTINGS.AD_MANAGER_LOAD_TIMEOUT])) {
+        MAX_AD_MANAGER_LOAD_TIMEOUT = this.adManagerSettings[SETTINGS.AD_MANAGER_LOAD_TIMEOUT];
+      }
+
+      //csai
+      if (this.adManagerSettings[SETTINGS.PAUSE_ON_LIVE_ADS] !== undefined) {
+        csaiMode = !this.adManagerSettings[SETTINGS.PAUSE_ON_LIVE_ADS];
+      }
+
+      if (this.testMode) {
+        _declareAllReadyOnTimeout();
+      } else {
+        _.delay(_.bind(_declareAllReadyOnTimeout, this), MAX_AD_MANAGER_LOAD_TIMEOUT);
+      }
+
+      var mappingObjects = _.values(metadataMap);
+      for (i = 0; i < mappingObjects.length; i++) {
+        var mappingObject = mappingObjects[i];
+        _safeFunctionCall(mappingObject.adManagerClass, "loadMetadata", [mappingObject.metadata,
+                                                                         OO.getInnerProperty(this.backlotSettings, ["base"]) || {},
+                                                                         this.movieMetadata]);
+      }
 
       // Handle metadata settings
       this.ui.shouldDisplayCuePointMarkers();
-      if (this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT] != null) {
-        MAX_AD_LOAD_TIMEOUT = this.adManagerSettings[SETTINGS.AD_LOAD_TIMEOUT] * 1000;
-      }
 
       _checkAllReady();
     }, this);
 
+    /**
+     * Helper function to determine if a value is a non-negative number.
+     * @private
+     * @method AdManagerController#_isValidTimeout
+     * @param {*} value The value to test
+     * @returns {boolean} true if value is a non-negative number. Otherwise, returns false.
+     */
+    var _isValidTimeout = _.bind(function(value) {
+      return _.isFinite(value) && (value >= 0);
+    }, this);
+
+    /**
+     * Helper function to convert a string to boolean. Accepts values of "true", "yes",
+     * and "1" to be true.
+     * @private
+     * @method AdManagerController#_stringToBoolean
+     * @param {string} value The value to convert
+     * @returns {boolean} true if value is "true", "yes", or "1". Otherwise, returns false.
+     */
     var _stringToBoolean = _.bind(function(value) {
       value = value.toString().toLowerCase();
       return value === "true" || value === "yes" || value === "1";
@@ -21854,17 +24895,19 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Collects page settings, sets up event dependencies, attempts init, destroys self if required, sets
      * up UI, platform, and interface classes, sets up root video element references in AdManagerControllerUi.
-     * @method OO.AdManagerController#onPlayerCreated
+     * @method AdManagerController#onPlayerCreated
      * @protected
-     * @param {string} eventname The name of the event for which this callback is called
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {string} elementId The ID of the root Ooyala element
      * @param {object} params Page level parameters
      * @fires OO.EVENTS.AMC_ALL_READY
      */
-    this.onPlayerCreated = function(eventname, elementId, params) {
+    this.onPlayerCreated = function(eventName, elementId, params) {
       var destroyEarly = _.bind(function() {
         _destroy();
-        mb.publish(OO.EVENTS.AMC_ALL_READY, Object.keys(this.adManagers));
+        mb.publish(OO.EVENTS.AMC_ALL_READY, {
+          prerolls: 0
+        });
       }, this);
 
       // instantiate the ad managers
@@ -21889,7 +24932,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
       this.ui = new AdManagerControllerUi(mb, this.adManagerSettings, this.adManagers);
       this.platform = new AdManagerControllerPlatform(mb);
-      this.interface = new AdManagerInterface(this);
+      this.amcInterface = new AdManagerInterface(this);
 
       this.pageSettings = params;
       pageSettingsRaised = true;
@@ -21911,7 +24954,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       // Initialize ad managers
       for (var key in this.adManagers) {
         if (this.adManagers[key]) {
-          _safeFunctionCall(this.adManagers[key], "initialize", [this.interface, elementId]);
+          _safeFunctionCall(this.adManagers[key], "initialize", [this.amcInterface, elementId]);
         }
       }
 
@@ -21923,6 +24966,8 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       mb.subscribe(OO.EVENTS.ASSET_CHANGED, moduleName, _.bind(this.onAssetChanged, this));
       mb.subscribe(OO.EVENTS.UI_READY, moduleName, _.bind(this.onUiReady, this));
       mb.subscribe(OO.EVENTS.PLAYBACK_READY, moduleName, _.bind(this.onPlaybackReady, this));
+      mb.subscribe(OO.EVENTS.AD_AUTHORIZATION_FETCHED, moduleName, _.bind(this.onAdAuthorizationFetched, this));
+      mb.subscribe(OO.EVENTS.GUID_SET, moduleName, _.bind(this.onGuidSet, this));
 
       // Playback
       mb.subscribe(OO.EVENTS.WILL_PLAY_FROM_BEGINNING, moduleName, _.bind(this.onWillPlayFromBeginning, this));
@@ -21933,6 +24978,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       mb.subscribe(OO.EVENTS.SEEK, moduleName, _.bind(this.onSeek, this));
       mb.subscribe(OO.EVENTS.SEEKED, moduleName, _.bind(this.onSeeked, this));
       mb.subscribe(OO.EVENTS.VC_PLAY, moduleName, onVideoPlay);
+      mb.subscribe(OO.EVENTS.VC_PAUSED, moduleName, _.bind(this.onVideoPaused, this));
       mb.subscribe(OO.EVENTS.VC_PLAYING, moduleName, _.bind(this.onVideoPlaying, this));
       mb.subscribe(OO.EVENTS.VC_PLAY_FAILED, moduleName, _.bind(this.onVideoPlayFailed, this));
       mb.subscribe(OO.EVENTS.VC_PLAYED, moduleName, _.bind(this.onVideoPlayed, this));
@@ -21953,6 +24999,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       mb.subscribe(OO.EVENTS.WILL_PAUSE_ADS, moduleName, _.bind(this.onWillPauseAds, this));
       mb.subscribe(OO.EVENTS.WILL_RESUME_ADS, moduleName, _.bind(this.onWillResumeAds, this));
       mb.subscribe(OO.EVENTS.AD_POD_ENDED, moduleName, _.bind(this.onAdPodEnded, this));
+      mb.subscribe(OO.EVENTS.NONLINEAR_AD_DISPLAYED, moduleName, _.bind(this.onNonlinearAdDisplayed, this));
 
       //SSAI events (like ID3 tags)
       mb.subscribe(OO.EVENTS.VC_TAG_FOUND, moduleName, _.bind(this.onVideoTagFound, this));
@@ -21988,7 +25035,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when the Alice UI is ready. Sets up the AMC UI with the parameters
      * provided in the message.
-     * @method OO.AdManagerController#onUiReady
+     * @method AdManagerController#onUiReady
      * @protected
      */
     this.onUiReady = function(eventName, uiParams) {
@@ -22004,7 +25051,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
     /**
      * Called when playback is deemed ready. Attempts to setup the UI.
-     * @method OO.AdManagerController#onPlaybackReady
+     * @method AdManagerController#onPlaybackReady
      * @protected
      */
     this.onPlaybackReady = function() {
@@ -22018,13 +25065,13 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when Backlot settings are available.
      * Attempts initialization.
-     * @method OO.AdManagerController#onMetadataFetched
+     * @method AdManagerController#onMetadataFetched
      * @protected
-     * @param {string} eventname The name of the event for which this callback is called
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {object} metadata Backlot metadata
      * @fires OO.EVENTS.AMC_ALL_READY
      */
-    this.onMetadataFetched = function(eventname, metadata) {
+    this.onMetadataFetched = function(eventName, metadata) {
       this.backlotSettings = metadata;
       backlotSettingsRaised = true;
       _tryInit();
@@ -22033,16 +25080,16 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when the movie metadata is available.
      * Attempts initialization.
-     * @method OO.AdManagerController#onContentTreeFetched
+     * @method AdManagerController#onContentTreeFetched
      * @protected
-     * @param {string} eventname The name of the event for which this callback is called
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {object} content Movie metadata (duration in milliseconds)
      * @fires OO.EVENTS.AMC_ALL_READY
      */
-    this.onContentTreeFetched = function(eventname, content) {
+    this.onContentTreeFetched = function(eventName, content) {
       this.movieMetadata = content;
       movieMetadataRaised = true;
-      if (content && content.duration && (this.movieDuration == -1)) {
+      if (content && content.duration) {
         this.movieDuration = content.duration/1000;
       }
 
@@ -22054,7 +25101,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
     /**
      * Called when authorization with the Ooyala server has completed.  Checks if the content is live or VOD.
-     * @method OO.AdManagerController#onAuthorizationFetched
+     * @method AdManagerController#onAuthorizationFetched
      * @protected
      * @param {string} event The name of the event for which this callback is called
      * @param {object} authorization
@@ -22063,13 +25110,36 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       this.isLiveStream = false;
       if (authorization && authorization.streams && authorization.streams[0])
       {
-        this.isLiveStream = authorization.streams[0]['is_live_stream'];
+        this.isLiveStream = authorization.streams[0]['is_live_stream'] || false;
+      }
+      for (var key in this.adManagers) {
+        if (this.adManagers[key]) {
+          _safeFunctionCall(this.adManagers[key], "authorizationFetched");
+        }
+      }
+    };
+
+
+    /**
+     * Called when authorization with the Ooyala server has completed.  Checks if the content contains an OoyalaAd.
+     * @method AdManagerController#onAdAuthorizationFetched
+     * @protected
+     * @param {string} event The name of the event for which this callback is called
+     * @param {object} response
+     */
+    this.onAdAuthorizationFetched = function(event, response) {
+      var ooyalaAds = response;
+      for (var key in this.adManagers) {
+        if (this.adManagers[key] && key === "ooyala-ads-manager" ) {
+          _safeFunctionCall(this.adManagers[key], "ooyalaAdData", [ooyalaAds]);
+          ooyalaAdManager = this.adManagers[key];
+        }
       }
     };
 
     /**
      * Called when the CMSless flow is used, receiving a JSON object full of asset metadata and player params.
-     * @method OO.AdManagerController#onAssetChanged
+     * @method AdManagerController#onAssetChanged
      * @protected
      * @param {string} event The name of the even for which the callback is called
      * @param {object} asset The JSON object containing all of the asset metadata
@@ -22097,14 +25167,14 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
       this.movieMetadata = asset.content;
       movieMetadataRaised = true;
-      if (asset.content && asset.content.duration && (this.movieDuration == -1)) {
+      if (asset.content && asset.content.duration) {
         this.movieDuration = asset.content.duration/1000;
       }
 
       this.isLiveStream = false;
       if (asset.content && asset.content.streams && asset.content.streams[0])
       {
-        this.isLiveStream = asset.content.streams[0]['is_live_stream'];
+        this.isLiveStream = asset.content.streams[0]['is_live_stream'] || false;
       }
 
       _tryInit();
@@ -22113,7 +25183,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Loads an ad module asynchronously from the network.
      * @public
-     * @method OO.AdManagerController#loadAdModule
+     * @method AdManagerController#loadAdModule
      * @param {string} adManager The name of the ad manager making the request (<code>{adManager}.name</code>).
      * @param {string} path The network path to the remote ad module to load.
      * @param {function} callback Calls this function when the network request is complete with one parameter
@@ -22137,17 +25207,36 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * When one ad manager reports it is ready, the ad manager controller checks all of the registered managers
      * to see if they are ready.
      * @public
-     * @method OO.AdManagerController#onAdManagerReady
+     * @method AdManagerController#onAdManagerReady
+     * @param {boolean} True to notify the player to create an MP4 ad video element, false otherwise
      * @fires OO.EVENTS.AMC_ALL_READY
      */
-    this.onAdManagerReady = function() {
+    this.onAdManagerReady = function(prepAdVideo) {
+      if (prepAdVideo) {
+        // [PBW-1743] We need to create and "activate" the plugin video on a click so that we can control
+        // it with JS later on mobile
+        // Always create ad video element so "load" can be called on it if necessary for muted autoplay
+        this.ui.prepAdVideoElement();
+      }
       _checkAllReady();
     };
 
     /**
+     * Called when a ad manager plugin has set itself to ready. The ad manager controller will then
+     * fire an OO.EVENTS.PLUGIN_LOADED evemt containing the plugin name and load time
+     * to see if they are ready.
+     * @public
+     * @method AdManagerController#reportPluginLoaded
+     * @fires OO.EVENTS.PLUGIN_LOADED
+     */
+    this.reportPluginLoaded = function(time, name){
+      mb.publish(OO.EVENTS.PLUGIN_LOADED, OO.PLUGINS.ADS, name, time);
+    }
+
+    /**
      * Unregisters an ad manager.  This is called when an ad manager fails to set up or become ready.
      * @public
-     * @method OO.AdManagerController#removeAdManager
+     * @method AdManagerController#removeAdManager
      * @param {string} adManager The name of the ad manager.
      * @fires OO.EVENTS.AMC_ALL_READY
      */
@@ -22168,7 +25257,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
       allready = true;
       _buildTimeline();
-      mb.publish(OO.EVENTS.AMC_ALL_READY, Object.keys(this.adManagers));
+      var prerolls = _extractPrerolls(timeline);
+      mb.publish(OO.EVENTS.AMC_ALL_READY, {
+        prerolls: prerolls.length
+      });
     }, this);
 
     // Abort ad managers that are not yet ready
@@ -22183,7 +25275,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         if (!allready) {
           allready = true;
           _buildTimeline();
-          mb.publish(OO.EVENTS.AMC_ALL_READY, Object.keys(this.adManagers));
+          var prerolls = _extractPrerolls(timeline);
+          mb.publish(OO.EVENTS.AMC_ALL_READY, {
+            prerolls: prerolls.length
+          });
         }
       }
     }, this);
@@ -22191,7 +25286,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Destroys self if there are no ad managers registered.
      * Resets the newStreamHandling flag as the handling is now completed.
-     * @method OO.AdManagerController#onAdManagerControllerAllReady
+     * @method AdManagerController#onAdManagerControllerAllReady
      * @protected
      */
     this.onAdManagerControllerAllReady = function() {
@@ -22238,9 +25333,20 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       }, this);
     }, this);
 
+    // goes through timeline to find any preroll ads
+    var _extractPrerolls = _.bind(function(timeline) {
+      var prerolls = [];
+      _.each(timeline, function(timelineAd) {
+        if (timelineAd.position === 0) {
+          prerolls.push(timelineAd);
+        }
+      }, this);
+      return prerolls;
+    }, this);
+
     /**
      * Adds ads to the controller's ad timeline.  This function can be called at any time.
-     * @method OO.AdManagerController#appendToTimeline
+     * @method AdManagerController#appendToTimeline
      * @public
      * @param {OO.AdManagerController#Ad[]} adManagerTimeline An array of ads to add to the timeline.
      *                                                        The ads are not required to be in time order.
@@ -22268,33 +25374,52 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     // Sort (!isLinear) last
     // Sort isRequest first
     var _sortAdArray = function(adArray) {
-      var sorted = adArray;
-      if ((!OO._.isArray(sorted)) || (!sorted.length) || (sorted.length < 1)) return [];
-      sorted.sort(function(a, b){
-          if (!a || !OO._.isObject(a) || a.position == undefined) return 1;
-          if (!b || !OO._.isObject(b) || b.position == undefined) return -1;
-          if (a.position < b.position) return -1;
+      var sortedArray = adArray;
+      if ((!OO._.isArray(sortedArray)) || (!sortedArray.length) || (sortedArray.length < 1)) {
+        return [];
+      }
+      sortedArray.sort(function(a, b){
+          if (!a || !OO._.isObject(a) || a.position === undefined) {
+            return 1;
+          }
+
+          if (!b || !OO._.isObject(b) || b.position === undefined) {
+            return -1;
+          }
+
+          if (a.position < b.position) {
+            return -1;
+          }
+
+          //if the positions are the same, then sort by played/not played.
           if (a.position === b.position) {
-            if (a.isRequest) {
+            if( a.played === true && b.played === false) {
               return -1;
-            } else if (b.isRequest) {
+            } else if( a.played === false && b.played === true) {
               return 1;
-            } else if (!a.isLinear) {
-              return 1;
-            } else if (!b.isLinear) {
-              return -1;
             } else {
-              return 0;
+              //if the played state is the same then sort but ad type (linear, non-linear, request)
+              if (a.isRequest) {
+                return -1;
+              } else if (b.isRequest) {
+                return 1;
+              } else if (!a.isLinear) {
+                return 1;
+              } else if (!b.isLinear) {
+                return -1;
+              } else {
+                return 0;
+              }
             }
           }
           return 1;
         });
-      return sorted;
+      return sortedArray;
     };
 
     /**
      * Raises an event on the message bus to notify listeners that a companion ad is to be shown.
-     * @method OO.AdManagerController#showCompanion
+     * @method AdManagerController#showCompanion
      * @public
      * @param {object} companion The companion ad to display.
      * @fires OO.EVENTS.WILL_SHOW_COMPANION_ADS
@@ -22307,7 +25432,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Not yet implemented.
      * @private
-     * @method OO.AdManagerController#hideCompanion
+     * @method AdManagerController#hideCompanion
      */
     this.hideCompanion = function() {
     };
@@ -22316,7 +25441,8 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Blocks the AMC from bringing up the end screen until <code>adManagerDoneControllingAds()</code>
      * is called.
      * @public
-     * @method OO.AdManagerController#adManagerWillControlAds
+     * @method AdManagerController#adManagerWillControlAds
+     * @param {string} adManagerName The name of the ad manager.
      */
     //EVENTS.CONTENT_COMPLETED will not be called as long as you are in this mode.
     this.adManagerWillControlAds = function(adManagerName) {
@@ -22334,12 +25460,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Forces an ad to play immediately, bypassing the timeline.
      * @public
-     * @method OO.AdManagerController#forceAdToPlay
+     * @method AdManagerController#forceAdToPlay
      * @param {object} adManager The name of the ad manager that will play the ad.
      * @param {object} ad An object containing all the optional parameters for the ad.
-     * @param {OO.AdManagerController#ADTYPE} adType The type of ad you are trying to force.
-     * @param {object} streams Object containing the ad video stream types
-     * @param {number} duration The duration of the ad
+     * @param {ADTYPE} adType The type of ad you are trying to force.
+     * @param {object} streams Object containing the ad video stream types.
+     * @param {number} duration The duration of the ad.
      */
     this.forceAdToPlay = function(adManager, ad, adType, streams, duration) {
       var adData = {
@@ -22348,7 +25474,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         "ad": ad,
         "streams": streams,
         "duration": duration,
-        "position": -1 //we want it to play immediately
+        "position": this.FORCED_AD_POSITION //we want it to play immediately
       };
       var newAd = new this.Ad(adData);
       _appendToQueue(newAd);
@@ -22361,9 +25487,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     };
 
     /**
-     * This unblocks the AMC so it can bring up the end screen.
+     * Unblocks the ad manager controller so it can bring up the end screen.
      * @public
-     * @method OO.AdManagerController#adManagerDoneControllingAds
+     * @method AdManagerController#adManagerDoneControllingAds
+     * @param {string} adManagerName The name of the ad manager.
      */
     this.adManagerDoneControllingAds = function(adManagerName) {
       if (adManagersControllingAds[adManagerName]) {
@@ -22424,6 +25551,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
       if (!started) {
         mb.publish(OO.EVENTS.AMC_PREROLLS_DONE);
+        amcPrerollsDoneCalled = true;
       }
     }, this);
 
@@ -22511,39 +25639,38 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     }, this);
 
     var _populateQueue = _.bind(function(playhead, lastAdBreakOnly, state) {
-      if (timeline == undefined || timeline.length == 0) return;
       var adDuration = 0;
-
-      // If we should only play the last ad, empty the queue before handling so that we only play the ads from new position
-      if (lastAdBreakOnly) adQueue = [];
-
-      // Find our current ad index starting with last ad index
-      while (timeline[lastAdIndex] &&
-             timeline[lastAdIndex].position > playhead &&
-             lastAdIndex > 0) {
-        lastAdIndex--;
+      if (timeline === undefined || timeline === null || timeline.length === 0) {
+        return adDuration;
       }
 
-      var index = lastAdIndex;
-      while (timeline[index] &&
-             (index < timeline.length - 1) &&
-             (timeline[index].played == true )) {
-        index++;
+      // If we should only play the last ad, clear the queue of all ads except
+      // ones that were forcefully added
+      if (lastAdBreakOnly) {
+        adQueue = _.filter(adQueue, _.bind(function(ad) {
+          return ad.position === this.FORCED_AD_POSITION;
+        },this));
       }
 
+      var index = 0;
+      //find the ad who's position is closest to the playhead without going past the playhead
+      for (index = 0; index < timeline.length - 1; index++) {
+        if (timeline[index + 1].position >= playhead) {
+          break;
+        }
+      }
 
+      //the index is now pointing to an ad that has the correct timestamp for
+      //the ads we want to play.  Now walk back in the timeline to find the first
+      //ad with the same position value that has not been played yet.
+      while (index > 0 &&
+             timeline[index].position === timeline[index - 1].position &&
+             timeline[index].played !== true) {
+         index--;
+       }
       // Build up the ad queue
       while (timeline[index] && timeline[index].position <= playhead) {
-        lastAdIndex = index;
-
-        // On a seek, only play ads at the most recent position
-        if (lastAdBreakOnly &&
-            (adQueue.length > 0) &&
-            (timeline[index].position != adQueue[adQueue.length - 1].position)) {
-          adQueue = [];
-          adDuration = 0;
-        }
-
+        //if the ad has already played, then don't add it to the queue.
         if (timeline[index].played || (skipAdsOnSeek && timeline[index].position < seekedPosition)) {
           index++;
           continue;
@@ -22556,7 +25683,9 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         }
 
         adQueue.push(timeline[index]);
-        if (timeline[index].isLinear) adDuration = adDuration + timeline[index].duration;
+        if (timeline[index].isLinear) {
+          adDuration = adDuration + timeline[index].duration;
+        }
         index++;
       }
 
@@ -22576,39 +25705,68 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       // sort ads in case of 2 repeat ads where one is an overlay and the other is a linear ad
       // linear ad should go first
       adQueue = _sortAdArray(adQueue);
-
       return adDuration;
     }, this);
 
     /**
      * Returns the ad timeline.  This is used in unit testing.
-     * @method OO.AdManagerController#getTimeline
+     * @method AdManagerController#getTimeline
      * @protected
-     * @returns {OO.AdManagerController#Ad[]} An array of the ads to play during the current video,
+     * @returns {AdManagerController#Ad[]} An array of the ads to play during the current video,
      *                                        arranged in order of time and ad type.
      */
     this.getTimeline = function() { return timeline; };
 
     /**
      * Returns the repeat ads.  This is used in unit testing.
-     * @method OO.AdManagerController#getRepeatAds
+     * @method AdManagerController#getRepeatAds
      * @protected
-     * @returns {OO.AdManagerController#Ad[]} An array of ads that have been specified to repeat.
+     * @returns {AdManagerController#Ad[]} An array of ads that have been specified to repeat.
      */
     this.getRepeatAds = function() { return _.clone(repeatAds); };
 
     /**
      * Returns the ad queue.  This is used in unit testing.
-     * @method OO.AdManagerController#getAdQueue
+     * @method AdManagerController#getAdQueue
      * @protected
-     * @returns {OO.AdManagerController#Ad[]} An array of the ads in the queue to be played during the
+     * @returns {AdManagerController#Ad[]} An array of the ads in the queue to be played during the
      *                                        current commercial break, arranged in play order.
      */
     this.getAdQueue = function() { return adQueue; };
 
     /**
+     * Function to return the value of current playhead.
+     * @public
+     * @method AdManagerController#getCurrentPlayhead
+     * @returns {number} The current playhead represented in seconds.
+     */
+    this.getCurrentPlayhead = _.bind(function() {
+      return currentPlayhead;
+    }, this);
+
+    /**
+     * Getter for AD_MANAGER_LOAD_TIMEOUT.
+     * @public
+     * @method AdManagerController#getAdManagerLoadTimeout
+     * @returns {number} The timeout constant.
+     */
+    this.getAdManagerLoadTimeout = function() {
+      return MAX_AD_MANAGER_LOAD_TIMEOUT;
+    };
+
+    /**
+     * Getter for AD_LOAD_TIMEOUT.
+     * @public
+     * @method AdManagerController#getAdLoadTimeout
+     * @returns {number} The timeout constant.
+     */
+    this.getAdLoadTimeout = function() {
+      return MAX_AD_LOAD_TIMEOUT;
+    };
+
+    /**
      * Determines whether the last ad in the timeline is marked as played.
-     * @method OO.AdManagerController#isLastAdPlayed
+     * @method AdManagerController#isLastAdPlayed
      * @public
      * @returns {boolean} <code>true</code> if the last ad in the timeline is marked as played, <code>false</code> otherwise.
     */
@@ -22617,8 +25775,8 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     };
 
     /**
-     * Dispatchs a <code>WILL_PLAY_NONLINEAR_AD</code> event with the nonLinear ad URL.
-     * @method OO.AdManagerController#sendURLToLoadAndPlayNonLinearAd
+     * Dispatches a <code>WILL_PLAY_NONLINEAR_AD</code> event with the nonLinear ad URL.
+     * @method AdManagerController#sendURLToLoadAndPlayNonLinearAd
      * @public
      * @param {object} ad Contains the ad details.
      * @param {string} adId Contains the unique ID that the AMC provides to the ad.
@@ -22639,13 +25797,13 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Sets the flag allowSkipButtonToBeShow to True or false, called by the ad managers. NOTE: It is important to call
      * this function before starting to play the ad, so that the flag is set when the play head updates.
-     * @method OO.AdManagerController#showSkipVideoAdButton
+     * @method AdManagerController#showSkipVideoAdButton
      * @public
-     * @param {boolean} allowButton If set to true, then it will display the skip button if the page level param is also
-     * set, if set to false, it will prevent the button from displaying even if the page level param is set to true.
+     * @param {boolean} allowButton If set to <code>true</code>, then the skip button will be displayed, provided the page level parameter is also
+     * set. If set to <code>false</code>, the button will be prevented from displaying, even if the page level parameter is set to <code>true</code>.
      * @param {string} offset Optional parameter which includes a time offset value in seconds which must be met before skip button is shown.
      *                        If a percent ('%') is suffixed, will be treated as a percentage of duration rather than seconds. Will
-     *                        only be accepted if allowButton is valid
+     *                        only be accepted if allowButton is valid.
      */
     this.showSkipVideoAdButton = function(allowButton, offset) {
       if(typeof allowButton === 'boolean') {
@@ -22661,7 +25819,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Attempts to trigger the next ad. If there are ads in the ad queue appropriate for our current state, we will
      * play the first ad in the ad queue. Otherwise, we will publish ADS_PLAYED.
      * @private
-     * @method OO.AdManagerController#_triggerNextAd
+     * @method AdManagerController#_triggerNextAd
      * @fires OO.EVENTS.ADS_PLAYED
      */
     var _triggerNextAd = _.bind(function() {
@@ -22670,8 +25828,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       // If this happens they will be appended to the timeline by the time adPodEnded is called.  Check the timeline
       // immediately and trigger ads to prevent the main video from advancing if more ads were added at the current
       // time slot.
+      //lastAdBreakOnly is used to ensure that the end user is not overwhelmed with ads at a given point
+      //when seeking or starting a video with a start time > 0.
       var lastAdBreakOnly = seeked || (!started && currentPlayhead > 0) ||
-                            this.startTime >= this.movieDuration;
+        (this.startTime >= this.movieDuration && !this.isLiveStream);
 
       if (this.startTime >= this.movieDuration || this.ended) {
         currentPlayhead = Number.MAX_VALUE;
@@ -22695,7 +25855,6 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     }, this);
 
     var _resetRepeatAds = _.bind(function() {
-      maxPlayhead = -1;
       repeatAds = [];
     }, this);
 
@@ -22729,7 +25888,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Update the url of the main stream content being played.
      * @public
-     * @method OO.AdManagerController#updateMainStreamUrl
+     * @method AdManagerController#updateMainStreamUrl
      * @param  {string} newUrl The new url to be used.
      * @fires OO.EVENTS.VC_UPDATE_ELEMENT_STREAM
      */
@@ -22742,16 +25901,39 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Triggers playback of an ad.
      * @public
-     * @method OO.AdManagerController#playAd
+     * @method AdManagerController#playAd
      * @param {object} ad From <code>this.Ad</code>, the object representing the ad.
      * @fires OO.EVENTS.AD_POD_STARTED
      * @fires OO.EVENTS.WILL_PLAY_SINGLE_AD
      * @fires OO.EVENTS.WILL_PLAY_NONLINEAR_AD
      */
     this.playAd = function(ad) {
-      if(!ad)
+      if(!ad || !ad.ad)
       {
         return;
+      }
+
+      cancelling = false;
+      currentAd = ad;
+      currentAd.played = true;
+
+      // Setup functions to cancel and end ads
+      var cancelAd = _.bind(function(mb, ad, adId){
+        OO.log("AMC: Cancelling an ad due to timeout " + adId);
+        _notifyCancelAd(ad, {
+          code : this.AD_CANCEL_CODE.TIMEOUT
+        });
+        mb.publish(OO.EVENTS.SINGLE_AD_PLAYED, adId);
+        mb.publish(OO.EVENTS.AD_POD_ENDED, adId);
+      }, this, mb, ad, ad.id);
+
+      if (!_shouldPlayAd(ad.ad.first_shown, ad.ad.frequency)) {
+        cancelAd();
+        return;
+      }
+
+      if (_.isFinite(ad.duration) && ad.duration > 0) {
+        this.timeMainVideoIdleMs += ad.duration * 1000;
       }
 
       // add the ad's current play position if it is a repeat ad
@@ -22771,33 +25953,28 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         ad.ad.playTimes[position] = true;
       }
 
-      cancelling = false;
-      currentAd = ad;
-      currentAd.played = true;
-
       if (ad.isLinear || ad.isRequest) {
         // Linear ad (not overlay)
         // These params may not be required
         OO.log("AMC: Will play a linear ad for time: " + ad.position + " at playhead " + currentPlayhead);
 
-        // Setup functions to cancel and end ads
-        var cancelAd = _.bind(function(mb, ad, adId){
-            OO.log("AMC: Cancelling an ad due to timeout " + adId);
-            _notifyCancelAd(ad, {
-              code : this.AD_CANCEL_CODE.TIMEOUT
-            });
-            mb.publish(OO.EVENTS.SINGLE_AD_PLAYED, adId);
-            mb.publish(OO.EVENTS.AD_POD_ENDED, adId);
-          }, this, mb, ad, ad.id);
-
         setAdTimeouts(ad, cancelAd, MAX_AD_LOAD_TIMEOUT);
 
         // trigger ads
         if (ad.adManager && this.adManagers[ad.adManager]) {
-          var videoRestrictions = this.adManagers[ad.adManager].videoRestrictions;
+          var videoRestrictions = this.adManagers[ad.adManager].videoRestrictions ? this.adManagers[ad.adManager].videoRestrictions : {};
           if (ad.videoRestrictions) {
             videoRestrictions = ad.videoRestrictions;
           }
+          //We need to pass the page level platform setting to the VTC to ensure the proper
+          //video element is created
+          var platform = this.pageSettings ? this.pageSettings.platform : null;
+
+          if (videoRestrictions && platform)
+          {
+            videoRestrictions["platform"] = platform;
+          }
+
           if (ad.adType === this.ADTYPE.UNKNOWN_AD_REQUEST) {
             //we want to create the video element but not focus it
             mb.subscribe(OO.EVENTS.VC_VIDEO_ELEMENT_CREATED, 'amc', startAdPlayback);
@@ -22868,11 +26045,11 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when the ad video element is created. Will focus the ad element.
      * @private
-     * @method OO.AdManagerController#videoElementCreated
-     * @param {string} eventname The name of the event
+     * @method AdManagerController#videoElementCreated
+     * @param {string} eventName The name of the event
      * @param {string} videoDetails The details of the video element that has been created
      */
-    var videoElementCreated = _.bind(function(eventname, adDetails) {
+    var videoElementCreated = _.bind(function(eventName, adDetails) {
       if (!(adDetails && adDetails["videoId"] === OO.VIDEO.ADS)) {
         return;
       }
@@ -22883,22 +26060,30 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Tells the ui class to transition to the ad video element.
      * @public
-     * @method OO.AdManagerController#focusAdVideo
+     * @method AdManagerController#focusAdVideo
      */
     this.focusAdVideo = function() {
       this.ui.transitionToAd();
+      //If we've reached this point as an unknown ad request,
+      //we now know the video is a linear video
+      //Since we did not publish VC_PLAY prior to this because we did not
+      //know if the ad was a linear video, publish it now
+      if (currentAd && currentAd.adType === this.ADTYPE.UNKNOWN_AD_REQUEST) {
+        mb.publish(OO.EVENTS.VC_PLAY, OO.VIDEO.ADS);
+      }
     };
 
     /**
      * Trigger ads from the ad manager itself and publish VTC play event.
      * @private
-     * @method OO.AdManagerController#startAdPlayback
+     * @method AdManagerController#startAdPlayback
      * @param {object} ad The ad object to start playback on
-     * @param {string} eventname The name of the event triggering this callback
+     * @param {string} eventName The name of the event triggering this callback
      * @param {string} videoId The id of the video element
      * @fires OO.EVENTS.VC_PLAY
      */
     var startAdPlayback = _.bind(function() {
+      OO.log("AMC: Start play ad");
       mb.unsubscribe(OO.EVENTS.VC_VIDEO_ELEMENT_CREATED, 'amc');
       mb.unsubscribe(OO.EVENTS.VC_VIDEO_ELEMENT_IN_FOCUS, 'amc');
       mb.unsubscribe(OO.EVENTS.VC_ERROR, 'amc');
@@ -22919,7 +26104,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Helper function that checks if a timeout exists for a particular adId and
      * erases it.
      * @private
-     * @method OO.AdManagerController#clearAdTimeout
+     * @method AdManagerController#clearAdTimeout
      * @param adId The ad id whose timeout should be erased. (Ad id comes from the
      *        AMC when playAd() is called)
      */
@@ -22933,13 +26118,13 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Stops the ad playback attempt upon error raised from VTC.
      * @private
-     * @method OO.AdManagerController#_stopAdOnVcError
+     * @method AdManagerController#_stopAdOnVcError
      * @param {string} adId The id of the ad (Ad.id)
-     * @param {string} eventname The name of the event triggering the callback
+     * @param {string} eventName The name of the event triggering the callback
      * @param {string} videoId The id of the video that encountered an error
      * @param {number} errorCode The error code associated with the VTC error
      */
-    var _stopAdOnVcError = _.bind(function(adId, eventname, videoId, errorCode) {
+    var _stopAdOnVcError = _.bind(function(adId, eventName, videoId, errorCode) {
       if (videoId !== OO.VIDEO.ADS) {
         return;
       }
@@ -22955,7 +26140,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Notifies the player that an ad or a set of podded ads has begun.  This cancels any ad timeouts.
      * @public
-     * @method OO.AdManagerController#notifyPodStarted
+     * @method AdManagerController#notifyPodStarted
      * @param {string} adId The ID of the ad (<code>Ad.id</code>).
      * @param {number} numberOfAds The number of ads in the pod or set.
      * @fires OO.EVENTS.AD_POD_STARTED
@@ -22969,7 +26154,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Notifies the player that an ad or a set of podded ads has ended.
      * @public
-     * @method OO.AdManagerController#notifyPodEnded
+     * @method AdManagerController#notifyPodEnded
      * @param {string} adId The ID of the ad (<code>Ad.id</code>).
      * @fires OO.EVENTS.AD_POD_ENDED
      */
@@ -22987,7 +26172,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Notifies the player that a nonlinear ad has begun.  This cancels any ad timeouts.
      * @public
-     * @method OO.AdManagerController#notifyNonlinearAdStarted
+     * @method AdManagerController#notifyNonlinearAdStarted
      * @param {string} adId The ID of the ad (<code>Ad.id</code>).
      */
     this.notifyNonlinearAdStarted = function(adId) {
@@ -22998,7 +26183,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Notifies the player that a nonlinear ad has ended.
      * @public
-     * @method OO.AdManagerController#notifyNonlinearAdEnded
+     * @method AdManagerController#notifyNonlinearAdEnded
      * @param {string} adId The ID of the ad (<code>Ad.id</code>).
      * @fires OO.EVENTS.NONLINEAR_AD_PLAYED
      */
@@ -23015,7 +26200,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Notifies the player that a single linear ad has started.  The ad may be within a pod of ads.
      * @public
-     * @method OO.AdManagerController#notifyLinearAdStarted
+     * @method AdManagerController#notifyLinearAdStarted
      * @param {string} adId The id of the AMC ad recieved from playad()
      * @param {object} properties Properties of the ad.  This is an object containing
      *   <code>name</code> (string), <code>duration</code> (seconds), <code>clickUrl</code> (string), <code>indexInPod</code> (number indicating the position
@@ -23032,7 +26217,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Notifies the player that a single linear ad has ended.  The ad may be within a pod of ads.
      * @public
-     * @method OO.AdManagerController#notifyLinearAdEnded
+     * @method AdManagerController#notifyLinearAdEnded
      * @param {string} adId The ID of the ad (<code>Ad.id</code>).
      * @fires OO.EVENTS.SINGLE_AD_PLAYED
      */
@@ -23046,18 +26231,22 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Requests the player to hide its UI. Used by Ad Managers that handle their own UI.
      * @public
-     * @method OO.AdManagerController#hidePlayerUi
+     * @method AdManagerController#hidePlayerUi
+     * @param {boolean} showAdControls override to show the ad controls
+     * @param {boolean} showAdMarquee override to show the ad marquee
      * @fires OO.EVENTS.SHOW_AD_MARQUEE
      */
-    this.hidePlayerUi = function() {
-      mb.publish(OO.EVENTS.SHOW_AD_CONTROLS, false);
-      mb.publish(OO.EVENTS.SHOW_AD_MARQUEE, false);
+    this.hidePlayerUi = function(showAdControls, showAdMarquee) {
+      showAdControls = _.isBoolean(showAdControls) ? showAdControls : false;
+      showAdMarquee = _.isBoolean(showAdMarquee) ? showAdMarquee : false;
+      mb.publish(OO.EVENTS.SHOW_AD_CONTROLS, showAdControls);
+      mb.publish(OO.EVENTS.SHOW_AD_MARQUEE, showAdMarquee);
     };
 
     /**
      * Requests the player to show its UI.
      * @private
-     * @method OO.AdManagerController#_showPlayerUi
+     * @method AdManagerController#_showPlayerUi
      * @fires OO.EVENTS.SHOW_AD_MARQUEE
      */
     var _showPlayerUi = _.bind(function() {
@@ -23066,8 +26255,18 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     }, this);
 
     /**
+     * Requests the player to show the nonlinear ad close button.
+     * @method AdManagerController#showNonlinearAdCloseButton
+     * @public
+     * @fires OO.EVENTS.SHOW_NONLINEAR_AD_CLOSE_BUTTON)
+     */
+    this.showNonlinearAdCloseButton = function() {
+      mb.publish(OO.EVENTS.SHOW_NONLINEAR_AD_CLOSE_BUTTON);
+    };
+
+    /**
      * Raises an ads error on the message bus.
-     * @method OO.AdManagerController#raiseAdError
+     * @method AdManagerController#raiseAdError
      * @protected
      * @param {(object|string)} error The error name or information.
      * @fires OO.EVENTS.ADS_ERROR
@@ -23081,39 +26280,48 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Adds listeners on events in <code>AdManagerController.EVENTS</code> that are triggered by this class.
      * @public
-     * @method OO.AdManagerController#addPlayerListener
-     * @param {string} eventname The name of the event for which this callback is called.
+     * @method AdManagerController#addPlayerListener
+     * @param {string} eventName The name of the event for which this callback is called.
      * @param {function} callback The listener callback function.
      */
-    this.addPlayerListener = function(eventname, callback) {
+    this.addPlayerListener = function(eventName, callback) {
       // Ad managers can call this to listen to events through the AdManagerController
       // Throw warning if selecting an event that's not allowed?
-      if (_.indexOf(_.values(this.EVENTS), eventname) < 0) return;
+      if (_.indexOf(_.values(this.EVENTS), eventName) < 0) return;
 
-      if (managerListeners[eventname] == null) {
-        managerListeners[eventname] = [];
+      if (managerListeners[eventName] == null) {
+        managerListeners[eventName] = [];
       }
 
       if (!_.isFunction(callback)) return;
-      managerListeners[eventname].push(callback);
+      managerListeners[eventName].push(callback);
+    };
+
+    /**
+     * Publishes Ad events to the message bus.
+     * @private
+     * @method AdManagerController#notify
+     */
+    this.notify = function(eventName, response, params) {
+      mb.publish(eventName,response, params);
     };
 
     /**
      * Removes listeners on events in <code>AdManagerController.EVENTS</code> that are triggered by this class.
      * @public
-     * @method OO.AdManagerController#removePlayerListener
-     * @param {string} eventname The name of the event for which this callback is called.
+     * @method AdManagerController#removePlayerListener
+     * @param {string} eventName The name of the event for which this callback is called.
      * @param {function} callback The listener callback function.
      */
-    this.removePlayerListener = function(eventname, callback) {
-      var callbackList = managerListeners[eventname];
+    this.removePlayerListener = function(eventName, callback) {
+      var callbackList = managerListeners[eventName];
       if (callbackList) {
         var index = callbackList.indexOf(callback);
         if (index >= 0) {
           callbackList.splice(index, 1);
         }
         if (callbackList.length <= 0) {
-          delete managerListeners[eventname];
+          delete managerListeners[eventName];
         }
       }
     };
@@ -23132,7 +26340,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
     /**
      * Called when playback is triggered.  Resumes ad playback if an ad was playing.
-     * @method OO.AdManagerController#onPlay
+     * @method AdManagerController#onPlay
      * @protected
      * @fires OO.EVENTS.WILL_RESUME_ADS
      */
@@ -23146,16 +26354,40 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
     /**
      * A new stream is being played, checks the timeline for ads before playback begins.
-     * @method OO.AdManagerController#onInitialPlay
+     * @method AdManagerController#onInitialPlay
      * @protected
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {number} unixTimeMs The UNIX timestamp, in milliseconds, of the time
+     * @param {boolean} wasAutoplayed True if the video was autoplayed, false otherwise
+     * OO.EVENTS.INITIAL_PLAY was published
      * @fires this.EVENTS.INITIAL_PLAY_REQUESTED
      * @fires OO.EVENTS.BUFFERING
      * @fires OO.EVENTS.WILL_PLAY_ADS
      */
-    this.onInitialPlay = function() {
+    this.onInitialPlay = function(eventName, unixTimeMs, wasAutoplayed) {
       if (this.startTime <= 0) {
         currentPlayhead = 0;
         this.startTime = 0;
+      }
+      _incrementMainVideoCount();
+
+      if (this.isLiveStream) {
+        this.liveStreamTimestamps.initialPlay = {
+          ms: unixTimeMs,
+          delayUsed: false
+        };
+      }
+
+      for (var key in this.adManagers) {
+        if (this.adManagers[key]) {
+          var encodings = _safeFunctionCall(this.adManagers[key], "createAdVideoElementOnPlayerInit", []) || [];
+          var adEncodings;
+          for (var i = 0; i < encodings.length; i++) {
+            adEncodings = {};
+            adEncodings[encodings[i]] = "";
+            this.ui.createAdVideoElement(adEncodings);
+          }
+        }
       }
 
       // [PBK-255] [PBW-199] [PBW-223]
@@ -23165,12 +26397,11 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         mb.publish(OO.EVENTS.VC_RELOAD, OO.VIDEO.MAIN);
       }
 
-      _triggerAdManagerCallback(this.EVENTS.INITIAL_PLAY_REQUESTED);
+      _triggerAdManagerCallback(this.EVENTS.INITIAL_PLAY_REQUESTED, wasAutoplayed);
 
       //Set the current playhead to the start time so we only play the ad pod
       //that is closest to the start time and skip other previous ones.
       currentPlayhead = this.startTime;
-
       // trigger ads
       _checkTimeline(currentPlayhead, currentPlayhead > 0);
     };
@@ -23178,12 +26409,15 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when a replay is triggered.  Resets AMC settings and triggers prerolls.
      * @protected
-     * @method OO.AdManagerController#onReplay
+     * @method AdManagerController#onReplay
      */
     this.onReplay = function() {
       // Movie state Properties
       this.startTime  = 0;
       currentPlayhead = 0;
+      amcPrerollsDoneCalled = false;
+
+      _incrementMainVideoCount();
 
       _resetMovieState();
       _resetAdState();
@@ -23205,7 +26439,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when a stream is first played.  Used to set the <code>lastEmbedCode</code> field.
      * @protected
-     * @method OO.AdManagerController#onWillPlayFromBeginning
+     * @method AdManagerController#onWillPlayFromBeginning
      */
     this.onWillPlayFromBeginning = function() {
       if (started) return;
@@ -23216,12 +26450,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when the embed code is set for a movie.
      * @protected
-     * @method OO.AdManagerController#onSetEmbedCode
-     * @param {string} eventname The name of the event for which this callback is called.
-     * @param {string} embedCode The video’s Ooyala content ID found in Backlot.
+     * @method AdManagerController#onSetEmbedCode
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {string} embedCode The videoâ€™s Ooyala content ID found in Backlot.
      * @param {object} options Page level settings for the new embed code.
      */
-    this.onSetEmbedCode = function(eventname, embedCode, options) {
+    this.onSetEmbedCode = function(eventName, embedCode, options) {
       if (options) {
         this.pageSettings = _.extend(this.pageSettings, options);
       }
@@ -23235,13 +26469,13 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      *     <li>ad managers are marked as not ready</li>
      *     <li><code>adManager['loadMetadata']</code> is called with the new metadata</li>
      * @protected
-     * @method OO.AdManagerController#onEmbedCodeChanged
-     * @param {string} eventname The name of the event for which this callback is called.
-     * @param {string} embedcode The video’s Ooyala content ID found in Backlot.
+     * @method AdManagerController#onEmbedCodeChanged
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {string} embedcode The videoâ€™s Ooyala content ID found in Backlot.
      * @fires this.EVENTS.CONTENT_CHANGED
      * @fires OO.EVENTS.WILL_PLAY_ADS
      */
-    this.onEmbedCodeChanged = function(eventname, embedcode) {
+    this.onEmbedCodeChanged = function(eventName, embedcode) {
       // Mark each ad manager as not ready - need to load new metadata
       for (var name in this.adManagers) {
         this.adManagers[name].ready = false;
@@ -23261,15 +26495,28 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Called when a video time changes.
      * If the main video is not paused or seeking, then the timeline is checked for ads to play.
      * @protected
-     * @method OO.AdManagerController#onPlayheadTimeChanged
-     * @param {string} eventname The name of the event for which this callback is called.
+     * @method AdManagerController#onPlayheadTimeChanged
+     * @param {string} eventName The name of the event for which this callback is called.
      * @param {number} playhead Current video time (seconds).
      * @param {number} duration Duration of the current video (seconds)
      * @fires this.EVENTS.PLAYHEAD_TIME_CHANGED
      * @fires OO.EVENTS.WILL_PLAY_ADS
      */
-    this.onPlayheadTimeChanged = function(eventname, playhead, duration, buffer, seekRange, videoId) {
+    this.onPlayheadTimeChanged = function(eventName, playhead, duration, buffer, seekRange, videoId) {
+      var offset = null;
+
+      if (this.isLiveStream && !csaiMode) {
+        offset = playhead;
+        playhead = _calculateLivePlayhead();
+      }
+
       if (videoId === OO.VIDEO.MAIN) {
+        //if the movie duration was not set by the content tree due to
+        //lack of availability, set it here if we receive a duration
+        if (this.movieDuration === -1 && duration > 0) {
+          this.movieDuration = duration;
+        }
+
         //for main content playheads, we are reading the playhead time to determine
         //when to start ad playback
 
@@ -23279,11 +26526,6 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         }
 
         currentPlayhead = playhead;
-        this.movieDuration = duration;
-
-        if (playhead > maxPlayhead) {
-          maxPlayhead = playhead;
-        }
 
         if (paused || seeked || seeking) {
           return;
@@ -23312,7 +26554,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         }
 
         // Call ad manager listeners
-        _triggerAdManagerCallback(this.EVENTS.PLAYHEAD_TIME_CHANGED, playhead, duration);
+        _triggerAdManagerCallback(this.EVENTS.PLAYHEAD_TIME_CHANGED, playhead, duration, offset);
       } else if (videoId === OO.VIDEO.ADS) {
         //for ad playheads, we are reading the playhead time to determine
         //when to show the skip ad button
@@ -23359,7 +26601,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         }
 
         // Call ad manager listeners
-        _triggerAdManagerCallback(this.EVENTS.AD_PLAYHEAD_TIME_CHANGED, playhead, duration);
+        _triggerAdManagerCallback(this.EVENTS.AD_PLAYHEAD_TIME_CHANGED, playhead, duration, offset);
       }
     };
 
@@ -23367,7 +26609,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Retrieves the value of a setting (key). Iterates through the provided settings to grab the first
      * value it can find for the provided key. Prioritized from first item in the array to the last.
      * @private
-     * @method OO.AdManagerController#getSetting
+     * @method AdManagerController#getSetting
      * @param {string} setting The setting to retrieve (the key)
      * @param {array} settings The settings to iterate through. Prioritized from first to last. Each item
      *                         in the array must be an object with key value pairs.
@@ -23388,7 +26630,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when pause is triggered.
      * @protected
-     * @method OO.AdManagerController#onPause
+     * @method AdManagerController#onPause
      * @fires this.EVENTS.PAUSE
      * @fires OO.EVENTS.WILL_PAUSE_ADS
      */
@@ -23417,9 +26659,23 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     };
 
     /**
+     * Called when the video element has entered the pause state.
+     * @protected
+     * @method AdManagerController#onVideoPaused
+     */
+    this.onVideoPaused = function() {
+      if (this.liveStreamTimestamps) {
+        this.liveStreamTimestamps.paused = {
+          ms: Date.now(),
+          delayUsed: false
+        };
+      }
+    };
+
+    /**
      * Called when an ad will be paused.  Triggers pauseAd in the appropriate ad manager.
      * @protected
-     * @method OO.AdManagerController#onWillPauseAds
+     * @method AdManagerController#onWillPauseAds
      */
     this.onWillPauseAds = function() {
       if (currentAd && this.adManagers[currentAd.adManager]) {
@@ -23432,7 +26688,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when an ad will be resumed.  Triggers resumeAd in the appropriate ad manager.
      * @protected
-     * @method OO.AdManagerController#onWillResumeAds
+     * @method AdManagerController#onWillResumeAds
      */
     this.onWillResumeAds = function() {
       if (currentAd && this.adManagers[currentAd.adManager]) {
@@ -23442,17 +26698,30 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       }
     };
 
+    /**
+     * Called when the player generates a guid to identify the device or reads the stored guid from browser
+     * local storage.
+     * @protected
+     * @method AdManagerController#onGuidSet
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {string} id The guid used to identify the device
+     * @fires this.EVENTS.DEVICE_ID_SET
+    **/
+    this.onGuidSet = function(eventName, id) {
+      _triggerAdManagerCallback(this.EVENTS.DEVICE_ID_SET, id);
+    }
+
      /**
      * Handle seek.
      * Note: This gets called on scrubber seek but not on button seek unless the player is paused.
      * @protected
-     * @method OO.AdManagerController#onWillPlay
-     * @param {string} eventname The name of the event for which this callback is called
+     * @method AdManagerController#onWillPlay
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {string} streamurl The url of the stream about to play
      * @fires this.EVENTS.PLAY_STARTED
      * @fires OO.EVENTS.WILL_PLAY_ADS
      */
-    this.onWillPlay = function(eventname, streamurl) {
+    this.onWillPlay = function(eventName, streamurl) {
       // Notify ad managers of initial play
       if (!started) {
         _triggerAdManagerCallback(this.EVENTS.PLAY_STARTED);
@@ -23477,7 +26746,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when a video is told to play.  Tracks whether or not the main video has been told to play.
      * @private
-     * @method OO.AdManagerController#onVideoPlay
+     * @method AdManagerController#onVideoPlay
      */
     var onVideoPlay = _.bind(function(event, videoId) {
       if (videoId == OO.VIDEO.MAIN) {
@@ -23488,7 +26757,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when main video is playing
      * @protected
-     * @method OO.AdManagerController#onPlaying
+     * @method AdManagerController#onPlaying
      */
     this.onPlaying = function() {
       seeking = false;
@@ -23498,7 +26767,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when a video completes.
      * @protected
-     * @method OO.AdManagerController#onVideoPlayed
+     * @method AdManagerController#onVideoPlayed
      */
     this.onVideoPlayed = function(event, videoId) {
       if (videoId === OO.VIDEO.MAIN) {
@@ -23506,6 +26775,8 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       } else if (videoId === OO.VIDEO.ADS) {
         if (currentAd && currentAd.isLinear && this.adManagers[currentAd.adManager]) {
           _safeFunctionCall(this.adManagers[currentAd.adManager], "adVideoEnded");
+        } else if (ooyalaAdManager) {
+          _safeFunctionCall(ooyalaAdManager, "adVideoEnded");
         }
       }
     };
@@ -23513,7 +26784,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when a video element comes into focus.
      * @protected
-     * @method OO.AdManagerController#onVideoElementInFocus
+     * @method AdManagerController#onVideoElementInFocus
      * @param event     the event name
      * @param videoId   the id of the element that came into focus
      */
@@ -23530,7 +26801,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Called when the video in the main video element ends.
      * Triggers postrolls.
      * @private
-     * @method OO.AdManagerController#onContentVideoPlayed
+     * @method AdManagerController#onContentVideoPlayed
      * @fires OO.EVENTS.WILL_PLAY_ADS
      * @fires this.EVENTS.CONTENT_COMPLETED
      */
@@ -23563,7 +26834,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when a stream has completed.
      * @protected
-     * @method OO.AdManagerController#onPlayed
+     * @method AdManagerController#onPlayed
      * @fires this.EVENTS.CONTENT_COMPLETED
      */
     this.onPlayed = function() {
@@ -23575,11 +26846,11 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called while a video is seeking.  Updates the current playhead if a video ad is not playing.
      * @protected
-     * @method OO.AdManagerController#onSeek
-     * @param {string} eventname The name of the event for which this callback is called
+     * @method AdManagerController#onSeek
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {number} playhead The current video position (seconds)
      */
-    this.onSeek = function(eventname, playhead) {
+    this.onSeek = function(eventName, playhead) {
       if ($.inArray(this.currentState, states_linearAd) >= 0) {
         // Trigger a seek on ads
         if (currentAd && currentAd.adManager) {
@@ -23613,17 +26884,14 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Does get called while scrubbing and at scrubbed and after willPlay
      * if weren't paused.
      * @protected
-     * @method OO.AdManagerController#onSeeked
-     * @param {string} eventname The name of the event
+     * @method AdManagerController#onSeeked
+     * @param {string} eventName The name of the event
      * @param {?number} playhead The current time of the video after seeking.
      * @fires OO.EVENTS.WILL_PLAY_ADS
      */
-    this.onSeeked = function(eventname, playhead) {
+    this.onSeeked = function(eventName, playhead) {
       if (typeof playhead === "number") {
         currentPlayhead = playhead;
-      }
-      if (playhead > maxPlayhead) {
-        maxPlayhead = playhead;
       }
       seeking = false;
       _tryHandleSeek();
@@ -23632,11 +26900,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when video started playback. Notifies ad managers of the event.
      * @protected
-     * @method OO.AdManagerController#onVideoPlaying
+     * @method AdManagerController#onVideoPlaying
      * @param {string} event The event name
      * @param {string} videoId The id of the video that started playback
      */
     this.onVideoPlaying = function(event, videoId) {
+      _handleLiveStreamDelays();
       if (videoId === OO.VIDEO.ADS && currentAd) {
         _safeFunctionCall(this.adManagers[currentAd.adManager], "adVideoPlaying");
       }
@@ -23645,7 +26914,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Reset ad manager controller on stream play failed.
      * @protected
-     * @method OO.AdManagerController#onVideoPlayFailed
+     * @method AdManagerController#onVideoPlayFailed
      * @param {string} event The name of the event triggering the callback
      * @param {string} videoId The id of the video that encountered an error
      * @param {number} errorCode The error code associated with the VTC error
@@ -23671,7 +26940,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Helper function to determine checking the timeline for ad is needed.
      * @private
-     * @method OO.AdManagerController#_tryHandleSeek
+     * @method AdManagerController#_tryHandleSeek
      */
     var _tryHandleSeek = _.bind(function() {
       if (!started) return;
@@ -23686,7 +26955,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * After seeking, check the timeline for ads.
      * @private
-     * @method OO.AdManagerController#_handleSeek
+     * @method AdManagerController#_handleSeek
      */
     var _handleSeek = _.bind(function() {
       _resetSeekState();
@@ -23711,12 +26980,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Will raise an event to tell the ad manager that it has entered or exited fullscreen mode.
      * @private
-     * @method OO.AdManagerController#onFullscreenChanged
-     * @param {string} eventname The name of the event for which this callback is called
+     * @method AdManagerController#onFullscreenChanged
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {boolean} isFullscreen The current fullscreen state
      * @fires this.EVENTS.FULLSCREEN_CHANGED
      */
-    this.onFullscreenChanged = function(eventname, isFullscreen) {
+    this.onFullscreenChanged = function(eventName, isFullscreen) {
       if (isFullscreen !== lastFullscreenState) {
         _triggerAdManagerCallback(this.EVENTS.FULLSCREEN_CHANGED, isFullscreen);
         lastFullscreenState = isFullscreen;
@@ -23726,7 +26995,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Called when the video size changes.  Note down the new size and raise event to ad managers.
      * @protected
-     * @method OO.AdManagerController#onSizeChanged
+     * @method AdManagerController#onSizeChanged
      * @param {string} event The sizeChanged event name
      * @param {number} width The new player width
      * @param {number} height The new player height
@@ -23742,18 +27011,21 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
     /**
      * Called when the control bar is shown. Raises event to ad managers.
-     * @protected
-     * @method OO.AdManagerController#onControlsShown
+     * @private
+     * @method AdManagerController#onControlsShown
      * @fires this.EVENTS.CONTROLS_SHOWN
      */
     this.onControlsShown = function() {
       _triggerAdManagerCallback(this.EVENTS.CONTROLS_SHOWN);
     };
 
+    // TODO: These two are set to private.
+    // Set back to protected when controls_shown and controls_hidden is working.
+
     /**
      * Called when the control bar is shown. Raises event to ad managers.
-     * @protected
-     * @method OO.AdManagerController#onControlsHidden
+     * @private
+     * @method AdManagerController#onControlsHidden
      * @fires this.EVENTS.CONTROLS_HIDDEN
      */
     this.onControlsHidden = function() {
@@ -23765,12 +27037,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * who do not use VTC video elements will need to listen on the VOLUME_CHANGED event and trigger the
      * change manually.
      * @protected
-     * @method OO.AdManagerController#onVolumeChanged
-     * @param {string} eventname The name of the event for which this callback is called
+     * @method AdManagerController#onVolumeChanged
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {number} volume The current volume level
      * @param {string} videoId The video tech id of the element disposed
      */
-    this.onVolumeChanged = function(eventname, volume, videoId) {
+    this.onVolumeChanged = function(eventName, volume, videoId) {
       _triggerAdManagerCallback(this.EVENTS.VOLUME_CHANGED, volume);
       if (videoId === OO.VIDEO.ADS) {
         _triggerAdManagerCallback(this.EVENTS.AD_VOLUME_CHANGED, volume);
@@ -23781,15 +27053,19 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     ///// Interaction Listeners /////
 
     /**
-     * When an ad is clicked.  If the ad is playing and if possible, pause the ad and show controls.
-     * If the ad was paused, resume it and hide controls if necessary. However if SETTINGS.ALLOW_AD_CLICK_THROUGH_ON_VIDEO
-     * is set to false, default is true, then we want to ignore the click if it comes from the video window.
+     * When an ad is clicked:  <ul><li>If the ad is playing and if possible, pause the ad and show controls.</li>
+     * <li>If the ad was paused, resume it and hide controls if necessary. However if <code>SETTINGS.ALLOW_AD_CLICK_THROUGH_ON_VIDEO</code>
+     * is set to <code>false</code> (default is <code>true</code>) then we want to ignore the click if it comes from the video window.</li></ul>
      * @public
-     * @method OO.AdManagerController#adsClicked
+     * @method AdManagerController#adsClicked
      * @param {object} prop The argument from the event that contains an object having the source from which the button
      * was clicked.
      */
     this.adsClicked = function(prop) {
+      if (ooyalaAdManager) {
+        _safeFunctionCall(ooyalaAdManager, "playerClicked");
+      }
+
       if (!currentAd) {
         return;
       }
@@ -23816,10 +27092,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     };
 
     /**
-     * Called when an ad's clickthrough URL is opened. Currently, it is called by each individual ad manager
+     * Called when an ad's clickthrough URL is opened. Currently, it is called by each individual ad manager,
      * because clickthroughs behave differently across the different ad managers (Google IMA, FreeWheel, VAST).
      * @public
-     * @method OO.AdManagerController#adsClickthroughOpened
+     * @method AdManagerController#adsClickthroughOpened
      * @fires OO.EVENTS.ADS_CLICKTHROUGH_OPENED
      */
     this.adsClickthroughOpened = function() {
@@ -23829,9 +27105,15 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * When the ad is closed with the X button, cancel the ad.
      * @public
-     * @method OO.AdManagerController#onSkipAd
+     * @method AdManagerController#onSkipAd
      */
     this.onSkipAd = function() {
+      if (ooyalaAdManager) {
+          _safeFunctionCall(ooyalaAdManager, "cancelAd", [currentAd, {
+            code : this.AD_CANCEL_CODE.SKIPPED
+          }]);
+      }
+
       if (this.currentState == 'LinearAd') {
         OO.log("AMC: Canceling linear ad due to skip button clicked.");
         _notifyCancelAd(currentAd, {
@@ -23846,7 +27128,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Cancels the current overlay. Notifies the overlay's ad manager of the event.
      * @private
-     * @method OO.AdManagerController#_cancelOverlay
+     * @method AdManagerController#_cancelOverlay
      */
     var _cancelOverlay = _.bind(function() {
       if (overlay && currentAd && this.adManagers[currentAd.adManager]) {
@@ -23890,7 +27172,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Called when ad mode is beginning.
      * Either notifies that the main content video will be unloaded or triggers the first ad in the set.
      * @protected
-     * @method OO.AdManagerController#onWillPlayAds
+     * @method AdManagerController#onWillPlayAds
      * @fires OO.EVENTS.AD_POD_STARTED
      * @fires OO.EVENTS.WILL_PLAY_SINGLE_AD
      */
@@ -23902,7 +27184,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * When this function is called, the state machine switches to LinearAd. This empty function must exist
      * for the state machine to change states.
      * @protected
-     * @method OO.AdManagerController#onAdPodStarted
+     * @method AdManagerController#onAdPodStarted
      */
     this.onAdPodStarted = function() {
       mb.publish(OO.EVENTS.DISABLE_SEEKING, OO.VIDEO.ADS);
@@ -23911,11 +27193,11 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Sets overlay state.  Shows the overlay.
      * @protected
-     * @method OO.AdManagerController#onWillPlayNonlinearAd
-     * @param {string} eventname The name of the event for which this callback is called
+     * @method AdManagerController#onWillPlayNonlinearAd
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {object} ad The ad that will be played
      */
-    this.onWillPlayNonlinearAd = function(eventname, ad) {
+    this.onWillPlayNonlinearAd = function(eventName, ad) {
       // Setup functions to cancel and end ads
       var cancelAd = _.bind(function(mb, ad, adId){
         lastOverlayAd = null;
@@ -23939,7 +27221,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Callback for when linear ads start to play.
      * @protected
-     * @method OO.AdManagerController#onPlayNonlinearAd
+     * @method AdManagerController#onPlayNonlinearAd
      */
     this.onPlayNonlinearAd = function() {
       //Must be defined so the state machine remains in the proper state (overlay state)
@@ -23956,13 +27238,13 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Trigger next queued ad if the ended ad is the current ad.
      * @protected
-     * @method OO.AdManagerController#onAdPodEnded
-     * @param {string} eventname The name of the event for which this callback is called
+     * @method AdManagerController#onAdPodEnded
+     * @param {string} eventName The name of the event for which this callback is called
      * @param {string} adId ID of the ad that finished playing
      * @fires OO.EVENTS.AD_POD_STARTED
      * @fires OO.EVENTS.WILL_PLAY_SINGLE_AD
      */
-    this.onAdPodEnded = function(eventname, adId) {
+    this.onAdPodEnded = function(eventName, adId) {
       pendingPodEnd = false;
       mb.publish(OO.EVENTS.ENABLE_SEEKING, OO.VIDEO.ADS);
       mb.publish(OO.EVENTS.VC_SET_VIDEO_STREAMS, OO.VIDEO.ADS, null);
@@ -23970,15 +27252,25 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     };
 
     /**
+     * Callback triggered when the UI successfully displays the nonlinear ad.
+     * @public
+     * @method AdManagerController#onNonlinearAdDisplayed
+     * @param {string} eventname The name of the event for which this callback is called.
+     */
+    this.onNonlinearAdDisplayed = function(eventname) {
+      _triggerAdManagerCallback(this.EVENTS.NONLINEAR_AD_DISPLAYED);
+    };
+
+    /**
      * Trigger next queued ad if the ended ad is the current ad.
      * @protected
-     * @method OO.AdManagerController#onNonlinearAdPlayed
-     * @param {string} eventname The name of the event for which this callback is called
-     * @param {string} adId The ID of the ad that has ended
+     * @method AdManagerController#onNonlinearAdPlayed
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {string} adId The ID of the ad that has ended.
      * @fires OO.EVENTS.AD_POD_STARTED
      * @fires OO.EVENTS.WILL_PLAY_SINGLE_AD
      */
-    this.onNonlinearAdPlayed = function(eventname, adId) {
+    this.onNonlinearAdPlayed = function(eventName, adId) {
       // Overlay should be hidden by the ad manager now.
       _handleEndOfAd(adId);
     };
@@ -23987,7 +27279,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     * Checks to see if all ads are done. If so, handles the necessary state changes
     * and publishes the required events for when all ads are done.
     * @protected
-    * @method OO.AdManagerController#tryAdsCompleted
+    * @method AdManagerController#tryAdsCompleted
     * @fires OO.EVENTS.AMC_ALL_ADS_DONE
     * @returns {boolean} True if it is determined that all ads are done, false otherwise
     */
@@ -24008,7 +27300,7 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Resumes the content video after ads are completed.  Re-enables controls and ends ad mode.
      * @protected
-     * @method OO.AdManagerController#onAdsPlayed
+     * @method AdManagerController#onAdsPlayed
      * @fires OO.EVENTS.AMC_ALL_ADS_DONE
      * @fires OO.EVENTS.AMC_PREROLLS_DONE
      * @fires OO.EVENTS.ENABLE_PLAYBACK_CONTROLS
@@ -24026,8 +27318,9 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       this.ui.transitionToMainContent(shouldResume, this.ended);
 
       // resume from preroll, NOTE: (started=false) on replay unless in single element mode
-      if (!started && !newStreamHandling) {
+      if ((!started && !newStreamHandling) || (!amcPrerollsDoneCalled && OO.isIos)) {
         mb.publish(OO.EVENTS.AMC_PREROLLS_DONE);
+        amcPrerollsDoneCalled = true;
       }
 
       //This will trigger any pending overlays
@@ -24042,11 +27335,10 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
       }
     };
 
-
     /**
      * Alerts the ad manager that an ad has been clicked on and it should react.
      * @protected
-     * @method OO.AdManagerController#onAdsClicked
+     * @method AdManagerController#onAdsClicked
      * @param {object} event The event object that sent when the event dispatches.
      * @param {object} prop An Object sent with the event that contains data we need to find what the source of ads clicked
      * was.
@@ -24054,13 +27346,11 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     this.onAdsClicked = function(event, prop) {
       this.adsClicked(prop);
     };
-    // Exposed to ad manager
-    //adPlaybackError
 
     /**
      * Alerts the ad manager that a video stream tag has been found.
      * @protected
-     * @method OO.AdManagerController#onVideoTagFound
+     * @method AdManagerController#onVideoTagFound
      * @param {string} event The event that triggered this callback.
      * @param {string} videoId The id of the video element that processed a tag.
      * @param {string} tagType The type of tag that was detected.
@@ -24074,17 +27364,229 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Notifies ad manager plugins that a URL for the MAIN element has been selected/changed.
      * @protected
      * @method AdManagerController#onVideoElementCreated
-     * @param {string} eventname The name of the event that triggered this callback
+     * @param {string} eventName The name of the event that triggered this callback
      * @param {object} elementParams The parameters of the element created including id, domId, parent,
      *                               video element, and supported encodings
      */
-    this.onVideoElementCreated = _.bind(function(eventname, elementParams) {
+    this.onVideoElementCreated = _.bind(function(eventName, elementParams) {
       if (elementParams["videoId"] === OO.VIDEO.MAIN) {
         var streamUrl = elementParams["streamUrl"];
         if (streamUrl) {
           _triggerAdManagerCallback(this.EVENTS.CONTENT_URL_CHANGED, streamUrl);
         }
       }
+    }, this);
+
+
+     /**
+     * Notifies the player that the ad plugin SDK has loaded successfully.
+     * @protected
+     * @method AdManagerController#onAdSdkLoaded
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     */
+    this.onAdSdkLoaded = function(adPluginName) {
+      OO.log("onAdSdkLoaded: ", adPluginName, OO.VERSION.core.releaseVersion);
+      mb.publish(OO.EVENTS.AD_SDK_LOADED, adPluginName, OO.VERSION.core.releaseVersion);
+    };
+
+    /**
+     * Notifies the player that the ad plugin SDK has failed to load.
+     * @method AdManagerController#onAdSdkLoadFailure
+     * @protected
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {(object|string)} error The error name or information.
+     * @fires OO.EVENTS.AD_SDK_LOAD_FAILED
+     */
+    this.onAdSdkLoadFailure = function(adPluginName, error) {
+      mb.publish(OO.EVENTS.AD_SDK_LOAD_FAILED, adPluginName, OO.VERSION.core.releaseVersion, error);
+    };
+
+    /**
+     * Notifies the player that an ad has been requested by the sdk.
+     * @protected
+     * @method AdManagerController#onAdRequest
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {number} adPosition The time the ad is scheduled to play
+     */
+    this.onAdRequest = function(adPluginName, adPosition) {
+      mb.publish(OO.EVENTS.AD_REQUEST, adPluginName, adPosition);
+    };
+
+    /**
+     * Notifies the player that the ad plugin has successfully requested an ad.
+     * @protected
+     * @method AdManagerController#onAdRequestSuccess
+     * @param {string} adPluginName The name of the ad plugin used
+     * @param {number} adPosition The position the ad is scheduled to play
+     * @param {number} responseTime The time in milliseconds that it took to get a response for the ad request
+     * @param {number} timeSinceInitialPlay The time in milliseconds from the initial play request time to ad request success
+     */
+    this.onAdRequestSuccess = function(adPluginName, adPosition, responseTime, timeSinceInitialPlay) {
+      mb.publish(OO.EVENTS.AD_REQUEST_SUCCESS, adPluginName, adPosition, responseTime, timeSinceInitialPlay);
+    };
+
+    /**
+     * Notifies the player that the ad plugin has received an empty response to an ad request.
+     * @protected
+     * @method AdManagerController#onAdRequestEmpty
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {number} adPosition The time the ad is scheduled to play
+     * @param {string} adTagUrl The ad tag url post macro substitution
+     * @param {object} errorCode The error code if any
+     * @param {string} errorMessage The error message
+     */
+    this.onAdRequestEmpty = function(adPluginName, adPosition, adTagUrl, errorCode, errorMessage) {
+      mb.publish(OO.EVENTS.AD_REQUEST_EMPTY, adPluginName, adPosition, adTagUrl, errorCode, errorMessage);
+    };
+
+    /**
+     * Notifies the player that the ad plugin has received an error response to an ad request.
+     * @protected
+     * @method AdManagerController#onAdRequestError
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {number} adPosition The time the ad is scheduled to play
+     * @param {string} adTagUrl The ad tag url post macro substitution
+     * @param {object} errorCode The error code if any
+     * @param {string} errorMessage The error message
+     * @param {boolean} isTimeout If ad request timed out or not
+     */
+    this.onAdRequestError = function(adPluginName, adPosition, adTagUrl, errorCode, errorMessage, isTimeout) {
+      mb.publish(OO.EVENTS.AD_REQUEST_ERROR, adPluginName, adPosition, adTagUrl, errorCode, errorMessage, isTimeout);
+    };
+
+
+    /**
+     * Notifies the player that the ad plugin has received an error trying to play back ad.
+     * @protected
+     * @method AdManagerController#onAdPlaybackError
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {number} adPosition The time the ad is scheduled to play
+     * @param {string} adTagUrl The ad tag url post macro substitution
+     * @param {object} errorCode The error code if any
+     * @param {string} errorMessage The error message
+     * @param {string} mediaFileUrl The url used to retrieve the ad media file
+     */
+    this.onAdPlaybackError = function(adPluginName, adPosition, adTagUrl, errorCode, errorMessage, mediaFileUrl) {
+      var plugins = OO.Video.getRegisteredPlugins();
+      var pluginNames = { pluginNames : Object.getOwnPropertyNames(plugins)};
+      mb.publish(OO.EVENTS.AD_PLAYBACK_ERROR, adPluginName, adPosition, adTagUrl, errorCode, errorMessage, pluginNames, mediaFileUrl);
+    };
+
+    /**
+     * Notifies the player when the ad impression is received.
+     * @protected
+     * @method AdManagerController#onAdSdkImpression
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {number} adPosition The time the ad is scheduled to play
+     * @param {number} adLoadTime The time in milliseconds between the ad request success and started
+     * @param {string} adProtocol The ad protocol (VAST / VPAID)
+     * @param {string} adType The ad type (LinearOverlay, LinearVideo, NonLinearOverlay, NonLinearVideo)
+     */
+    this.onAdSdkImpression = function(adPluginName, adPosition, adLoadTime, adProtocol, adType) {
+      mb.publish(OO.EVENTS.AD_SDK_IMPRESSION, adPluginName, adPosition, adLoadTime, adProtocol, adType);
+    };
+    /**
+     * Notifies the player that an ad has completed.
+     * @protected
+     * @method AdManagerController#onAdCompleted
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {number} timeSinceImpression The time passed since the ad impression
+     *                                        was recorded in milliseconds
+     * @param {boolean} skipped True if ad was skipped by user.
+     */
+    this.onAdCompleted = function(adPluginName, timeSinceImpression, skipped) {
+      mb.publish(OO.EVENTS.AD_COMPLETED, adPluginName, timeSinceImpression, skipped);
+    };
+
+
+    /**
+     * Notifies the player that an SDK Ad Event has occurred. Currently private as
+     * we do not want to expose this at this time.
+     * @private
+     * @method AdManagerController#onSdkAdEvent
+     * @param {string} adPluginName The name of the ad plugin that sent this event
+     * @param {string} adEventName The name of this event from the ad plugin
+     * @param {object} adEventData An object containing details of the ad event. This may vary
+     *                               between ad plugin to ad plugin.
+     */
+    this.onSdkAdEvent = function(adPluginName, adEventName, adEventData) {
+      mb.publish(OO.EVENTS.SDK_AD_EVENT, adPluginName, adEventName, adEventData);
+    };
+
+    // Live Stream Helpers
+
+    /**
+     * Helper function to calculate the duration of a pause or from the time
+     * initial play is called to the time the video actually begins playing. Accumulate
+     * these delays/offsets to then use as part of the calculation for the live playhead.
+     * @private
+     * @method AdManagerController#_handleLiveStreamDelays
+     */
+    var _handleLiveStreamDelays = _.bind(function() {
+      var now = Date.now();
+      var paused = this.liveStreamTimestamps.paused;
+      var initialPlay = this.liveStreamTimestamps.initialPlay;
+      if (paused && _.isFinite(paused.ms) && !paused.delayUsed) {
+        this.timeMainVideoIdleMs += now - paused.ms;
+        this.liveStreamTimestamps.paused.delayUsed = true;
+      }
+      if (initialPlay && _.isFinite(initialPlay.ms) && !initialPlay.delayUsed) {
+        this.timeMainVideoIdleMs += now - initialPlay.ms;
+        this.liveStreamTimestamps.initialPlay.delayUsed = true;
+      }
+    }, this);
+
+    /**
+     * Helper function to calculate the playhead for a livestream. The live playhead is calculated
+     * by taking: timeSinceInitialPlay - timeMainVideoIdle
+     * timeMainVideoIdle is the accumulation of the duration of pauses, ad playback, and
+     * delay between hitting play and the stream actually playing back (aka the duration of non main
+     * video playback).
+     * @private
+     * @method AdManagerController#_calculateLivePlayhead
+     * @returns {number} The live playhead represented in milliseconds.
+     */
+    var _calculateLivePlayhead = _.bind(function() {
+      var timeSinceInitialPlayMs = Date.now() - this.liveStreamTimestamps.initialPlay.ms;
+      var mainVideoPlayhead = (timeSinceInitialPlayMs - this.timeMainVideoIdleMs) / 1000;
+      return mainVideoPlayhead;
+    }, this);
+
+    /**
+     * Determines if we should play an ad based on the first_shown and frequency attributes
+     * of the ad object backlot/page level settings provides us.
+     * @private
+     * @method AdManagerController#_shouldPlayAd
+     * @param {number} playAfter The number of main content views prior to showing an ad
+     * @param {number} adFrequency How often we want to show an ad. (adFrequency - 1) main
+     * content views between ads
+     * @returns {boolean} True if we should play the ad, false otherwise
+     */
+    var _shouldPlayAd = _.bind(function(playAfter, adFrequency) {
+      playAfter = playAfter > 0 ? playAfter : 0;
+      adFrequency = adFrequency > 0 ? adFrequency : 0;
+      //compare main video count against play after and ad frequency values
+      var count = OO.localStorage.getItem(VIDEO_COUNT_KEY);
+      count = count && +count > 0 ? +count : 0;
+      var shouldPlayAd = false;
+      if (count >= playAfter && (adFrequency === 0 || (count - playAfter) % adFrequency === 0)) {
+        shouldPlayAd = true;
+      }
+      return shouldPlayAd;
+    }, this);
+
+    /**
+     * Increments a count of main content playbacks by this user.
+     * @private
+     * @method AdManagerController#_incrementMainVideoCount
+     */
+    var _incrementMainVideoCount = _.bind(function() {
+      //Add main video count to local storage so ad frequency
+      //can be upheld
+      var count = OO.localStorage.getItem(VIDEO_COUNT_KEY);
+      count = (count && +count > 0 ? +count : 0) + 1;
+      OO.setItem(VIDEO_COUNT_KEY, count);
+      OO.log("MAIN VIDEO COUNT: " + OO.localStorage.getItem(VIDEO_COUNT_KEY));
     }, this);
 
     ///////// CLEANUP ////////
@@ -24109,7 +27611,6 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
 
     var _resetMovieState = _.bind(function() {
       adQueue                    = [];
-      lastAdIndex                = 0;
       seeked                     = false;
       seeking                    = false;
       paused                     = false;
@@ -24152,6 +27653,12 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
         this.ui.destroy();
       }
 
+      for (var id in adTimeouts) {
+        if (adTimeouts.hasOwnProperty(id)) {
+          clearAdTimeout(id);
+        }
+      }
+
       // stop any ads that are playing
       if (this.currentState == 'LinearAd' || this.currentState == 'Overlay') {
         _cancelCurrentAd({
@@ -24171,17 +27678,17 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
      * Called when the player is being destroyed.  Destroys the ad manager controller, including the state
      * machine and all registered ad managers.
      * @protected
-     * @method OO.AdManagerController#onDestroy
+     * @method AdManagerController#onDestroy
      */
     this.onDestroy = function() {
       _destroy();
     };
 
     /**
-     * Returns a list of all registered ad managers. This is used in testing.
-     * @method OO.AdManagerController#getRegisteredAdManagers
+     * Returns a list of all registered ad managers. This can be used in testing.
+     * @method AdManagerController#getRegisteredAdManagers
      * @public
-     * @returns {Object[]} A list of all registered ad managers
+     * @returns {Object[]} A list of all registered ad managers.
      */
     this.getRegisteredAdManagers = function() {
       return this.adManagers;
@@ -24190,9 +27697,9 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     /**
      * Unregisters an ad manager.
      * @public
-     * @method OO.AdManagerController#unregisterAdManager
+     * @method AdManagerController#unregisterAdManager
      * @param {string} name The name of the ad manager to unregister, traditionally represented by
-     *                      adManager.name
+     *                      <code>adManager.name</code>.
      */
     this.unregisterAdManager = function(name) {
       OO.log("AMC: Removing an ad manager: " + name);
@@ -24237,6 +27744,373 @@ OO.plugin("ExternalId", function(OO, _, $, W) {
     return controller = new OO.AdManagerController(messageBus, id);
   }, this));
 }(OO, OO._, OO.$));
+
+/**
+ * Ad Manager For Ooyala video as Ads
+ */
+
+OO.Ads.manager(function(_, $) {
+  /**
+   * @class OoyalaAdManager
+   * @classDesc The Ooyala Ads Manager class, registered as an ads manager with the ad manager controller.
+   * Controls how Ooyala ads are loaded and played as ads while communicating with the ad manager framework.
+   * @public
+   * @property {string} name Name of the OoyalaAdManager, must match what is sent from Backlot and used at the page level.
+   * @property {boolean} ready ready Used to communicate with the ad manger controller if the manager is ready to go.
+   * @property {object} movieMetadata Store metadata for the main video
+   * @property {object} streams Store streams info of the ad.
+   */
+  var OoyalaAdManager = function() {
+    this.name = "ooyala-ads-manager";
+    this.adId = null;
+    this.ready = false;
+    this.initTime = Date.now();
+    this.movieMetadata = {};
+    this.streams = {};
+    var _amc  = null;
+    var _adEmbedCode = "";
+    var _movieEmbedCode = "";
+    var _getMainVideoEmbedCode = true;
+    var _adProperties = {};
+    var _clickedOnAdBefore = false;
+
+    var metadataLoaded = false;
+    var fetchedAdAuthorization = false;
+    var afterOoyalaAd = false;
+
+    var startTime = 0;
+
+    var _reset = _.bind(function() {
+      OO.log(this.name + ": resetting");
+      this.adId = null;
+      this.ready = false;
+      this.initTime = Date.now();
+      this.movieMetadata = {};
+      this.streams = {};
+
+      _adEmbedCode = "";
+      _movieEmbedCode = "";
+      _getMainVideoEmbedCode = true;
+      _adProperties = {};
+      _clickedOnAdBefore = false;
+
+      metadataLoaded = false;
+      fetchedAdAuthorization = false;
+      afterOoyalaAd = false;
+    }, this);
+
+    /**
+     * Called by the Ad Manager Controller. Use this function to initialize, create listeners, and load
+     * remote JS files.
+     * @method OoyalaAdManager#initialize
+     * @public
+     * @param {object} adManagerController A reference to the Ad Manager Controller
+     * @param {string} playerId The unique player identifier of the player initializing the class
+     */
+    this.initialize = function(adManagerController, playerId) {
+      _reset();
+      startTime = new Date().getTime();
+      _amc = adManagerController;
+    };
+
+    /**
+     * Called by Ad Manager Controller. When this function is called, all movie and server metadata are
+     * ready to be parsed.
+     * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
+     * @method AdManager#loadMetadata
+     * @public
+     * @param {object} adManagerMetadata Ad manager-specific metadata
+     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
+     * @param {object} movieMetadata Metadata for the main video
+     */
+    this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
+      OO.log(this.name + ": Load Metadata at " + (new Date().getTime() - startTime) + " ms");
+      if (!_amc) {
+        return;
+      }
+      _amc.addPlayerListener(_amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+
+      this.movieMetadata = movieMetadata;
+      if (_getMainVideoEmbedCode && movieMetadata) {
+        this.ready = false;
+        _movieEmbedCode = movieMetadata.embed_code;
+        _getMainVideoEmbedCode = false;
+      }
+
+      metadataLoaded = true;
+      _tryFetchAdAuthorization();
+    };
+
+    /**
+     * Called by Ad Manager Controller.  When this function is called, the content authorization will have been fetched.
+     * At this point, we can safely fetch our ad authorization.
+     * @method OoyalaAdManager#authorizationFetched
+     * @public
+     */
+    this.authorizationFetched = function() {
+      OO.log(this.name + ": Authorization Fetched at " + (new Date().getTime() - startTime) + " ms");
+    };
+
+    /**
+     * Try to fetch our ad authorization. We will wait until the metadata has been loaded.
+     * @method OoyalaAdManager#_tryFetchAdAuthorization
+     * @private
+     */
+    var _tryFetchAdAuthorization = _.bind(function() {
+      OO.log(this.name + ": Try Fetch Ad Authorization at " + (new Date().getTime() - startTime) + " ms");
+      // If we have not loaded all initial metadata, return as we are not ready to try to fetch ad authorization
+      if (!metadataLoaded || !_amc || fetchedAdAuthorization) {
+        return;
+      }
+
+      // If we have loaded all initial metadata and there are no Ooyala ads, set to ready and return as this ad
+      // manager has nothing else to do
+      if (!this.movieMetadata || !this.movieMetadata.ads || this.movieMetadata.ads.length <= 0 ||
+          !this.movieMetadata.ads[0] || !this.movieMetadata.ads[0].ad_embed_code) {
+        OO.log(this.name + ": No Ooyala Ads at " + (new Date().getTime() - startTime) + " ms");
+        fetchedAdAuthorization = true;
+        _setReady();
+        _reset();
+        // We need to Ooyala ads manager to remain ready in case there are other ad managers that need to load
+        // The reset() call above is setting this.ready to false
+        this.ready = true;
+        return;
+      }
+
+      OO.log(this.name + ": Fetching Ad Authorization at " + (new Date().getTime() - startTime) + " ms");
+
+      fetchedAdAuthorization = true;
+
+      _adEmbedCode = this.movieMetadata.ads[0].ad_embed_code;
+      var adsRequest = {
+        pcode: this.movieMetadata.asset_pcode || "unknown",
+        embedCode: _adEmbedCode,
+        server: OO.SERVER.AUTH,
+
+        params: OO.playerParams
+      };
+      _amc.notify(_amc.EVENTS.WILL_FETCH_AD_AUTHORIZATION, adsRequest, sasErrorCallback);
+    }, this);
+
+    var sasErrorCallback = function(xhr, status, error) {
+        OO.log("Error: Failed SAS call for Ooyala Ad. Continuing on with playback.");
+        _setReady();
+    };
+
+    /**
+     * Called by Ad Manager Controller.  When this function is called, all the information about the Ooyala
+     * ads will be received and will notify the controller that the Ad Manager is ready.
+     * @method OoyalaAdManager#ooyalaAdData
+     * @public
+     * @param {object} adData Ad-specific metadata
+     */
+    this.ooyalaAdData = function(adData) {
+      OO.log(this.name + ": Ooyala Ad Data at " + (new Date().getTime() - startTime) + " ms");
+      if (!adData) {
+        return;
+      }
+      this.streams[OO.VIDEO.ENCODING.MP4] = adData;
+      _setReady();
+    };
+
+    /**
+     * Sets this ad manager as ready. Notifies the Ad Manager Controller of this event, unblocking playback.
+     * @method OoyalaAdManager#_setReady
+     * @private
+     */
+    var _setReady = _.bind(function() {
+      OO.log(this.name + ": Set ready at " + (new Date().getTime() - startTime) + " ms");
+      this.ready = true;
+      var loadTime = Date.now() - this.initTime;
+      _amc.reportPluginLoaded(loadTime, this.name);
+      var createMp4Element = !_.isEmpty(this.streams);
+      _amc.onAdManagerReady(createMp4Element);
+    }, this);
+
+    /**
+     * Called once per video by Ad Manager Controller once the ad manager has set its ready flag to true.
+     * This function asks the ad manager to return a list of all ads to the controller for addition in the
+     * line. If the list of ads is not available at this time, then return [].
+     * The duration and position of each ad should be specified in seconds.
+     * @method OoyalaAdManager#buildTimeline
+     * @public
+     * @returns {OO.AdManagerController#Ad[]} timeline A list of the ads to play for the current video
+     */
+    this.buildTimeline = function() {
+      var adsTimeline = [];
+      OO.log(this.name + ": Build Timeline at " + (new Date().getTime() - startTime) + " ms");
+      if (!this.movieMetadata || !this.movieMetadata.ads) {
+        return adsTimeline;
+      }
+
+      for (var index = 0; index < this.movieMetadata.ads.length; index++) {
+        var adData = this.movieMetadata.ads[index];
+        if (adData && adData.type === 'ooyala') {
+          var amcAdData = {
+            "position": adData.time,
+            "adManager": this.name,
+            "ad": adData,
+            "streams": {},
+            "adType": _amc.ADTYPE.UNKNOWN_AD_REQUEST
+          };
+          amcAdData.streams[OO.VIDEO.ENCODING.MP4] = "";
+          var adToInsert = new _amc.Ad(amcAdData);
+          adsTimeline.push(adToInsert);
+        }
+      }
+      return adsTimeline;
+    };
+
+    /**
+     * Called by Ad Manager Controller. The ad manager should play the ad or group of podded ads passed to
+     * the function as a parameter.
+     * @method OoyalaAdManager#playAd
+     * @public
+     * @param {object} ad The ad object to play
+     *
+     * TODO: _adProperties.name and _adProperties.duration need data supplied from backlotBaseMetadata.
+     *
+     */
+    this.playAd = function(ad) {
+      OO.log(this.name + ": Play Ad at " + (new Date().getTime() - startTime) + " ms");
+      _amc.pageSettings.autoPlay = true;
+      _amc.pageSettings.ooyalaAds = true;
+      _adProperties.indexInPod = 1;
+      if (this.movieMetadata) {
+        _adProperties.name = this.movieMetadata.title;
+        _adProperties.duration = this.movieMetadata.duration;
+      } else {
+        _adProperties.name = "";
+        _adProperties.duration = 30;
+      }
+      _adProperties.ooyalaAds = true;
+      _adProperties.hasClickUrl = ad.ad.click_url;
+      _adProperties.skippable = false;
+      this.adId = ad.id;
+      var tempPageSettings = _.clone(_amc.pageSettings);
+      tempPageSettings.onCreate = null;
+      _amc.notify(_amc.EVENTS.SET_EMBED_CODE, _adEmbedCode, tempPageSettings);
+      _amc.notifyLinearAdStarted(ad.id, _adProperties);
+    };
+
+    /**
+     * Called by Ad Manager Controller. The ad manager should cancel the ad passed to the function as a
+     * parameter. After cancelling the ad, the ad manager should call the adEndedCallback to indicate that
+     * ad cancellation has completed. If the given ad is not currently playing and the adEndedCallback has
+     * already been called, then no action is required.
+     * @method OoyalaAdManager#cancelAd
+     * @public
+     * @param {object} ad The ad object to cancel
+     * @param {object} params An object containing information about the cancellation. It will include the
+     *                        following fields:
+     *                 code : The _amc.AD_CANCEL_CODE for the cancellation
+     */
+    this.cancelAd = function(ad, params) {
+      OO.log("Cancelling Ooyala ad");
+      if (params && params.code === _amc.AD_CANCEL_CODE.SKIPPED) {
+        _amc.pageSettings.ooyalaAds = false;
+        _amc.notify(OO.EVENTS.SINGLE_AD_PLAYED, this.adId);
+        _amc.notify(OO.EVENTS.AD_POD_ENDED, this.adId);
+        var movieEmbedCode = _movieEmbedCode;
+        _reset();
+        afterOoyalaAd = true;
+        _amc.notify(OO.EVENTS.SET_EMBED_CODE_AFTER_OOYALA_AD, movieEmbedCode, _amc.pageSettings);
+      }
+    };
+
+    /**
+     * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
+     * called
+     * @method OoyalaAdManager#playerClicked
+     * @public
+    */
+    this.playerClicked = function() {
+      OO.log("Click Url = " + _adProperties.hasClickUrl);
+      if (_clickedOnAdBefore) {
+        _amc.notify(OO.EVENTS.PLAY);
+        _clickedOnAdBefore = false;
+      } else {
+        _amc.notify(OO.EVENTS.PAUSE);
+
+        if (this.openUrl(_adProperties.hasClickUrl)) {
+          _amc.adsClickthroughOpened();
+        }
+        _clickedOnAdBefore = true;
+      }
+    };
+
+    /**
+    * Checks whether URL is valid or not.
+    * @private
+    * @method OoyalaAdManager#isClickThroughURLValid
+    * @param {string} url The url that needs to be validated
+    * @returns {boolean} true, if the URL is valid. Returns false, if url is invalid.
+    */
+    var isClickThroughURLValid = _.bind(function(url) {
+      if (typeof url === 'string' && url.length > 0) {
+        return true;
+      }
+      return false;
+    }, this);
+
+    /**
+     * Opens a new page pointing to the URL provided.
+     * @public
+     * @method OoyalaAdManager#openUrl
+     * @param {string} url The url that we need to open in a new page
+     * @returns {boolean} true, if the URL is valid. Returns false, if url is invalid.
+     */
+    this.openUrl = function(url) {
+      if (isClickThroughURLValid(url)) {
+        window.open(url);
+        return true;
+      }
+      return false;
+    };
+
+    /**
+     * Called when ad is finished playing.
+     * @method OoyalaAdManager#adVideoEnded
+     * @public
+     */
+    this.adVideoEnded = function() {
+      OO.log(this.name + ": adVideoEnded at " + (new Date().getTime() - startTime) + " ms");
+      _amc.pageSettings.ooyalaAds = false;
+      _amc.notify(OO.EVENTS.SINGLE_AD_PLAYED, this.adId);
+      _amc.notify(OO.EVENTS.AD_POD_ENDED, this.adId);
+
+      var movieEmbedCode = _movieEmbedCode;
+      _reset();
+      afterOoyalaAd = true;
+      _amc.notify(OO.EVENTS.SET_EMBED_CODE_AFTER_OOYALA_AD, movieEmbedCode, _amc.pageSettings);
+    };
+
+    var _onContentChanged = _.bind(function() {
+      OO.log(this.name + ": onContentChanged at " + (new Date().getTime() - startTime) + " ms");
+      startTime = new Date().getTime();
+      //We need to set to ready so the AMC can proceed when attempting to play the Ooyala ad.
+      //We reset this value to false in this.loadMetadata
+      this.ready = true;
+      if (afterOoyalaAd) {
+        _reset();
+      }
+    }, this);
+
+    /**
+     * Remove player listeners.
+     * @public
+     * @method OoyalaAdManager#destroy
+     */
+    this.destroy = function() {
+      OO.log(this.name + ": Destroy at " + (new Date().getTime() - startTime) + " ms");
+      if (_amc) {
+        _amc.removePlayerListener(_amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+      }
+      _clickedOnAdBefore = false;
+    };
+  };
+  return new OoyalaAdManager();
+});
 
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 if (!OO)
@@ -24542,6 +28416,135 @@ if (!OO.Analytics.EVENTS)
 
     /**
      * @public
+     * @event OO.Analytics.EVENTS#INITIAL_PLAY_STARTING
+     * @description This message is sent when the player has begun playback for the first time, first frame has been received.
+     */
+    INITIAL_PLAY_STARTING:                    'initialPlayStarting',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#PLAYBACK_READY
+     * @description This message is sent when the player has indicated that it is in a playback-ready state.
+     */
+    PLAYBACK_READY:                    'playbackReady',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#API_ERROR
+     * @description This message is sent if an api related error has occurred.
+     */
+    API_ERROR:                      'apiError',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#BITRATE_INITIAL
+     * @description This message contains the bitrate used at the start of playback.
+     */
+    BITRATE_INITIAL:                      'bitrateInitial',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#BITRATE_FIVE_SEC
+     * @description This message contains the bitrate used five seconds into playback.
+     */
+    BITRATE_FIVE_SEC:                      'bitrateFiveSec',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#BITRATE_STABLE
+     * @description This message contains the bitrate used thirty seconds into playback.
+     */
+    BITRATE_STABLE:                      'bitrateStable',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#PLAYBACK_START_ERROR
+     * @description This message is sent when a playback error has occurred before the video start.
+     */
+    PLAYBACK_START_ERROR:                      'playbackStartError',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#PLAYBACK_MIDSTREAM_ERROR
+     * @description This message is sent when a playback error has occurred midstream.
+     */
+    PLAYBACK_MIDSTREAM_ERROR:                      'playbackMidstreamError',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#PLUGIN_LOADED
+     * @description This message is sent when a plugin is loaded in core.
+     */
+    PLUGIN_LOADED:                      'pluginLoaded',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#VC_PLUGIN_ERROR
+     * @description This message is sent when the video plugin has reported an error message.
+     */
+    VC_PLUGIN_ERROR:                      'videoPluginError',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_SDK_LOADED
+     * @description This message is sent when ad sdk has loaded successfully.
+     */
+    AD_SDK_LOADED:               'adSdkLoaded',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_SDK_LOAD_FAILURE
+     * @description This message is sent when ad sdk has failed to load.
+     */
+    AD_SDK_LOAD_FAILURE:               'adSdkLoadFailed',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_REQUEST
+     * @description This message is sent when an ad request is sent to the ad sdk.
+     */
+    AD_REQUEST:               'adRequest',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_REQUEST_SUCCESS
+     * @description This event is sent when an ad request successfully returns an ad or playlist of ads.
+     */
+    AD_REQUEST_SUCCESS:               'adRequestSuccess',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_REQUEST_ERROR
+     * @description This event is sent when an ad request fails due to an error.
+     */
+    AD_REQUEST_ERROR:               'adRequestError',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_REQUEST_EMPTY
+     * @description This event is sent when an ad request returns but contains no ads.
+     */
+    AD_REQUEST_EMPTY:               'adRequestEmpty',
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_PLAYBACK_ERROR
+     * @description This event is sent when an ad playback fails due to an error.
+     */
+    AD_PLAYBACK_ERROR:               'adPlaybackError',
+
+
+    /**
+     * @public
+     * @event OO.Analytics.EVENTS#AD_SDK_IMPRESSION
+     * @description This message is sent when an impression is recorded
+     * by the ad plugin SDK.
+     */
+    AD_SDK_IMPRESSION:                  'adSdkImpression',
+
+
+    /**
+     * @public
      * @event OO.Analytics.EVENTS#AD_BREAK_STARTED
      * @description This message is sent when the player stops the main content
      * to start playing linear ads.
@@ -24616,10 +28619,24 @@ if (!OO.Analytics.EVENTS)
 
     /**
      * @public
+     * @event OO.Analytics.EVENTS#AD_COMPLETED
+     * @description This message is sent when the ad playback is completed.
+     */
+    AD_COMPLETED:                   'adCompleted',
+
+    /**
+     * @public
      * @event OO.Analytics.EVENTS#AD_CLICKTHROUGH_OPENED
      * @description This message is sent when an ad clickthrough event has occurred.
      */
     AD_CLICKTHROUGH_OPENED:         'ad_clickthrough_opened',
+
+    /**
+     * @private
+     * @event OO.Analytics.EVENTS#SDK_AD_EVENT
+     * @description This message is sent when an SDK Ad Event has occurred.
+     */
+    SDK_AD_EVENT:                   'sdkAdEvent',
 
     /**
      * @public
@@ -24788,11 +28805,15 @@ if (!OO.Analytics.EVENT_DATA)
    * @class Analytics.EVENT_DATA#VideoBufferingStartedData
    * @classdesc Contains information about the stream that has started buffering.
    * @property {string} streamUrl The url of the stream that is buffering
+   * @property {string} videoId The video Id (main, etc.)
+   * @property {number} position The playhead position buffering started
    */
-  EVENT_DATA.VideoBufferingStartedData = function(streamUrl)
+  EVENT_DATA.VideoBufferingStartedData = function(streamUrl, videoId, position)
   {
     var checkBufferingStartedData = OO._.bind(checkDataType, this, "VideoBufferingStartedData");
     this.streamUrl = checkBufferingStartedData(streamUrl, "streamUrl", ["string"]);
+    this.videoId = checkBufferingStartedData(videoId, "videoId", ["string"]);
+    this.position = checkBufferingStartedData(position, "position", ["number"]);
   };
 
   /**
@@ -24821,14 +28842,17 @@ if (!OO.Analytics.EVENT_DATA)
   EVENT_DATA.VideoBitrateProfileLookupData = function(bitrateProfileArray)
   {
     var checkBitrateProfileList = OO._.bind(checkDataType, this, "VideoBitrateProfileLookupData");
-    var list = checkBitrateProfileList(bitrateProfileArray, "bitrateProfileArray", ["array"]);
+    var list = checkBitrateProfileList(bitrateProfileArray, "bitrateProfileArray", ["array"]) || [];
     this.profiles = {};
-    for(var key in list)
+    for (var i = 0; i < list.length; i++)
     {
-      var entry = list[key];
-      this.profiles[entry.id] = entry;
+      var entry = list[i];
+      if (entry && entry.id)
+      {
+        this.profiles[entry.id] = entry;
+      }
     }
-  }
+  };
 
   /**
    * @public
@@ -24842,11 +28866,11 @@ if (!OO.Analytics.EVENT_DATA)
   EVENT_DATA.VideoBitrateProfileData = function(bitrateProfile)
   {
     var checkBitrateProfile = OO._.bind(checkDataType, this, "VideoBitrateProfileData");
-    this.bitrate = checkBitrateProfile(bitrateProfile.bitrate, "bitrate", ["number"]);
+    this.bitrate = checkBitrateProfile(bitrateProfile.bitrate, "bitrate", ["number","string"]);
     this.height = checkBitrateProfile(bitrateProfile.height, "height", ["number"]);
     this.width = checkBitrateProfile(bitrateProfile.width, "width", ["number"]);
     this.id = checkBitrateProfile(bitrateProfile.id, "id", ["string"]);
-  }
+  };
 
   /**
    * @public
@@ -24858,7 +28882,7 @@ if (!OO.Analytics.EVENT_DATA)
   {
     var checkTargetBitrate = OO._.bind(checkDataType, this, "VideoTargetBitrateData");
     this.targetProfile = checkTargetBitrate(targetProfile, "targetProfile", ["string"]);
-  }
+  };
 
   /**
    * @public
@@ -25068,6 +29092,378 @@ if (!OO.Analytics.EVENT_DATA)
   {
     var checkAdErrorData = OO._.bind(checkDataType, this, "AdErrorData");
     this.error = checkAdErrorData(error, "error", ["string", "object"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#VideoPlayerCreatedData
+   * @classdesc Contains information about the player created event
+   * @property {string} playerCoreVersion The player core version
+   * @property {object} params The configuration metadata associated with the player
+   * (i.e. pcode, playerBrandingId, skin configuration, player configuration parameters)
+   * @property {string} embedCode The embed code of the asset attempting to play
+   * @property {string} playerUrl The url of the page containing the player
+   * @property {string} pcode The provider pcode
+   */
+  EVENT_DATA.VideoPlayerCreatedData = function(playerCoreVersion, params, embedCode, playerUrl)
+  {
+    var checkVideoPlayerCreatedData = OO._.bind(checkDataType, this, "VideoPlayerCreatedData");
+    this.playerCoreVersion = checkVideoPlayerCreatedData(playerCoreVersion, "playerCoreVersion", ["string"]);
+    this.params = checkVideoPlayerCreatedData(params, "params", ["object"]);
+    this.embedCode = checkVideoPlayerCreatedData(embedCode, "embedCode", ["string"]);
+    this.playerUrl = checkVideoPlayerCreatedData(playerUrl, "playerUrl", ["string"]);
+    this.pcode = checkVideoPlayerCreatedData(this.params.pcode, "pcode", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#InitialPlayStartingData
+   * @classdesc Contains the information about the initial play starting event.
+   * @property {string} playerCoreVersion The player core version
+   * @property {number} timeSinceInitialPlay The time since the initial play request was made
+   * @property {boolean} autoplayed Boolean for if the video was autoplayed or not
+   * @property {boolean} hadPreroll Boolean for if the video had an ad play before it started
+   * @property {number} position The initial position of the playhead upon playback start. This includes
+   *   midrolls that play before content due to an initial playhead time > 0
+   * @property {string} plugin The video plugin used for playback
+   * @property {string} technology The browser technology used - HTML5, Flash, Mixed, or Other
+   * @property {string} encoding The stream encoding type, i.e. MP4, HLS, Dash, etc.
+   * @property {string} streamUrl The URL of the content being played
+   * @property {string} drm The DRM being used, none if there is no DRM
+   * @property {boolean} isLive Boolean that is true if a live stream is playing. If false it is VOD.
+   */
+  EVENT_DATA.InitialPlayStartingData = function(playerCoreVersion, timeSinceInitialPlay,
+        autoplayed, hadPreroll, position, plugin, technology, encoding, streamUrl, drm, isLive)
+  {
+    var checkInitialPlayStartingData = OO._.bind(checkDataType, this, "VideoPlayerCreatedData");
+    this.playerCoreVersion = checkInitialPlayStartingData(playerCoreVersion, "playerCoreVersion", ["string"]);
+    this.timeSinceInitialPlay = checkInitialPlayStartingData(timeSinceInitialPlay, "timeSinceInitialPlay", ["number"]);
+    this.autoplayed = checkInitialPlayStartingData(autoplayed, "autoplayed", ["boolean"]);
+    this.hadPreroll = checkInitialPlayStartingData(hadPreroll, "hadPreroll", ["boolean"]);
+    this.position = checkInitialPlayStartingData(position, "position", ["number"]);
+    this.plugin = checkInitialPlayStartingData(plugin, "plugin", ["string"]);
+    this.technology = checkInitialPlayStartingData(technology, "technology", ["string"]);
+    this.encoding = checkInitialPlayStartingData(encoding, "encoding", ["string"]);
+    this.streamUrl = checkInitialPlayStartingData(streamUrl, "streamUrl", ["string"]);
+    this.drm = checkInitialPlayStartingData(drm, "drm", ["string"]);
+    this.isLive = checkInitialPlayStartingData(isLive, "isLive", ["boolean"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#PlaybackReadyData
+   * @classdesc Contains the information about the playback ready event
+   * @property {string} playerCoreVersion The player core version
+   * @property {number} timeSincePlayerCreated The time between player creation and playback ready state
+   * @property {array} pluginList List of plugins loaded
+   */
+  EVENT_DATA.PlaybackReadyData = function(playerCoreVersion, timeSincePlayerCreated, pluginList)
+  {
+    var checkPlaybackReadyData = OO._.bind(checkDataType, this, "PlaybackReadyData");
+    this.playerCoreVersion = checkPlaybackReadyData(playerCoreVersion, "playerCoreVersion", ["string"]);
+    this.timeSincePlayerCreated = checkPlaybackReadyData(timeSincePlayerCreated, "timeSincePlayerCreated", ["number"]);
+    this.pluginList = checkPlaybackReadyData(pluginList, "pluginList", ["array"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#ApiErrorData
+   * @classdesc Contains information about the api error.
+   * @property {string} playerCoreVersion The player core version
+   * @property {number} errorCode The error code if any
+   * @property {string} errorMessage The error message
+   * @property {string} url The ad tag url post macro substitution
+   */
+  EVENT_DATA.ApiErrorData = function(playerCoreVersion, errorCode, errorMessage, url)
+  {
+    var checkApiErrorData = OO._.bind(checkDataType, this, "ApiErrorData");
+    this.playerCoreVersion = checkApiErrorData(playerCoreVersion, "playerCoreVersion", ["string"]);
+    this.errorCode = checkApiErrorData(errorCode, "errorCode", ["number"]);
+    this.errorMessage = checkApiErrorData(errorMessage, "errorMessage", ["string"]);
+    this.url = checkApiErrorData(url, "url", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#BitrateInitialData
+   * @classdesc Contains the information about the bitrate initial event
+   * @property {number} The bitrate at the start of playback
+   */
+  EVENT_DATA.BitrateInitialData = function(bitrate)
+  {
+    var checkBitrateInitialData = OO._.bind(checkDataType, this, "BitrateInitialData");
+    this.bitrate = checkBitrateInitialData(bitrate, "bitrate", ["number"]);
+  };
+
+    /**
+   * @public
+   * @class Analytics.EVENT_DATA#BitrateFiveSecData
+   * @classdesc  Contains the information about the bitrate five sec event
+   * @property {number} The bitrate at five seconds into the video
+   */
+  EVENT_DATA.BitrateFiveSecData = function(bitrate)
+  {
+    var checkBitrateFiveSecData = OO._.bind(checkDataType, this, "BitrateFiveSecData");
+    this.bitrate = checkBitrateFiveSecData(bitrate, "bitrate", ["number"]);
+  };
+
+    /**
+   * @public
+   * @class Analytics.EVENT_DATA#BitrateStableData
+   * @classdesc  Contains the information about the bitrate stable event
+   * @property {number} The bitrate at thirty seconds into the video
+   */
+  EVENT_DATA.BitrateStableData = function(bitrate)
+  {
+    var checkBitrateStableData = OO._.bind(checkDataType, this, "BitrateStableData");
+    this.bitrate = checkBitrateStableData(bitrate, "bitrate", ["number"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#PlaybackStartErrorData
+   * @classdesc Contains information about the playback start error.
+   * @property {object} errorCodes Object containing all error codes associated with the error
+   * @property {object} errorMessages Object containing error messages associated with the error
+   * @property {object} drm The DRM information, if relevant and available
+   */
+  EVENT_DATA.PlaybackStartErrorData = function(errorCodes, errorMessages, drm)
+  {
+    var checkPlaybackStartErrorData = OO._.bind(checkDataType, this, "PlaybackStartErrorData");
+    this.errorCodes = checkPlaybackStartErrorData(errorCodes, "errorCodes", ["object"]);
+    this.errorMessages = checkPlaybackStartErrorData(errorMessages, "errorMessages", ["object"]);
+    this.drm = checkPlaybackStartErrorData(drm, "drm", ["object"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#PlaybackMidstreamErrorData
+   * @classdesc Contains information about the playback midstream error.
+   * @property {object} errorCodes Object containing all error codes associated with the error
+   * @property {object} errorMessages Object containing error messages associated with the error
+   * @property {number} position The playhead position the error occurred at
+   */
+  EVENT_DATA.PlaybackMidstreamErrorData = function(errorCodes, errorMessages, position)
+  {
+    var checkPlaybackMidstreamErrorData = OO._.bind(checkDataType, this, "PlaybackMidstreamErrorData");
+    this.errorCodes = checkPlaybackMidstreamErrorData(errorCodes, "errorCodes", ["object"]);
+    this.errorMessages = checkPlaybackMidstreamErrorData(errorMessages, "errorMessages", ["object"]);
+    this.position = checkPlaybackMidstreamErrorData(position, "position", ["number"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#PluginLoadedData
+   * @classdesc Contains information about the plugin loaded event.
+   * @property {string} playerCoreVersion The player core version
+   * @property {string} pluginType Type of the loaded plugin - ads, playback, analytics, playlist, or skin
+   * @property {string} pluginName The name of the plugin loaded
+   * @property {number} loadTime The time it took for the plugin to reach the ready state
+   */
+  EVENT_DATA.PluginLoadedData = function(playerCoreVersion, pluginType, pluginName, loadTime)
+  {
+    var checkPluginLoadedData = OO._.bind(checkDataType, this, "PluginLoadedData");
+    this.playerCoreVersion = checkPluginLoadedData(playerCoreVersion, "playerCoreVersion", ["string"]);
+    this.pluginType = checkPluginLoadedData(pluginType, "pluginType", ["string"]);
+    this.pluginName = checkPluginLoadedData(pluginName, "pluginName", ["string"]);
+    this.loadTime = checkPluginLoadedData(loadTime, "loadTime", ["number"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdErrorData
+   * @classdesc Contains information about the ad error.
+   * @property {object|string} The error object or string
+   */
+  EVENT_DATA.AdErrorData = function(error)
+  {
+    var checkAdErrorData = OO._.bind(checkDataType, this, "AdErrorData");
+    this.error = checkAdErrorData(error, "error", ["string", "object"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdRequestData
+   * @classdesc Contains information about the ad request event.
+   * @property {string} adPluginName The name of the ad plugin used
+   * @property {number} adPosition The position, in seconds, the ad is scheduled to play
+   */
+  EVENT_DATA.AdRequestData = function(adPluginName, adPosition)
+  {
+    var checkAdRequestData = OO._.bind(checkDataType, this, "AdRequestData");
+    this.adPluginName = checkAdRequestData(adPluginName, "adPluginName", ["string"]);
+    this.adPosition = checkAdRequestData(adPosition, "adPosition", ["number"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdRequestSuccssData
+   * @classdesc Contains information about the ad request success event.
+   * @property {string} adPluginName The name of the ad plugin used
+   * @property {number} adPosition The position, in seconds, the ad is scheduled to play
+   * @property {number} responseTime The time in milliseconds that it took to get a response for the ad request
+   * @property {number} timeSinceInitialPlay The time in milliseconds from the initial play request time to ad request success
+   */
+  EVENT_DATA.AdRequestSuccessData = function(adPluginName, adPosition, responseTime, timeSinceInitialPlay)
+  {
+    var checkAdRequestSuccessData = OO._.bind(checkDataType, this, "AdRequestSuccessData");
+    this.adPluginName = checkAdRequestSuccessData(adPluginName, "adPluginName", ["string"]);
+    this.adPosition = checkAdRequestSuccessData(adPosition, "adPosition", ["number"]);
+    this.responseTime = checkAdRequestSuccessData(responseTime, "responseTime", ["number"]);
+    this.timeSinceInitialPlay = checkAdRequestSuccessData(timeSinceInitialPlay, "timeSinceInitialPlay", ["number"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdRequestEmptyData
+   * @classdesc Contains information about the ad request empty event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {number} adPosition The position, in seconds, the ad is scheduled to play
+   * @property {string} adTagUrl The ad tag url post macro substitution
+   * @property {object} errorCodes Object containing all error codes received
+   * @property {string} errorMessage The error message
+   */
+  EVENT_DATA.AdRequestEmptyData = function(adPluginName, adPosition, adTagUrl, errorCodes, errorMessage)
+  {
+    var checkAdRequestEmptyData = OO._.bind(checkDataType, this, "AdRequestEmptyData");
+    this.adPluginName = checkAdRequestEmptyData(adPluginName, "adPluginName", ["string"]);
+    this.adPosition = checkAdRequestEmptyData(adPosition, "adPosition", ["number"]);
+    this.adTagUrl = checkAdRequestEmptyData(adTagUrl, "adTagUrl", ["string"]);
+    this.errorCodes = checkAdRequestEmptyData(errorCodes, "errorCodes", ["object"]);
+    this.errorMessage = checkAdRequestEmptyData(errorMessage, "errorMessage", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdRequestErrorData
+   * @classdesc Contains information about the ad request error event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {number} adPosition The position, in seconds, the ad is scheduled to play
+   * @property {string} adTagUrl The ad tag url post macro substitution
+   * @property {object} errorCodes Object containing all error codes received
+   * @property {string} errorMessage The error message
+   * @property {boolean} isTimeout If ad request timed out or not
+   */
+  EVENT_DATA.AdRequestErrorData = function(adPluginName, adPosition, adTagUrl, errorCodes, errorMessage, isTimeout)
+  {
+    var checkAdRequestErrorData = OO._.bind(checkDataType, this, "AdRequestErrorData");
+    this.adPluginName = checkAdRequestErrorData(adPluginName, "adPluginName", ["string"]);
+    this.adPosition = checkAdRequestErrorData(adPosition, "adPosition", ["number"]);
+    this.adTagUrl = checkAdRequestErrorData(adTagUrl, "adTagUrl", ["string"]);
+    this.errorCodes = checkAdRequestErrorData(errorCodes, "errorCodes", ["object"]);
+    this.errorMessage = checkAdRequestErrorData(errorMessage, "errorMessage", ["string"]);
+    this.isTimeout = checkAdRequestErrorData(isTimeout, "isTimeout", ["boolean"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdPlaybackErrorData
+   * @classdesc Contains information about the ad playback error event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {number} adPosition The position, in seconds, the ad is scheduled to play
+   * @property {string} adTagUrl The ad tag url post macro substitution
+   * @property {object} errorCodes Object containing all error codes received
+   * @property {string} errorMessage The error message
+   * @property {array} videoPluginList Array containing names of all video plugins registered
+   * @property {string} mediaFileUrl The url used to retrieve the ad media file
+   */
+  EVENT_DATA.AdPlaybackErrorData = function(adPluginName, adPosition, adTagUrl, errorCodes, errorMessage, videoPluginList, mediaFileUrl)
+  {
+    var checkAdPlaybackErrorData = OO._.bind(checkDataType, this, "AdPlaybackErrorData");
+    this.adPluginName = checkAdPlaybackErrorData(adPluginName, "adPluginName", ["string"]);
+    this.adPosition = checkAdPlaybackErrorData(adPosition, "adPosition", ["number"]);
+    this.adTagUrl = checkAdPlaybackErrorData(adTagUrl, "adTagUrl", ["string"]);
+    this.errorCodes = checkAdPlaybackErrorData(errorCodes, "errorCodes", ["object"]);
+    this.errorMessage = checkAdPlaybackErrorData(errorMessage, "errorMessage", ["string"]);
+    this.videoPluginList = checkAdPlaybackErrorData(videoPluginList, "videoPluginList", ["array"]);
+    this.mediaFileUrl = checkAdPlaybackErrorData(mediaFileUrl, "mediaFileUrl", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdSdkImpressionData
+   * @classdesc Contains information about the ad sdk impression event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {number} adPosition The position, in seconds, the ad is scheduled to play
+   * @property {number} adLoadTime The time in milliseconds between the ad request success and started
+   * @property {string} adProtocol The ad protocol (VAST / VPAID)
+   * @property {string} adType The ad type (LinearOverlay, LinearVideo, NonLinearOverlay, NonLinearVideo)
+   */
+  EVENT_DATA.AdSdkImpressionData = function(adPluginName, adPosition, adLoadTime, adProtocol, adType)
+  {
+    var checkAdSdkImpressionData = OO._.bind(checkDataType, this, "AdSdkImpressionData");
+    this.adPluginName = checkAdSdkImpressionData(adPluginName, "adPluginName", ["string"]);
+    this.adPosition = checkAdSdkImpressionData(adPosition, "adPosition", ["number"]);
+    this.adLoadTime = checkAdSdkImpressionData(adLoadTime, "adLoadTime", ["number"]);
+    this.adProtocol = checkAdSdkImpressionData(adProtocol, "adProtocol", ["string"]);
+    this.adType = checkAdSdkImpressionData(adType, "adType", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdCompletedData
+   * @classdesc Contains information about the ad completed event.
+   * @property {string} adPluginName The name of the ad plugin used
+   * @property {number} timeSinceImpression The time passed since the ad impression
+   *                                          was recorded in milliseconds
+   * @property {boolean} skipped True if ad was skipped by user.
+   * @property {string} adTagUrl The ad tag url post macro substitution
+   */
+  EVENT_DATA.AdCompletedData = function(adPluginName, timeSinceImpression, skipped, adTagUrl)
+  {
+    var checkAdCompletedData = OO._.bind(checkDataType, this, "AdCompletedData");
+    this.adPluginName = checkAdCompletedData(adPluginName, "adPluginName", ["string"]);
+    this.timeSinceImpression = checkAdCompletedData(timeSinceImpression, "timeSinceImpression", ["number"]);
+    this.skipped = checkAdCompletedData(skipped, "skipped", ["boolean"]);
+    this.adTagUrl = checkAdCompletedData(adTagUrl, "adTagUrl", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdSdkLoadedData
+   * @classdesc Contains information about the ad SDK loaded event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {string} playerCoreVersion The player core version
+   */
+  EVENT_DATA.LoadAdSdkData = function(adPluginName, playerCoreVersion)
+  {
+    var checkLoadAdSdkData = OO._.bind(checkDataType, this, "LoadAdSdkData");
+    this.adPluginName = checkLoadAdSdkData(adPluginName, "adPluginName", ["string"]);
+    this.playerCoreVersion = checkLoadAdSdkData(playerCoreVersion, "playerCoreVersion", ["string"]);
+  };
+
+  /**
+   * @public
+   * @class Analytics.EVENT_DATA#AdSdkLoadFailureData
+   * @classdesc Contains information about the ad SDK load failure event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {string} playerCoreVersion The player core version
+   * @property {string} errorMessage The error message associated with the ad sdk load failure
+   */
+  EVENT_DATA.LoadAdSdkFailureData = function(adPluginName, playerCoreVersion, errorMessage)
+  {
+    var checkLoadAdSdkFailureData = OO._.bind(checkDataType, this, "LoadAdSdkFailureData");
+    this.adPluginName = checkLoadAdSdkFailureData(adPluginName, "adPluginName", ["string"]);
+    this.playerCoreVersion = checkLoadAdSdkFailureData(playerCoreVersion, "playerCoreVersion", ["string"]);
+    this.errorMessage = checkLoadAdSdkFailureData(errorMessage, "errorMessage", ["string"]);
+  };
+
+  /**
+   * @private
+   * @class Analytics.EVENT_DATA#SdkAdEventData
+   * @classdesc Contains information about SDK Ad Event. This has been marked private because
+   * we do not want to expose this as a public event.
+   * @property {string} adPluginName The name of the ad plugin that sent this event
+   * @property {string} adEventName The name of this event from the ad plugin
+   * @property {object} adEventData An object containing details of the ad event. This may vary
+   *                               between ad plugin to ad plugin.
+   */
+  EVENT_DATA.SdkAdEventData = function(adPluginName, adEventName, adEventData)
+  {
+    var checkSdkAdEventData = OO._.bind(checkDataType, this, "SdkAdEventData");
+    this.adPluginName = checkSdkAdEventData(adPluginName, "adPluginName", ["string"]);
+    this.adEventName = checkSdkAdEventData(adEventName, "adEventName", ["string"]);
+    this.adEventData = checkSdkAdEventData(adEventData, "adEventData", ["object"]);
   };
 
   /**
@@ -27194,6 +31590,1981 @@ if (!OO.Analytics.UnregisterFrameworkInstance)
 
 },{}]},{},[4]);
 
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+if (!OO)
+{
+  OO = {};
+}
+
+},{}],2:[function(require,module,exports){
+require("./InitOO.js");
+
+if (!window._)
+{
+  window._ = require('underscore');
+}
+
+if (!OO._)
+{
+  OO._ = window._.noConflict();
+}
+
+},{"./InitOO.js":1,"underscore":6}],3:[function(require,module,exports){
+  (function(OO,_,$) {
+    OO.getRandomString = function() { return Math.random().toString(36).substring(7); };
+
+    OO.safeClone = function(source) {
+      if (_.isNumber(source) || _.isString(source) || _.isBoolean(source) || _.isFunction(source) ||
+          _.isNull(source) || _.isUndefined(source)) {
+        return source;
+      }
+      var result = (source instanceof Array) ? [] : {};
+      try {
+        $.extend(true, result, source);
+      } catch(e) { OO.log("deep clone error", e); }
+      return result;
+    };
+
+    OO.d = function() {
+      if (OO.isDebug) { OO.log.apply(OO, arguments); }
+      OO.$("#OOYALA_DEBUG_CONSOLE").append(JSON.stringify(OO.safeClone(arguments))+'<br>');
+    };
+
+    // Note: This inherit only for simple inheritance simulation, the Parennt class still has a this binding
+    // to the parent class. so any variable initiated in the Parent Constructor, will not be available to the
+    // Child Class, you need to copy paste constructor to Child Class to make it work.
+    // coffeescript is doing a better job here by binding the this context to child in the constructor.
+    // Until we switch to CoffeeScript, we need to be careful using this simplified inherit lib.
+    OO.inherit = function(ParentClass, myConstructor) {
+      if (typeof(ParentClass) !== "function") {
+        OO.log("invalid inherit, ParentClass need to be a class", ParentClass);
+        return null;
+      }
+      var SubClass = function() {
+        ParentClass.apply(this, arguments);
+        if (typeof(myConstructor) === "function") { myConstructor.apply(this, arguments); }
+      };
+      var parentClass = new ParentClass();
+      OO._.extend(SubClass.prototype, parentClass);
+      SubClass.prototype.parentClass = parentClass;
+      return SubClass;
+    };
+
+    var styles = {}; // keep track of all styles added so we can remove them later if destroy is called
+
+    OO.attachStyle = function(styleContent, playerId) {
+      var s = $('<style type="text/css">' + styleContent + '</style>').appendTo("head");
+      styles[playerId] = styles[playerId] || [];
+      styles[playerId].push(s);
+    };
+
+    OO.removeStyles = function(playerId) {
+      OO._.each(styles[playerId], function(style) {
+        style.remove();
+      });
+    };
+
+    // object: object to get the inner property for, ex. {"mod":{"fw":{"data":{"key":"val"}}}}
+    // keylist: list of keys to find, ex. ["mod", "fw", "data"]
+    // example output: {"key":"val"}
+    OO.getInnerProperty = function(object, keylist) {
+      var innerObject = object;
+      var list = keylist;
+      while (list.length > 0) {
+        var key = list.shift();
+        // Note that function and arrays are objects
+        if (_.isNull(innerObject) || !_.isObject(innerObject) ||
+            _.isFunction(innerObject) || _.isArray(innerObject))
+          return null;
+        innerObject = innerObject[key];
+      }
+      return innerObject;
+    }
+
+    OO.formatSeconds = function(timeInSeconds) {
+      var seconds = parseInt(timeInSeconds,10) % 60;
+      var hours = parseInt(timeInSeconds / 3600, 10);
+      var minutes = parseInt((timeInSeconds - hours * 3600) / 60, 10);
+
+
+      if (hours < 10) {
+        hours = '0' + hours;
+      }
+
+      if (minutes < 10) {
+        minutes = '0' + minutes;
+      }
+
+      if (seconds < 10) {
+        seconds = '0' + seconds;
+      }
+
+      return (parseInt(hours,10) > 0) ? (hours + ":" + minutes + ":" + seconds) : (minutes + ":" + seconds);
+    };
+
+    OO.timeStringToSeconds = function(timeString) {
+      var timeArray = (timeString || '').split(":");
+      return _.reduce(timeArray, function(m, s) { return m * 60 + parseInt(s, 10); }, 0);
+    };
+
+    OO.leftPadding = function(num, totalChars) {
+      var pad = '0';
+      var numString = num ? num.toString() : '';
+      while (numString.length < totalChars) {
+        numString = pad + numString;
+      }
+      return numString;
+    };
+
+    OO.getColorString = function(color) {
+      return '#' + (OO.leftPadding(color.toString(16), 6)).toUpperCase();
+    };
+
+    OO.hexToRgb = function(hex) {
+      var r = (hex & 0xFF0000) >> 16;
+      var g = (hex & 0xFF00) >> 8;
+      var b = (hex & 0xFF);
+      return [r, g, b];
+    };
+
+    OO.changeColor = function(color, ratio, darker) {
+      var minmax     = darker ? Math.max : Math.min;
+      var boundary = darker ? 0 : 255;
+      var difference = Math.round(ratio * 255) * (darker ? -1 : 1);
+      var rgb = OO.hexToRgb(color);
+      return [
+        OO.leftPadding(minmax(rgb[0] + difference, boundary).toString(16), 2),
+        OO.leftPadding(minmax(rgb[1] + difference, boundary).toString(16), 2),
+        OO.leftPadding(minmax(rgb[2] + difference, boundary).toString(16), 2)
+      ].join('');
+    };
+
+    OO.decode64 = function(s) {
+      s = s.replace(/\n/g,"");
+      var results = "";
+      var j, i = 0;
+      var enc = [];
+      var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+      //shortcut for browsers with atob
+      if (window.atob) {
+        return atob(s);
+      }
+
+      do {
+        for (j = 0; j < 4; j++) {
+          enc[j] = b64.indexOf(s.charAt(i++));
+        }
+        results += String.fromCharCode((enc[0] << 2) | (enc[1] >> 4),
+                                        enc[2] == 64 ? 0 : ((enc[1] & 15) << 4) | (enc[2] >> 2),
+                                        enc[3] == 64 ? 0 : ((enc[2] & 3) << 6) | enc[3]);
+      } while (i < s.length);
+
+      //trim tailing null characters
+      return results.replace(/\0/g, "");
+    };
+
+    OO.pixelPing = function (url) {
+      var img = new Image();
+      img.onerror = img.onabort = function() { OO.d("onerror:", url); };
+      img.src = OO.getNormalizedTagUrl(url);
+    };
+
+    // ping array of urls.
+    OO.pixelPings = function (urls) {
+        if (_.isEmpty(urls)) { return; }
+        _.each(urls, function(url) {
+          OO.pixelPing(url);
+        }, this);
+    };
+
+    // helper function to convert types to boolean
+    // the (!!) trick only works to verify if a string isn't the empty string
+    // therefore, we must use a special case for that
+    OO.stringToBoolean = function(value) {
+      if (typeof value === 'string')
+        return (value.toLowerCase().indexOf("true") > -1 || value.toLowerCase().indexOf("yes") > -1);
+      return !!value;
+    }
+
+    OO.regexEscape = function(value) {
+      var specials = /[<>()\[\]{}]/g;
+      return value.replace(specials, "\\$&");
+    };
+
+    OO.getNormalizedTagUrl = function (url, embedCode) {
+      var ts = new Date().getTime();
+      var pageUrl = escape(document.URL);
+
+      var placeHolderReplace = function (template, replaceValue) {
+        _.each(template, function (placeHolder) {
+          var regexSearchVal = new RegExp("(" +
+                                    OO.regexEscape(placeHolder) + ")", 'gi');
+          url = url.replace(regexSearchVal, replaceValue);
+        }, this);
+      }
+
+      // replace the timestamp and referrer_url placeholders
+      placeHolderReplace(OO.TEMPLATES.RANDOM_PLACE_HOLDER, ts);
+      placeHolderReplace(OO.TEMPLATES.REFERAK_PLACE_HOLDER, pageUrl);
+
+      // first make sure that the embedCode exists, then replace the
+      // oo_embedcode placeholder
+      if (embedCode) {
+        placeHolderReplace(OO.TEMPLATES.EMBED_CODE_PLACE_HOLDER, embedCode);
+      }
+      return url;
+    };
+
+    OO.safeSeekRange = function(seekRange) {
+      return {
+        start : seekRange.length > 0 ? seekRange.start(0) : 0,
+        end : seekRange.length > 0 ? seekRange.end(0) : 0
+      };
+    };
+
+    OO.loadedJS = OO.loadedJS || {};
+
+    OO.jsOnSuccessList = OO.jsOnSuccessList || {};
+
+    OO.safeFuncCall = function(fn) {
+      if (typeof fn !== "function") { return; }
+      try {
+        fn.apply();
+      } catch (e) {
+        OO.log("Can not invoke function!", e);
+      }
+    };
+
+    OO.loadScriptOnce = function(jsSrc, successCallBack, errorCallBack, timeoutInMillis) {
+      OO.jsOnSuccessList[jsSrc] = OO.jsOnSuccessList[jsSrc] || [];
+      if (OO.loadedJS[jsSrc]) {
+        // invoke call back directly if loaded.
+        if (OO.loadedJS[jsSrc] === "loaded") {
+          OO.safeFuncCall(successCallBack);
+        } else if (OO.loadedJS[jsSrc] === "loading") {
+          OO.jsOnSuccessList[jsSrc].unshift(successCallBack);
+        }
+        return false;
+      }
+      OO.loadedJS[jsSrc] = "loading";
+      $.ajax({
+        url: jsSrc,
+        type: 'GET',
+        cache: true,
+        dataType: 'script',
+        timeout: timeoutInMillis || 15000,
+        success: function() {
+          OO.loadedJS[jsSrc] = "loaded";
+          OO.jsOnSuccessList[jsSrc].unshift(successCallBack);
+          OO._.each(OO.jsOnSuccessList[jsSrc], function(fn) {
+            OO.safeFuncCall(fn);
+          }, this);
+          OO.jsOnSuccessList[jsSrc] = [];
+        },
+        error: function() {
+          OO.safeFuncCall(errorCallBack);
+        }
+      });
+      return true;
+    };
+
+    try {
+      OO.localStorage = window.localStorage;
+    } catch (err) {
+      OO.log(err);
+    }
+    if (!OO.localStorage) {
+      OO.localStorage = {
+        getItem: function (sKey) {
+          if (!sKey || !this.hasOwnProperty(sKey)) { return null; }
+          return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+        },
+        key: function (nKeyId) {
+          return unescape(document.cookie.replace(/\s*\=(?:.(?!;))*$/, "").split(/\s*\=(?:[^;](?!;))*[^;]?;\s*/)[nKeyId]);
+        },
+        setItem: function (sKey, sValue) {
+          if(!sKey) { return; }
+          document.cookie = escape(sKey) + "=" + escape(sValue) + "; expires=Tue, 19 Jan 2038 03:14:07 GMT; path=/";
+          this.length = document.cookie.match(/\=/g).length;
+        },
+        length: 0,
+        removeItem: function (sKey) {
+          if (!sKey || !this.hasOwnProperty(sKey)) { return; }
+          document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+          this.length--;
+        },
+        hasOwnProperty: function (sKey) {
+          return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+        }
+      };
+      OO.localStorage.length = (document.cookie.match(/\=/g) || OO.localStorage).length;
+    }
+
+    // A container to properly request OO.localStorage.setItem
+    OO.setItem = function (sKey, sValue) {
+      try {
+        OO.localStorage.setItem(sKey, sValue);
+      } catch (err) {
+        OO.log(err);
+      }
+    };
+
+    OO.JSON = window.JSON;
+
+  }(OO, OO._, OO.$));
+
+},{}],4:[function(require,module,exports){
+require("../../html5-common/js/utils/InitModules/InitOO.js");
+require("../../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+
+if (!OO.Analytics)
+{
+  OO.Analytics = {};
+}
+
+if (!OO.Analytics.FrameworkInstanceList)
+{
+  OO.Analytics.FrameworkInstanceList = [];
+}
+
+if (!OO.Analytics.PluginFactoryList)
+{
+  OO.Analytics.PluginFactoryList = [];
+}
+
+if (!OO.Analytics.RegisterPluginFactory)
+{
+  /**
+   * Registers a plugin factory in a global list of factories and then
+   * registers the factory with any existing framework instances.
+   * @public
+   * @method OO.Analytics.Framework#RegisterPluginFactory
+   * @param  {object} factory The factory creation function
+   */
+  OO.Analytics.RegisterPluginFactory = function(factory)
+  {
+    //Add plugin to the factory list.
+    OO.Analytics.PluginFactoryList.push(factory);
+
+    //Register this plugin with any existing frameworks.
+    if (OO.Analytics.FrameworkInstanceList && OO.Analytics.FrameworkInstanceList.length)
+    {
+      for(var i = 0; i < OO.Analytics.FrameworkInstanceList.length; i++)
+      {
+        OO.Analytics.FrameworkInstanceList[i].registerPluginFactory(factory);
+      }
+    }
+  }
+}
+
+
+if (!OO.Analytics.FrameworkRegistrationObject)
+{
+  /**
+   * @class FrameworkRegistrationObject
+   * @classdesc This class wraps a framework object to only expose
+   * registerPluginFactory.  It will be used to let plugins register to frameworks
+   * at the global scope. Please note that this class is not important to analytics plugins. You only need to use this class if you're creating your own version of the Analytics Framework.
+   * @public
+   * @param  {object} framework Analytics framework instance
+   */
+  OO.Analytics.FrameworkRegistrationObject = function(framework)
+  {
+    this.registerPluginFactory = function(pluginFactory)
+    {
+      framework.registerPlugin(pluginFactory);
+    }
+  }
+}
+
+
+if (!OO.Analytics.RegisterFrameworkInstance)
+{
+  /**
+   * Registers a framework instance in a global list of frameworks and then
+   * register any plugin factory that are in the global plugin factory list.
+   * @public
+   * @method OO.Analytics.Framework#RegisterFrameworkInstance
+   * @param  {object} framework Instance of the framework to register
+   */
+  OO.Analytics.RegisterFrameworkInstance = function(framework)
+  {
+    var frameworkRegistrationObject = new OO.Analytics.FrameworkRegistrationObject(framework);
+    framework.frameworkRegistrationObject = frameworkRegistrationObject;
+    OO.Analytics.FrameworkInstanceList.push(frameworkRegistrationObject);
+
+    //check to see if any plugin factories already existed and register them to this plugin.
+    if (OO._.isArray(OO.Analytics.PluginFactoryList) && OO.Analytics.PluginFactoryList.length > 0)
+    {
+      for (var i = 0; i < OO.Analytics.PluginFactoryList.length; i++)
+      {
+        framework.registerPlugin(OO.Analytics.PluginFactoryList[i]);
+      }
+    }
+  }
+}
+
+if (!OO.Analytics.UnregisterFrameworkInstance)
+{
+  /**
+   * Remove a framework instance from the global list of instance. You must have
+   * a reference to the FrameworkRegistrationObject from that framework to remove it.
+   * This is meant for framework instances to remove themselves from the list only.
+   * @public
+   * @method OO.Analytics.Framework#UnregisterFrameworkInstance
+   * @param  {object} framework Instance of the FrameworkRegistrationObject created when framework instance was registered
+   */
+  OO.Analytics.UnregisterFrameworkInstance = function(framework)
+  {
+    if (framework)
+    {
+      var regObj = framework.frameworkRegistrationObject;
+      if (regObj)
+      {
+        OO.Analytics.FrameworkInstanceList = OO._.without(OO.Analytics.FrameworkInstanceList, regObj);
+      }
+    }
+  }
+}
+
+},{"../../html5-common/js/utils/InitModules/InitOO.js":1,"../../html5-common/js/utils/InitModules/InitOOUnderscore.js":2}],5:[function(require,module,exports){
+require("../framework/InitAnalyticsNamespace.js");
+require("../../html5-common/js/utils/utils.js");
+
+/**
+ * @class IqPlugin
+ * @classdesc Ooyala IQ analytics.js plugin that works with the Ooyala Analytics Framework.
+ * @param {object} framework The Analytics Framework instance
+ */
+var IqPlugin= function (framework)
+{
+  var _framework = framework;
+  var name = "iq";
+  var version = "v1";
+  var id;
+
+  var SDK_LOAD_TIMEOUT = 3000;
+
+  var autoPlay = null;
+  var pcode = null;
+  var playerId = null;
+  var currentEmbedCode = null;
+  var contentType = "ooyala";
+  var currentPlayheadPosition = null;
+  var iqEnabled = false;
+
+  this.ooyalaReporter = null;
+  this.testMode = false;
+
+  /**
+   * [Required Function] Return the name of the plugin.
+   * @public
+   * @method IqPlugin#getName
+   * @return {string} The name of the plugin.
+   */
+  this.getName = function ()
+  {
+    return name;
+  };
+
+  /**
+   * [Required Function] Return the version string of the plugin.
+   * @public
+   * @method IqPlugin#getVersion
+   * @return {string} The version of the plugin.
+   */
+  this.getVersion = function ()
+  {
+    return version;
+  };
+
+  /**
+   * Return the autoPlay value.
+   * @public
+   * @method IqPlugin@getAutoPlay
+   * @return {boolean} The value of autoPlay.
+   */
+  this.getAutoPlay = function()
+  {
+    return autoPlay;
+  };
+
+  /**
+   * Return the iqEnabled value.
+   * @public
+   * @method IqPlugin@getIqEnabled
+   * @return {boolean} The value of iqEnabled.
+   */
+  this.getIqEnabled = function()
+  {
+    return iqEnabled;
+  };
+
+  /**
+   * [Required Function] Set the plugin id given by the Analytics Framework when
+   * this plugin is registered.
+   * @public
+   * @method IqPlugin#setPluginID
+   * @param  {string} newID The plugin id
+   */
+  this.setPluginID = function(newID)
+  {
+    id = newID;
+  };
+
+  /**
+   * [Required Function] Returns the stored plugin id, given by the Analytics Framework.
+   * @public
+   * @method IqPlugin#setPluginID
+   * @return  {string} The pluginID assigned to this instance from the Analytics Framework.
+   */
+  this.getPluginID = function()
+  {
+    return id;
+  };
+
+  /**
+   * [Required Function] Initialize the plugin with the given metadata.
+   * @public
+   * @method IqPlugin#init
+   */
+  this.init = function()
+  {
+    if (this.testMode)
+    {
+      trySetupAnalytics();
+    }
+    else if (!this.ooyalaReporter)
+    {
+      OO.loadScriptOnce("//analytics.ooyala.com/static/v3/analytics.js", trySetupAnalytics, sdkLoadError, SDK_LOAD_TIMEOUT);
+    }
+  };
+
+  /**
+   * [Required Function] Set the metadata for this plugin.
+   * @public
+   * @method IqPlugin#setMetadata
+   * @param  {object} metadata The metadata for this plugin
+   */
+  this.setMetadata = function(metadata)
+  {
+    if (metadata && metadata.metadata){
+      if(metadata.metadata.enabled != null){
+        iqEnabled = metadata.metadata.enabled;
+      }
+    }
+    OO.log( "Analytics Template: PluginID \'" + id + "\' received this metadata:", metadata);
+  };
+
+  /**
+   * [Required Function] Process an event from the Analytics Framework, with the given parameters.
+   * @public
+   * @method IqPlugin#processEvent
+   * @param  {string} eventName Name of the event
+   * @param  {Array} params     Array of parameters sent with the event
+   */
+  this.processEvent = function(eventName, params)
+  {
+    OO.log( "IQ: PluginID \'" + id + "\' received this event \'" + eventName + "\' with these params:", params);
+    //Need to always check this event to see if we can enable analytics.js reporting.
+    //OO.EVENTS.METADATA_FETCHED -> OO.Analytics.EVENTS.VIDEO_STREAM_METADATA_UPDATED.
+    if (eventName === OO.Analytics.EVENTS.VIDEO_STREAM_METADATA_UPDATED)
+    {
+      if (params && params[0]){
+        modules = params[0].modules;
+        if (modules)
+        {
+          this.setMetadata(modules.iq);
+        }
+      }
+      OO.log( "Analytics Template: PluginID \'" + id + "\' received this event \'" + eventName + "\' with these params:", params);
+      return;
+    }
+
+    if (!iqEnabled)
+    {
+      return;
+    }
+
+    switch(eventName)
+    {
+      //OO.EVENTS.CONTENT_TREE_FETCHED -> OO.Analytics.EVENTS.VIDEO_CONTENT_METADATA_UPDATED.
+      case OO.Analytics.EVENTS.VIDEO_CONTENT_METADATA_UPDATED:
+        if (params && params[0])
+        {
+          duration = params[0].duration;
+          if (this.ooyalaReporter)
+          {
+            this.ooyalaReporter.initializeMedia(currentEmbedCode, contentType);
+            OO.log("IQ: Reported: initializeMedia() with args: " + currentEmbedCode + ", " + contentType);
+            this.ooyalaReporter.setMediaDuration(duration);
+            OO.log("IQ: Reported: setMediaDuration() with args: " + duration);
+          }
+          else
+          {
+            OO.log("Tried reporting event: " + OO.Analytics.EVENTS.VIDEO_CONTENT_METADATA_UPDATED +
+                   " but ooyalaReporter is: " + this.ooyalaReporter);
+          }
+        }
+        break;
+      //OO.EVENTS.EMBED_CODE_CHANGED -> OO.Analytics.EVENTS.VIDEO_SOURCE_CHANGED.
+      case OO.Analytics.EVENTS.VIDEO_SOURCE_CHANGED:
+        if (params && params[0] && params[0].metadata)
+        {
+          //autoPlay = params[0].metadata.autoPlay;
+          currentEmbedCode = params[0].embedCode;
+        }
+        break;
+      //OO.EVENTS.PLAYER_CREATED -> OO.Analytics.EVENTS.VIDEO_PLAYER_CREATED
+      case OO.Analytics.EVENTS.VIDEO_PLAYER_CREATED:
+        if (params && params[0] && params[0].params)
+        {
+          eventParams = params[0];
+          pcode = eventParams.params.pcode;
+          playerId = eventParams.params.playerBrandingId;
+          eventMetadata = {};
+          eventMetadata.playerCoreVersion = eventParams.playerCoreVersion;
+          eventMetadata.pcode = pcode;
+          eventMetadata.params = eventParams.params;
+          eventMetadata.embedCode = eventParams.embedCode;
+          eventMetadata.playerUrl = eventParams.playerUrl;
+
+          if (this.ooyalaReporter)
+          {
+            this.ooyalaReporter._base.pcode = pcode;
+            OO.log("IQ: Reported: reportCustomEvent() for event: " + eventName + " with args:" + JSON.stringify(eventMetadata));
+            this.ooyalaReporter.reportCustomEvent(eventName, eventMetadata);
+            /* TODO: disable for now as this is already reported by reporter.js in core */
+            //this.ooyalaReporter.reportPlayerLoad();
+            //OO.log("IQ: Reported: reportPlayerLoad()");
+          }
+          else
+          {
+            OO.log("IQ: Tried reporting event: " + OO.Analytics.EVENTS.VIDEO_PLAYER_CREATED +
+                   " but ooyalaReporter is: " + this.ooyalaReporter);
+          }
+        }
+        break;
+      //OO.EVENTS.INITIAL_PLAY -> OO.Analytics.EVENTS.VIDEO_PLAY_REQUESTED.
+      case OO.Analytics.EVENTS.INITIAL_PLAYBACK_REQUESTED:
+        /* TODO: disable for now as this is already reported by reporter.js in core */
+        //OO.log("IQ: Reported: reportPlayRequested() with args: " + autoPlay);
+        //this.ooyalaReporter.reportPlayRequested(autoPlay);
+        break;
+      //OO.EVENTS.PLAYHEAD_TIME_CHANGED -> OO.Analytics.EVENTS.VIDEO_STREAM_POSITION_CHANGED.
+      case OO.Analytics.EVENTS.VIDEO_STREAM_POSITION_CHANGED:
+        if (params && params[0])
+        {
+          currentPlayheadPosition = params[0].streamPosition;
+          if (currentPlayheadPosition > 0)
+          {
+            if (this.ooyalaReporter)
+            {
+              /* TODO: disable for now as this is already reported by reporter.js in core */
+              //var currentPlayheadPositionMilli = currentPlayheadPosition * 1000;
+              //this.ooyalaReporter.reportPlayHeadUpdate(currentPlayheadPositionMilli);
+              //OO.log("IQ: Reported: reportPlayHeadUpdate() with args: " + Math.floor(currentPlayheadPosition * 1000));
+            }
+            else
+            {
+              OO.log("IQ: Tried reporting event: " + OO.Analytics.EVENTS.VIDEO_STREAM_POSITION_CHANGED +
+                     " but ooyalaReporter is: " + this.ooyalaReporter);
+            }
+          }
+        }
+        break;
+      //OO.EVENTS.PAUSED -> OO.Analytics.EVENTS.VIDEO_PAUSED.
+      case OO.Analytics.EVENTS.VIDEO_PAUSED:
+        if (this.ooyalaReporter)
+        {
+          this.ooyalaReporter.reportPause();
+          OO.log("IQ: Reported: reportPause()");
+        }
+        else
+        {
+          OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+        }
+        break;
+      // TODO: use for resume?
+      //OO.EVENTS.PLAYING -> OO.Analytics.EVENTS.VIDEO_PLAYING.
+      case OO.Analytics.EVENTS.VIDEO_PLAYING:
+        if (this.ooyalaReporter)
+        {
+          this.ooyalaReporter.reportResume();
+          OO.log("IQ: Reported: reportResume()");
+        }
+        else
+        {
+          OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+        }
+        break;
+      //OO.EVENTS.SEEKED -> OO.Analytics.EVENTS.VIDEO_SEEK_COMPLETED.
+      case OO.Analytics.EVENTS.VIDEO_SEEK_COMPLETED:
+        if (params && params[0])
+        {
+          if (this.ooyalaReporter)
+          {
+            var seekedPlayheadPosition = params[0].timeSeekedTo;
+            var seekedPlayheadPositionMilli = seekedPlayheadPosition * 1000;
+            var currentPlayheadPositionMilli = currentPlayheadPosition * 1000;
+            this.ooyalaReporter.reportSeek(currentPlayheadPositionMilli, seekedPlayheadPositionMilli);
+            OO.log("IQ: Reported: reportSeek() with args: " + currentPlayheadPositionMilli + ", " + seekedPlayheadPositionMilli);
+          }
+          else
+          {
+            OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+          }
+        }
+        break;
+      //OO.EVENTS.PLAYED -> OO.Analytics.EVENTS.PLAYBACK_COMPLETED.
+      case OO.Analytics.EVENTS.PLAYBACK_COMPLETED:
+        if (this.ooyalaReporter)
+        {
+          this.ooyalaReporter.reportComplete();
+          OO.log("IQ: Reported: reportComplete()");
+        }
+        else
+        {
+          OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+        }
+        break;
+      //OO.EVENTS.REPLAY -> OO.Analytics.EVENTS.VIDEO_REPLAY_REQUESTED.
+      case OO.Analytics.EVENTS.VIDEO_REPLAY_REQUESTED:
+        if (this.ooyalaReporter)
+        {
+          this.ooyalaReporter.reportReplay();
+          OO.log("IQ: Reported: reportReplay()");
+        }
+        else
+        {
+          OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+        }
+        break;
+      //OO.EVENTS.BUFFERING -> OO.Analytics.EVENTS.VIDEO_BUFFERING_STARTED.
+      case OO.Analytics.EVENTS.VIDEO_BUFFERING_STARTED:
+
+        if (params && params[0] )
+        {
+          if (this.ooyalaReporter)
+          {
+
+            eventParams = params[0];
+            eventMetadata = {};
+            eventMetadata.qosEventName = eventName;
+            eventMetadata.position = eventParams.position;
+            OO.log("IQ: Reported: reportCustomEvent() for event: " + eventName + " with args:" + JSON.stringify(eventMetadata));
+            this.ooyalaReporter.reportCustomEvent(eventName, eventMetadata);
+          }
+          else
+          {
+            OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+          }
+        }
+        break;
+      case OO.Analytics.EVENTS.INITIAL_PLAY_STARTING:
+      case OO.Analytics.EVENTS.PLAYBACK_READY:
+      case OO.Analytics.EVENTS.API_ERROR:
+      case OO.Analytics.EVENTS.BITRATE_INITIAL:
+      case OO.Analytics.EVENTS.BITRATE_FIVE_SEC:
+      case OO.Analytics.EVENTS.BITRATE_STABLE:
+      case OO.Analytics.EVENTS.PLAYBACK_START_ERROR:
+      case OO.Analytics.EVENTS.PLAYBACK_MIDSTREAM_ERROR:
+      case OO.Analytics.EVENTS.PLUGIN_LOADED:
+        if (params && params[0])
+        {
+          if (this.ooyalaReporter)
+          {
+            eventMetadata = params[0];
+            eventMetadata.qosEventName = eventName;
+            OO.log("IQ: Reported: reportCustomEvent() for event: " + eventName + " with args:" + JSON.stringify(eventMetadata));
+            this.ooyalaReporter.reportCustomEvent(eventName, eventMetadata);
+          }
+          else
+          {
+            OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+          }
+        }
+        break;
+      case OO.Analytics.EVENTS.AD_REQUEST:
+      case OO.Analytics.EVENTS.AD_REQUEST_SUCCESS:
+      case OO.Analytics.EVENTS.AD_SDK_LOADED:
+      case OO.Analytics.EVENTS.AD_SDK_LOAD_FAILURE:
+      case OO.Analytics.EVENTS.AD_BREAK_STARTED:
+      case OO.Analytics.EVENTS.AD_BREAK_ENDED:
+      case OO.Analytics.EVENTS.AD_POD_STARTED:
+      case OO.Analytics.EVENTS.AD_POD_ENDED:
+      case OO.Analytics.EVENTS.AD_STARTED:
+      case OO.Analytics.EVENTS.AD_ENDED:
+      case OO.Analytics.EVENTS.AD_SKIPPED:
+      case OO.Analytics.EVENTS.AD_ERROR:
+      case OO.Analytics.EVENTS.AD_REQUEST_EMPTY:
+      case OO.Analytics.EVENTS.AD_REQUEST_ERROR:
+      case OO.Analytics.EVENTS.AD_PLAYBACK_ERROR:
+      case OO.Analytics.EVENTS.AD_IMPRESSION:
+      case OO.Analytics.EVENTS.AD_SDK_IMPRESSION:
+      case OO.Analytics.EVENTS.AD_COMPLETED:
+      case OO.Analytics.EVENTS.AD_CLICKTHROUGH_OPENED:
+      case OO.Analytics.EVENTS.SDK_AD_EVENT:
+        if (!params || !params[0])
+        {
+          params = [];
+        }
+        if (this.ooyalaReporter)
+        {
+          var eventMetadata = params[0];
+          if(!eventMetadata)
+          {
+            eventMetadata = {};
+          }
+
+          if (eventMetadata.adEventName)
+          {
+            eventMetadata.adEventName = eventName + ":" + eventMetadata.adEventName;
+          }
+          else
+          {
+            eventMetadata.adEventName = eventName;
+          }
+          this.ooyalaReporter.reportCustomEvent(eventName, eventMetadata);
+          OO.log("IQ: Reported: reportCustomEvent() for event: " + eventName + " with args:" + JSON.stringify(eventMetadata));
+        }
+        else
+        {
+          OO.log("IQ: Tried reporting event: " + eventName + " but ooyalaReporter is: " + this.ooyalaReporter);
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  /**
+   * [Required Function] Clean up this plugin so the garbage collector can clear it out.
+   * @public
+   * @method IqPlugin#destroy
+   */
+  this.destroy = function ()
+  {
+    _framework = null;
+  };
+
+  /**
+   * Called when the SDK fails to load.
+   * @private
+   * @method NielsenAnalyticsPlugin#sdkLoadError
+   */
+  var sdkLoadError = function()
+  {
+    //Destroy and unregister
+    if (_.isString(id))
+    {
+      framework.unregisterPlugin(id);
+    }
+    this.destroy();
+  };
+
+  var trySetupAnalytics = OO._.bind(function()
+  {
+    if (window.Ooyala)
+    {
+      this.ooyalaReporter = new Ooyala.Analytics.Reporter();
+
+      var missedEvents;
+      //if you need to process missed events, here is an example
+      if (_framework && OO._.isFunction(_framework.getRecordedEvents))
+      {
+        missedEvents = _framework.getRecordedEvents();
+        for (var i = 0; i < missedEvents.length; i++)
+        {
+          recordedEvent = missedEvents[i];
+          this.processEvent(recordedEvent.eventName, recordedEvent.params);
+        }
+      }
+
+      // TODO: setup
+      var deviceInfo = {};
+      var playerName = "Ooyala Player";
+      var playerVersion = OO.VERSION.core.releaseVersion;  // TODO: need a mechanism in core to get this
+      this.ooyalaReporter.setDeviceInfo();
+      this.ooyalaReporter.setPlayerInfo(playerId, playerName, playerVersion);
+    }
+    else
+    {
+      OO.log("IQ Plugin: Analytics SDK not loaded");
+    }
+  }, this);
+};
+
+//Add the template to the global list of factories for all new instances of the framework
+//and register the template with all current instance of the framework.
+OO.Analytics.RegisterPluginFactory(IqPlugin);
+
+module.exports = IqPlugin;
+
+},{"../../html5-common/js/utils/utils.js":3,"../framework/InitAnalyticsNamespace.js":4}],6:[function(require,module,exports){
+//     Underscore.js 1.3.3
+//     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+//     Underscore is freely distributable under the MIT license.
+//     Portions of Underscore are inspired or borrowed from Prototype,
+//     Oliver Steele's Functional, and John Resig's Micro-Templating.
+//     For all details and documentation:
+//     http://documentcloud.github.com/underscore
+
+(function() {
+
+  // Baseline setup
+  // --------------
+
+  // Establish the root object, `window` in the browser, or `global` on the server.
+  var root = this;
+
+  // Save the previous value of the `_` variable.
+  var previousUnderscore = root._;
+
+  // Establish the object that gets returned to break out of a loop iteration.
+  var breaker = {};
+
+  // Save bytes in the minified (but not gzipped) version:
+  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
+
+  // Create quick reference variables for speed access to core prototypes.
+  var slice            = ArrayProto.slice,
+      unshift          = ArrayProto.unshift,
+      toString         = ObjProto.toString,
+      hasOwnProperty   = ObjProto.hasOwnProperty;
+
+  // All **ECMAScript 5** native function implementations that we hope to use
+  // are declared here.
+  var
+    nativeForEach      = ArrayProto.forEach,
+    nativeMap          = ArrayProto.map,
+    nativeReduce       = ArrayProto.reduce,
+    nativeReduceRight  = ArrayProto.reduceRight,
+    nativeFilter       = ArrayProto.filter,
+    nativeEvery        = ArrayProto.every,
+    nativeSome         = ArrayProto.some,
+    nativeIndexOf      = ArrayProto.indexOf,
+    nativeLastIndexOf  = ArrayProto.lastIndexOf,
+    nativeIsArray      = Array.isArray,
+    nativeKeys         = Object.keys,
+    nativeBind         = FuncProto.bind;
+
+  // Create a safe reference to the Underscore object for use below.
+  var _ = function(obj) { return new wrapper(obj); };
+
+  // Export the Underscore object for **Node.js**, with
+  // backwards-compatibility for the old `require()` API. If we're in
+  // the browser, add `_` as a global object via a string identifier,
+  // for Closure Compiler "advanced" mode.
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = _;
+    }
+    exports._ = _;
+  } else {
+    root['_'] = _;
+  }
+
+  // Current version.
+  _.VERSION = '1.3.3';
+
+  // Collection Functions
+  // --------------------
+
+  // The cornerstone, an `each` implementation, aka `forEach`.
+  // Handles objects with the built-in `forEach`, arrays, and raw objects.
+  // Delegates to **ECMAScript 5**'s native `forEach` if available.
+  var each = _.each = _.forEach = function(obj, iterator, context) {
+    if (obj == null) return;
+    if (nativeForEach && obj.forEach === nativeForEach) {
+      obj.forEach(iterator, context);
+    } else if (obj.length === +obj.length) {
+      for (var i = 0, l = obj.length; i < l; i++) {
+        if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
+      }
+    } else {
+      for (var key in obj) {
+        if (_.has(obj, key)) {
+          if (iterator.call(context, obj[key], key, obj) === breaker) return;
+        }
+      }
+    }
+  };
+
+  // Return the results of applying the iterator to each element.
+  // Delegates to **ECMAScript 5**'s native `map` if available.
+  _.map = _.collect = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+    each(obj, function(value, index, list) {
+      results[results.length] = iterator.call(context, value, index, list);
+    });
+    if (obj.length === +obj.length) results.length = obj.length;
+    return results;
+  };
+
+  // **Reduce** builds up a single result from a list of values, aka `inject`,
+  // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
+  _.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
+    if (obj == null) obj = [];
+    if (nativeReduce && obj.reduce === nativeReduce) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
+    }
+    each(obj, function(value, index, list) {
+      if (!initial) {
+        memo = value;
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, value, index, list);
+      }
+    });
+    if (!initial) throw new TypeError('Reduce of empty array with no initial value');
+    return memo;
+  };
+
+  // The right-associative version of reduce, also known as `foldr`.
+  // Delegates to **ECMAScript 5**'s native `reduceRight` if available.
+  _.reduceRight = _.foldr = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
+    if (obj == null) obj = [];
+    if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
+    }
+    var reversed = _.toArray(obj).reverse();
+    if (context && !initial) iterator = _.bind(iterator, context);
+    return initial ? _.reduce(reversed, iterator, memo, context) : _.reduce(reversed, iterator);
+  };
+
+  // Return the first value which passes a truth test. Aliased as `detect`.
+  _.find = _.detect = function(obj, iterator, context) {
+    var result;
+    any(obj, function(value, index, list) {
+      if (iterator.call(context, value, index, list)) {
+        result = value;
+        return true;
+      }
+    });
+    return result;
+  };
+
+  // Return all the elements that pass a truth test.
+  // Delegates to **ECMAScript 5**'s native `filter` if available.
+  // Aliased as `select`.
+  _.filter = _.select = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
+    each(obj, function(value, index, list) {
+      if (iterator.call(context, value, index, list)) results[results.length] = value;
+    });
+    return results;
+  };
+
+  // Return all the elements for which a truth test fails.
+  _.reject = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    each(obj, function(value, index, list) {
+      if (!iterator.call(context, value, index, list)) results[results.length] = value;
+    });
+    return results;
+  };
+
+  // Determine whether all of the elements match a truth test.
+  // Delegates to **ECMAScript 5**'s native `every` if available.
+  // Aliased as `all`.
+  _.every = _.all = function(obj, iterator, context) {
+    var result = true;
+    if (obj == null) return result;
+    if (nativeEvery && obj.every === nativeEvery) return obj.every(iterator, context);
+    each(obj, function(value, index, list) {
+      if (!(result = result && iterator.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  };
+
+  // Determine if at least one element in the object matches a truth test.
+  // Delegates to **ECMAScript 5**'s native `some` if available.
+  // Aliased as `any`.
+  var any = _.some = _.any = function(obj, iterator, context) {
+    iterator || (iterator = _.identity);
+    var result = false;
+    if (obj == null) return result;
+    if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
+    each(obj, function(value, index, list) {
+      if (result || (result = iterator.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  };
+
+  // Determine if a given value is included in the array or object using `===`.
+  // Aliased as `contains`.
+  _.include = _.contains = function(obj, target) {
+    var found = false;
+    if (obj == null) return found;
+    if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+    found = any(obj, function(value) {
+      return value === target;
+    });
+    return found;
+  };
+
+  // Invoke a method (with arguments) on every item in a collection.
+  _.invoke = function(obj, method) {
+    var args = slice.call(arguments, 2);
+    return _.map(obj, function(value) {
+      return (_.isFunction(method) ? method || value : value[method]).apply(value, args);
+    });
+  };
+
+  // Convenience version of a common use case of `map`: fetching a property.
+  _.pluck = function(obj, key) {
+    return _.map(obj, function(value){ return value[key]; });
+  };
+
+  // Return the maximum element or (element-based computation).
+  _.max = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0]) return Math.max.apply(Math, obj);
+    if (!iterator && _.isEmpty(obj)) return -Infinity;
+    var result = {computed : -Infinity};
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      computed >= result.computed && (result = {value : value, computed : computed});
+    });
+    return result.value;
+  };
+
+  // Return the minimum element (or element-based computation).
+  _.min = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0]) return Math.min.apply(Math, obj);
+    if (!iterator && _.isEmpty(obj)) return Infinity;
+    var result = {computed : Infinity};
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      computed < result.computed && (result = {value : value, computed : computed});
+    });
+    return result.value;
+  };
+
+  // Shuffle an array.
+  _.shuffle = function(obj) {
+    var shuffled = [], rand;
+    each(obj, function(value, index, list) {
+      rand = Math.floor(Math.random() * (index + 1));
+      shuffled[index] = shuffled[rand];
+      shuffled[rand] = value;
+    });
+    return shuffled;
+  };
+
+  // Sort the object's values by a criterion produced by an iterator.
+  _.sortBy = function(obj, val, context) {
+    var iterator = _.isFunction(val) ? val : function(obj) { return obj[val]; };
+    return _.pluck(_.map(obj, function(value, index, list) {
+      return {
+        value : value,
+        criteria : iterator.call(context, value, index, list)
+      };
+    }).sort(function(left, right) {
+      var a = left.criteria, b = right.criteria;
+      if (a === void 0) return 1;
+      if (b === void 0) return -1;
+      return a < b ? -1 : a > b ? 1 : 0;
+    }), 'value');
+  };
+
+  // Groups the object's values by a criterion. Pass either a string attribute
+  // to group by, or a function that returns the criterion.
+  _.groupBy = function(obj, val) {
+    var result = {};
+    var iterator = _.isFunction(val) ? val : function(obj) { return obj[val]; };
+    each(obj, function(value, index) {
+      var key = iterator(value, index);
+      (result[key] || (result[key] = [])).push(value);
+    });
+    return result;
+  };
+
+  // Use a comparator function to figure out at what index an object should
+  // be inserted so as to maintain order. Uses binary search.
+  _.sortedIndex = function(array, obj, iterator) {
+    iterator || (iterator = _.identity);
+    var low = 0, high = array.length;
+    while (low < high) {
+      var mid = (low + high) >> 1;
+      iterator(array[mid]) < iterator(obj) ? low = mid + 1 : high = mid;
+    }
+    return low;
+  };
+
+  // Safely convert anything iterable into a real, live array.
+  _.toArray = function(obj) {
+    if (!obj)                                     return [];
+    if (_.isArray(obj))                           return slice.call(obj);
+    if (_.isArguments(obj))                       return slice.call(obj);
+    if (obj.toArray && _.isFunction(obj.toArray)) return obj.toArray();
+    return _.values(obj);
+  };
+
+  // Return the number of elements in an object.
+  _.size = function(obj) {
+    return _.isArray(obj) ? obj.length : _.keys(obj).length;
+  };
+
+  // Array Functions
+  // ---------------
+
+  // Get the first element of an array. Passing **n** will return the first N
+  // values in the array. Aliased as `head` and `take`. The **guard** check
+  // allows it to work with `_.map`.
+  _.first = _.head = _.take = function(array, n, guard) {
+    return (n != null) && !guard ? slice.call(array, 0, n) : array[0];
+  };
+
+  // Returns everything but the last entry of the array. Especcialy useful on
+  // the arguments object. Passing **n** will return all the values in
+  // the array, excluding the last N. The **guard** check allows it to work with
+  // `_.map`.
+  _.initial = function(array, n, guard) {
+    return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
+  };
+
+  // Get the last element of an array. Passing **n** will return the last N
+  // values in the array. The **guard** check allows it to work with `_.map`.
+  _.last = function(array, n, guard) {
+    if ((n != null) && !guard) {
+      return slice.call(array, Math.max(array.length - n, 0));
+    } else {
+      return array[array.length - 1];
+    }
+  };
+
+  // Returns everything but the first entry of the array. Aliased as `tail`.
+  // Especially useful on the arguments object. Passing an **index** will return
+  // the rest of the values in the array from that index onward. The **guard**
+  // check allows it to work with `_.map`.
+  _.rest = _.tail = function(array, index, guard) {
+    return slice.call(array, (index == null) || guard ? 1 : index);
+  };
+
+  // Trim out all falsy values from an array.
+  _.compact = function(array) {
+    return _.filter(array, function(value){ return !!value; });
+  };
+
+  // Return a completely flattened version of an array.
+  _.flatten = function(array, shallow) {
+    return _.reduce(array, function(memo, value) {
+      if (_.isArray(value)) return memo.concat(shallow ? value : _.flatten(value));
+      memo[memo.length] = value;
+      return memo;
+    }, []);
+  };
+
+  // Return a version of the array that does not contain the specified value(s).
+  _.without = function(array) {
+    return _.difference(array, slice.call(arguments, 1));
+  };
+
+  // Produce a duplicate-free version of the array. If the array has already
+  // been sorted, you have the option of using a faster algorithm.
+  // Aliased as `unique`.
+  _.uniq = _.unique = function(array, isSorted, iterator) {
+    var initial = iterator ? _.map(array, iterator) : array;
+    var results = [];
+    // The `isSorted` flag is irrelevant if the array only contains two elements.
+    if (array.length < 3) isSorted = true;
+    _.reduce(initial, function (memo, value, index) {
+      if (isSorted ? _.last(memo) !== value || !memo.length : !_.include(memo, value)) {
+        memo.push(value);
+        results.push(array[index]);
+      }
+      return memo;
+    }, []);
+    return results;
+  };
+
+  // Produce an array that contains the union: each distinct element from all of
+  // the passed-in arrays.
+  _.union = function() {
+    return _.uniq(_.flatten(arguments, true));
+  };
+
+  // Produce an array that contains every item shared between all the
+  // passed-in arrays. (Aliased as "intersect" for back-compat.)
+  _.intersection = _.intersect = function(array) {
+    var rest = slice.call(arguments, 1);
+    return _.filter(_.uniq(array), function(item) {
+      return _.every(rest, function(other) {
+        return _.indexOf(other, item) >= 0;
+      });
+    });
+  };
+
+  // Take the difference between one array and a number of other arrays.
+  // Only the elements present in just the first array will remain.
+  _.difference = function(array) {
+    var rest = _.flatten(slice.call(arguments, 1), true);
+    return _.filter(array, function(value){ return !_.include(rest, value); });
+  };
+
+  // Zip together multiple lists into a single array -- elements that share
+  // an index go together.
+  _.zip = function() {
+    var args = slice.call(arguments);
+    var length = _.max(_.pluck(args, 'length'));
+    var results = new Array(length);
+    for (var i = 0; i < length; i++) results[i] = _.pluck(args, "" + i);
+    return results;
+  };
+
+  // If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
+  // we need this function. Return the position of the first occurrence of an
+  // item in an array, or -1 if the item is not included in the array.
+  // Delegates to **ECMAScript 5**'s native `indexOf` if available.
+  // If the array is large and already in sort order, pass `true`
+  // for **isSorted** to use binary search.
+  _.indexOf = function(array, item, isSorted) {
+    if (array == null) return -1;
+    var i, l;
+    if (isSorted) {
+      i = _.sortedIndex(array, item);
+      return array[i] === item ? i : -1;
+    }
+    if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item);
+    for (i = 0, l = array.length; i < l; i++) if (i in array && array[i] === item) return i;
+    return -1;
+  };
+
+  // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
+  _.lastIndexOf = function(array, item) {
+    if (array == null) return -1;
+    if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) return array.lastIndexOf(item);
+    var i = array.length;
+    while (i--) if (i in array && array[i] === item) return i;
+    return -1;
+  };
+
+  // Generate an integer Array containing an arithmetic progression. A port of
+  // the native Python `range()` function. See
+  // [the Python documentation](http://docs.python.org/library/functions.html#range).
+  _.range = function(start, stop, step) {
+    if (arguments.length <= 1) {
+      stop = start || 0;
+      start = 0;
+    }
+    step = arguments[2] || 1;
+
+    var len = Math.max(Math.ceil((stop - start) / step), 0);
+    var idx = 0;
+    var range = new Array(len);
+
+    while(idx < len) {
+      range[idx++] = start;
+      start += step;
+    }
+
+    return range;
+  };
+
+  // Function (ahem) Functions
+  // ------------------
+
+  // Reusable constructor function for prototype setting.
+  var ctor = function(){};
+
+  // Create a function bound to a given object (assigning `this`, and arguments,
+  // optionally). Binding with arguments is also known as `curry`.
+  // Delegates to **ECMAScript 5**'s native `Function.bind` if available.
+  // We check for `func.bind` first, to fail fast when `func` is undefined.
+  _.bind = function bind(func, context) {
+    var bound, args;
+    if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!_.isFunction(func)) throw new TypeError;
+    args = slice.call(arguments, 2);
+    return bound = function() {
+      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      var result = func.apply(self, args.concat(slice.call(arguments)));
+      if (Object(result) === result) return result;
+      return self;
+    };
+  };
+
+  // Bind all of an object's methods to that object. Useful for ensuring that
+  // all callbacks defined on an object belong to it.
+  _.bindAll = function(obj) {
+    var funcs = slice.call(arguments, 1);
+    if (funcs.length == 0) funcs = _.functions(obj);
+    each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
+    return obj;
+  };
+
+  // Memoize an expensive function by storing its results.
+  _.memoize = function(func, hasher) {
+    var memo = {};
+    hasher || (hasher = _.identity);
+    return function() {
+      var key = hasher.apply(this, arguments);
+      return _.has(memo, key) ? memo[key] : (memo[key] = func.apply(this, arguments));
+    };
+  };
+
+  // Delays a function for the given number of milliseconds, and then calls
+  // it with the arguments supplied.
+  _.delay = function(func, wait) {
+    var args = slice.call(arguments, 2);
+    return setTimeout(function(){ return func.apply(null, args); }, wait);
+  };
+
+  // Defers a function, scheduling it to run after the current call stack has
+  // cleared.
+  _.defer = function(func) {
+    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
+  };
+
+  // Returns a function, that, when invoked, will only be triggered at most once
+  // during a given window of time.
+  _.throttle = function(func, wait) {
+    var context, args, timeout, throttling, more, result;
+    var whenDone = _.debounce(function(){ more = throttling = false; }, wait);
+    return function() {
+      context = this; args = arguments;
+      var later = function() {
+        timeout = null;
+        if (more) func.apply(context, args);
+        whenDone();
+      };
+      if (!timeout) timeout = setTimeout(later, wait);
+      if (throttling) {
+        more = true;
+      } else {
+        result = func.apply(context, args);
+      }
+      whenDone();
+      throttling = true;
+      return result;
+    };
+  };
+
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  _.debounce = function(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      if (immediate && !timeout) func.apply(context, args);
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  // Returns a function that will be executed at most one time, no matter how
+  // often you call it. Useful for lazy initialization.
+  _.once = function(func) {
+    var ran = false, memo;
+    return function() {
+      if (ran) return memo;
+      ran = true;
+      return memo = func.apply(this, arguments);
+    };
+  };
+
+  // Returns the first function passed as an argument to the second,
+  // allowing you to adjust arguments, run code before and after, and
+  // conditionally execute the original function.
+  _.wrap = function(func, wrapper) {
+    return function() {
+      var args = [func].concat(slice.call(arguments, 0));
+      return wrapper.apply(this, args);
+    };
+  };
+
+  // Returns a function that is the composition of a list of functions, each
+  // consuming the return value of the function that follows.
+  _.compose = function() {
+    var funcs = arguments;
+    return function() {
+      var args = arguments;
+      for (var i = funcs.length - 1; i >= 0; i--) {
+        args = [funcs[i].apply(this, args)];
+      }
+      return args[0];
+    };
+  };
+
+  // Returns a function that will only be executed after being called N times.
+  _.after = function(times, func) {
+    if (times <= 0) return func();
+    return function() {
+      if (--times < 1) { return func.apply(this, arguments); }
+    };
+  };
+
+  // Object Functions
+  // ----------------
+
+  // Retrieve the names of an object's properties.
+  // Delegates to **ECMAScript 5**'s native `Object.keys`
+  _.keys = nativeKeys || function(obj) {
+    if (obj !== Object(obj)) throw new TypeError('Invalid object');
+    var keys = [];
+    for (var key in obj) if (_.has(obj, key)) keys[keys.length] = key;
+    return keys;
+  };
+
+  // Retrieve the values of an object's properties.
+  _.values = function(obj) {
+    return _.map(obj, _.identity);
+  };
+
+  // Return a sorted list of the function names available on the object.
+  // Aliased as `methods`
+  _.functions = _.methods = function(obj) {
+    var names = [];
+    for (var key in obj) {
+      if (_.isFunction(obj[key])) names.push(key);
+    }
+    return names.sort();
+  };
+
+  // Extend a given object with all the properties in passed-in object(s).
+  _.extend = function(obj) {
+    each(slice.call(arguments, 1), function(source) {
+      for (var prop in source) {
+        obj[prop] = source[prop];
+      }
+    });
+    return obj;
+  };
+
+  // Return a copy of the object only containing the whitelisted properties.
+  _.pick = function(obj) {
+    var result = {};
+    each(_.flatten(slice.call(arguments, 1)), function(key) {
+      if (key in obj) result[key] = obj[key];
+    });
+    return result;
+  };
+
+  // Fill in a given object with default properties.
+  _.defaults = function(obj) {
+    each(slice.call(arguments, 1), function(source) {
+      for (var prop in source) {
+        if (obj[prop] == null) obj[prop] = source[prop];
+      }
+    });
+    return obj;
+  };
+
+  // Create a (shallow-cloned) duplicate of an object.
+  _.clone = function(obj) {
+    if (!_.isObject(obj)) return obj;
+    return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
+  };
+
+  // Invokes interceptor with the obj, and then returns obj.
+  // The primary purpose of this method is to "tap into" a method chain, in
+  // order to perform operations on intermediate results within the chain.
+  _.tap = function(obj, interceptor) {
+    interceptor(obj);
+    return obj;
+  };
+
+  // Internal recursive comparison function.
+  function eq(a, b, stack) {
+    // Identical objects are equal. `0 === -0`, but they aren't identical.
+    // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
+    if (a === b) return a !== 0 || 1 / a == 1 / b;
+    // A strict comparison is necessary because `null == undefined`.
+    if (a == null || b == null) return a === b;
+    // Unwrap any wrapped objects.
+    if (a._chain) a = a._wrapped;
+    if (b._chain) b = b._wrapped;
+    // Invoke a custom `isEqual` method if one is provided.
+    if (a.isEqual && _.isFunction(a.isEqual)) return a.isEqual(b);
+    if (b.isEqual && _.isFunction(b.isEqual)) return b.isEqual(a);
+    // Compare `[[Class]]` names.
+    var className = toString.call(a);
+    if (className != toString.call(b)) return false;
+    switch (className) {
+      // Strings, numbers, dates, and booleans are compared by value.
+      case '[object String]':
+        // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
+        // equivalent to `new String("5")`.
+        return a == String(b);
+      case '[object Number]':
+        // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
+        // other numeric values.
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+      case '[object Date]':
+      case '[object Boolean]':
+        // Coerce dates and booleans to numeric primitive values. Dates are compared by their
+        // millisecond representations. Note that invalid dates with millisecond representations
+        // of `NaN` are not equivalent.
+        return +a == +b;
+      // RegExps are compared by their source patterns and flags.
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != 'object' || typeof b != 'object') return false;
+    // Assume equality for cyclic structures. The algorithm for detecting cyclic
+    // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+    var length = stack.length;
+    while (length--) {
+      // Linear search. Performance is inversely proportional to the number of
+      // unique nested structures.
+      if (stack[length] == a) return true;
+    }
+    // Add the first object to the stack of traversed objects.
+    stack.push(a);
+    var size = 0, result = true;
+    // Recursively compare objects and arrays.
+    if (className == '[object Array]') {
+      // Compare array lengths to determine if a deep comparison is necessary.
+      size = a.length;
+      result = size == b.length;
+      if (result) {
+        // Deep compare the contents, ignoring non-numeric properties.
+        while (size--) {
+          // Ensure commutative equality for sparse arrays.
+          if (!(result = size in a == size in b && eq(a[size], b[size], stack))) break;
+        }
+      }
+    } else {
+      // Objects with different constructors are not equivalent.
+      if ('constructor' in a != 'constructor' in b || a.constructor != b.constructor) return false;
+      // Deep compare objects.
+      for (var key in a) {
+        if (_.has(a, key)) {
+          // Count the expected number of properties.
+          size++;
+          // Deep compare each member.
+          if (!(result = _.has(b, key) && eq(a[key], b[key], stack))) break;
+        }
+      }
+      // Ensure that both objects contain the same number of properties.
+      if (result) {
+        for (key in b) {
+          if (_.has(b, key) && !(size--)) break;
+        }
+        result = !size;
+      }
+    }
+    // Remove the first object from the stack of traversed objects.
+    stack.pop();
+    return result;
+  }
+
+  // Perform a deep comparison to check if two objects are equal.
+  _.isEqual = function(a, b) {
+    return eq(a, b, []);
+  };
+
+  // Is a given array, string, or object empty?
+  // An "empty" object has no enumerable own-properties.
+  _.isEmpty = function(obj) {
+    if (obj == null) return true;
+    if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
+    for (var key in obj) if (_.has(obj, key)) return false;
+    return true;
+  };
+
+  // Is a given value a DOM element?
+  _.isElement = function(obj) {
+    return !!(obj && obj.nodeType == 1);
+  };
+
+  // Is a given value an array?
+  // Delegates to ECMA5's native Array.isArray
+  _.isArray = nativeIsArray || function(obj) {
+    return toString.call(obj) == '[object Array]';
+  };
+
+  // Is a given variable an object?
+  _.isObject = function(obj) {
+    return obj === Object(obj);
+  };
+
+  // Is a given variable an arguments object?
+  _.isArguments = function(obj) {
+    return toString.call(obj) == '[object Arguments]';
+  };
+  if (!_.isArguments(arguments)) {
+    _.isArguments = function(obj) {
+      return !!(obj && _.has(obj, 'callee'));
+    };
+  }
+
+  // Is a given value a function?
+  _.isFunction = function(obj) {
+    return toString.call(obj) == '[object Function]';
+  };
+
+  // Is a given value a string?
+  _.isString = function(obj) {
+    return toString.call(obj) == '[object String]';
+  };
+
+  // Is a given value a number?
+  _.isNumber = function(obj) {
+    return toString.call(obj) == '[object Number]';
+  };
+
+  // Is a given object a finite number?
+  _.isFinite = function(obj) {
+    return _.isNumber(obj) && isFinite(obj);
+  };
+
+  // Is the given value `NaN`?
+  _.isNaN = function(obj) {
+    // `NaN` is the only value for which `===` is not reflexive.
+    return obj !== obj;
+  };
+
+  // Is a given value a boolean?
+  _.isBoolean = function(obj) {
+    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
+  };
+
+  // Is a given value a date?
+  _.isDate = function(obj) {
+    return toString.call(obj) == '[object Date]';
+  };
+
+  // Is the given value a regular expression?
+  _.isRegExp = function(obj) {
+    return toString.call(obj) == '[object RegExp]';
+  };
+
+  // Is a given value equal to null?
+  _.isNull = function(obj) {
+    return obj === null;
+  };
+
+  // Is a given variable undefined?
+  _.isUndefined = function(obj) {
+    return obj === void 0;
+  };
+
+  // Has own property?
+  _.has = function(obj, key) {
+    return hasOwnProperty.call(obj, key);
+  };
+
+  // Utility Functions
+  // -----------------
+
+  // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
+  // previous owner. Returns a reference to the Underscore object.
+  _.noConflict = function() {
+    root._ = previousUnderscore;
+    return this;
+  };
+
+  // Keep the identity function around for default iterators.
+  _.identity = function(value) {
+    return value;
+  };
+
+  // Run a function **n** times.
+  _.times = function (n, iterator, context) {
+    for (var i = 0; i < n; i++) iterator.call(context, i);
+  };
+
+  // Escape a string for HTML interpolation.
+  _.escape = function(string) {
+    return (''+string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g,'&#x2F;');
+  };
+
+  // If the value of the named property is a function then invoke it;
+  // otherwise, return it.
+  _.result = function(object, property) {
+    if (object == null) return null;
+    var value = object[property];
+    return _.isFunction(value) ? value.call(object) : value;
+  };
+
+  // Add your own custom functions to the Underscore object, ensuring that
+  // they're correctly added to the OOP wrapper as well.
+  _.mixin = function(obj) {
+    each(_.functions(obj), function(name){
+      addToWrapper(name, _[name] = obj[name]);
+    });
+  };
+
+  // Generate a unique integer id (unique within the entire client session).
+  // Useful for temporary DOM ids.
+  var idCounter = 0;
+  _.uniqueId = function(prefix) {
+    var id = idCounter++;
+    return prefix ? prefix + id : id;
+  };
+
+  // By default, Underscore uses ERB-style template delimiters, change the
+  // following template settings to use alternative delimiters.
+  _.templateSettings = {
+    evaluate    : /<%([\s\S]+?)%>/g,
+    interpolate : /<%=([\s\S]+?)%>/g,
+    escape      : /<%-([\s\S]+?)%>/g
+  };
+
+  // When customizing `templateSettings`, if you don't want to define an
+  // interpolation, evaluation or escaping regex, we need one that is
+  // guaranteed not to match.
+  var noMatch = /.^/;
+
+  // Certain characters need to be escaped so that they can be put into a
+  // string literal.
+  var escapes = {
+    '\\': '\\',
+    "'": "'",
+    'r': '\r',
+    'n': '\n',
+    't': '\t',
+    'u2028': '\u2028',
+    'u2029': '\u2029'
+  };
+
+  for (var p in escapes) escapes[escapes[p]] = p;
+  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
+  var unescaper = /\\(\\|'|r|n|t|u2028|u2029)/g;
+
+  // Within an interpolation, evaluation, or escaping, remove HTML escaping
+  // that had been previously added.
+  var unescape = function(code) {
+    return code.replace(unescaper, function(match, escape) {
+      return escapes[escape];
+    });
+  };
+
+  // JavaScript micro-templating, similar to John Resig's implementation.
+  // Underscore templating handles arbitrary delimiters, preserves whitespace,
+  // and correctly escapes quotes within interpolated code.
+  _.template = function(text, data, settings) {
+    settings = _.defaults(settings || {}, _.templateSettings);
+
+    // Compile the template source, taking care to escape characters that
+    // cannot be included in a string literal and then unescape them in code
+    // blocks.
+    var source = "__p+='" + text
+      .replace(escaper, function(match) {
+        return '\\' + escapes[match];
+      })
+      .replace(settings.escape || noMatch, function(match, code) {
+        return "'+\n_.escape(" + unescape(code) + ")+\n'";
+      })
+      .replace(settings.interpolate || noMatch, function(match, code) {
+        return "'+\n(" + unescape(code) + ")+\n'";
+      })
+      .replace(settings.evaluate || noMatch, function(match, code) {
+        return "';\n" + unescape(code) + "\n;__p+='";
+      }) + "';\n";
+
+    // If a variable is not specified, place data values in local scope.
+    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
+
+    source = "var __p='';" +
+      "var print=function(){__p+=Array.prototype.join.call(arguments, '')};\n" +
+      source + "return __p;\n";
+
+    var render = new Function(settings.variable || 'obj', '_', source);
+    if (data) return render(data, _);
+    var template = function(data) {
+      return render.call(this, data, _);
+    };
+
+    // Provide the compiled function source as a convenience for build time
+    // precompilation.
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' +
+      source + '}';
+
+    return template;
+  };
+
+  // Add a "chain" function, which will delegate to the wrapper.
+  _.chain = function(obj) {
+    return _(obj).chain();
+  };
+
+  // The OOP Wrapper
+  // ---------------
+
+  // If Underscore is called as a function, it returns a wrapped object that
+  // can be used OO-style. This wrapper holds altered versions of all the
+  // underscore functions. Wrapped objects may be chained.
+  var wrapper = function(obj) { this._wrapped = obj; };
+
+  // Expose `wrapper.prototype` as `_.prototype`
+  _.prototype = wrapper.prototype;
+
+  // Helper function to continue chaining intermediate results.
+  var result = function(obj, chain) {
+    return chain ? _(obj).chain() : obj;
+  };
+
+  // A method to easily add functions to the OOP wrapper.
+  var addToWrapper = function(name, func) {
+    wrapper.prototype[name] = function() {
+      var args = slice.call(arguments);
+      unshift.call(args, this._wrapped);
+      return result(func.apply(_, args), this._chain);
+    };
+  };
+
+  // Add all of the Underscore functions to the wrapper object.
+  _.mixin(_);
+
+  // Add all mutator Array functions to the wrapper.
+  each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
+    var method = ArrayProto[name];
+    wrapper.prototype[name] = function() {
+      var wrapped = this._wrapped;
+      method.apply(wrapped, arguments);
+      var length = wrapped.length;
+      if ((name == 'shift' || name == 'splice') && length === 0) delete wrapped[0];
+      return result(wrapped, this._chain);
+    };
+  });
+
+  // Add all accessor Array functions to the wrapper.
+  each(['concat', 'join', 'slice'], function(name) {
+    var method = ArrayProto[name];
+    wrapper.prototype[name] = function() {
+      return result(method.apply(this._wrapped, arguments), this._chain);
+    };
+  });
+
+  // Start chaining a wrapped Underscore object.
+  wrapper.prototype.chain = function() {
+    this._chain = true;
+    return this;
+  };
+
+  // Extracts the result from a wrapped and chained object.
+  wrapper.prototype.value = function() {
+    return this._wrapped;
+  };
+
+}).call(this);
+
+},{}]},{},[5]);
+
 
 OO.exposeStaticApi("Analytics", OO.Analytics);
 
@@ -27203,6 +33574,8 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
   var mb;
   var af;
   var adMode = false;
+  var singleAdStarted = false;
+  var lastAdPodStartedParam = null;
   var impressionMade = false;
 
   // used for OO.EVENTS.ERROR message
@@ -27256,6 +33629,24 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
     mb.subscribe(OO.EVENTS.REPLAY, "AnalyticsFrameworkTranslator", onReplay);
     mb.subscribe(OO.EVENTS.SEEK, "AnalyticsFrameworkTranslator", onSeek);
     mb.subscribe(OO.EVENTS.SEEKED, "AnalyticsFrameworkTranslator", onSeeked);
+    mb.subscribe(OO.EVENTS.INITIAL_PLAY_STARTING, "AnalyticsFrameworkTranslator", onInitialPlayStarting);
+    mb.subscribe(OO.EVENTS.PLAYBACK_READY, "AnalyticsFrameworkTranslator", onPlaybackReady);
+    mb.subscribe(OO.EVENTS.API_ERROR, "AnalyticsFrameworkTranslator", onApiError);
+    mb.subscribe(OO.EVENTS.BITRATE_INITIAL, "AnalyticsFrameworkTranslator", onBitrateInitial);
+    mb.subscribe(OO.EVENTS.BITRATE_FIVE_SEC, "AnalyticsFrameworkTranslator", onBitrateFiveSec);
+    mb.subscribe(OO.EVENTS.BITRATE_STABLE, "AnalyticsFrameworkTranslator", onBitrateStable);
+    mb.subscribe(OO.EVENTS.PLAYBACK_START_ERROR, "AnalyticsFrameworkTranslator", onPlaybackStartError);
+    mb.subscribe(OO.EVENTS.PLAYBACK_MIDSTREAM_ERROR, "AnalyticsFrameworkTranslator", onPlaybackMidstreamError);
+    mb.subscribe(OO.EVENTS.PLUGIN_LOADED, "AnalyticsFrameworkTranslator", onPluginLoaded);
+    mb.subscribe(OO.EVENTS.AD_SDK_LOADED, "AnalyticsFrameworkTranslator", onLoadAdSdk);
+    mb.subscribe(OO.EVENTS.AD_SDK_LOAD_FAILED, "AnalyticsFrameworkTranslator", onLoadAdSdkFailure);
+    mb.subscribe(OO.EVENTS.AD_REQUEST, "AnalyticsFrameworkTranslator", onAdRequest);
+    mb.subscribe(OO.EVENTS.AD_REQUEST_SUCCESS, "AnalyticsFrameworkTranslator", onAdRequestSuccess);
+    mb.subscribe(OO.EVENTS.AD_REQUEST_EMPTY, "AnalyticsFrameworkTranslator", onAdRequestEmpty);
+    mb.subscribe(OO.EVENTS.AD_REQUEST_ERROR, "AnalyticsFrameworkTranslator", onAdRequestError);
+    mb.subscribe(OO.EVENTS.AD_PLAYBACK_ERROR, "AnalyticsFrameworkTranslator", onAdPlaybackError);
+    mb.subscribe(OO.EVENTS.AD_SDK_IMPRESSION, "AnalyticsFrameworkTranslator", onAdSdkImpression);
+    mb.subscribe(OO.EVENTS.AD_COMPLETED, "AnalyticsFrameworkTranslator", onAdCompleted);
     mb.subscribe(OO.EVENTS.WILL_PLAY_ADS, "AnalyticsFrameworkTranslator", onWillPlayAds);
     mb.subscribe(OO.EVENTS.AD_POD_STARTED, "AnalyticsFrameworkTranslator", onAdPodStarted);
     mb.subscribe(OO.EVENTS.AD_POD_ENDED, "AnalyticsFrameworkTranslator", onAdPodEnded);
@@ -27267,6 +33658,7 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
     mb.subscribe(OO.EVENTS.SKIP_AD, "AnalyticsFrameworkTranslator", onSkipAd);
     mb.subscribe(OO.EVENTS.ADS_ERROR, "AnalyticsFrameworkTranslator", onAdsError);
     mb.subscribe(OO.EVENTS.ADS_CLICKTHROUGH_OPENED, "AnalyticsFrameworkTranslator", onAdsClickthroughOpened);
+    mb.subscribe(OO.EVENTS.SDK_AD_EVENT, "AnalyticsFrameworkTranslator", onSdkAdEvent);
     mb.subscribe(OO.EVENTS.FULLSCREEN_CHANGED, "AnalyticsFrameworkTranslator", onFullscreenChanged);
     mb.subscribe(OO.EVENTS.VOLUME_CHANGED, "AnalyticsFrameworkTranslator", onVolumeChanged);
     mb.subscribe(OO.EVENTS.DESTROY, "AnalyticsFrameworkTranslator", onDestroy);
@@ -27290,21 +33682,24 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
    * @param {string} elementId The id of the DOM element that contains the player
    * @param {object} metadata The configuration metadata associated with the player
    * (i.e. pcode, playerBrandingId, skin configuration, player configuration parameters)
+   * @param {object} persistentSettings An object containing player persistent settings
+   * @param {string} embedCode The embed code of the asset attempting to play
+   * @param {number} createdTime The timestamp the player was created
+   * @param {string} playerUrl The url of the page containing the player
    */
-  var onPlayerCreated = privateMember(function(eventName, elementId, metadata)
+  var onPlayerCreated = privateMember(function(eventName, elementId, metadata, persistentSettings, embedCode, createdTime, playerUrl)
   {
     var param1;
     try
     {
-      // TODO checkDataType
-      param1 = metadata;
+       param1 = new OO.Analytics.EVENT_DATA.VideoPlayerCreatedData(OO.VERSION.core.releaseVersion, metadata, embedCode, playerUrl);
     }
     catch(e)
     {
       logEventDataError(eventName);
       param1 = {};
     }
-    af.setPluginMetadata(param1);
+    af.setPluginMetadata(metadata);
     af.publishEvent(OO.Analytics.EVENTS.VIDEO_PLAYER_CREATED, [param1]);
   });
 
@@ -27482,14 +33877,16 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
    * @private
    * @method AnalyticsFrameworkTranslator#onBuffering
    * @param {string} eventName Core message bus event name
-   * @param {string} url The stream url
+   * @param {string} url The url of the stream that is buffering
+   * @param {string} videoId The video Id (main, etc.)
+   * @param {number} position The playhead position buffering started
    */
-  var onBuffering = privateMember(function(eventName, url)
+  var onBuffering = privateMember(function(eventName, url, videoId, position)
   {
     var param1;
     try
     {
-      param1 = new OO.Analytics.EVENT_DATA.VideoBufferingStartedData(url);
+      param1 = new OO.Analytics.EVENT_DATA.VideoBufferingStartedData(url, videoId, position);
     }
     catch(e)
     {
@@ -27726,8 +34123,500 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
   });
 
   /**
-   * Callback to map core message bus event to AnalyticsFramework event:
-   * OO.EVENTS.WILL_PLAY_ADS -> OO.Analytics.EVENTS.AD_BREAK_STARTED.
+   * Callback from core message bus event OO.EVENTS.INITIAL_PLAY_STARTING
+   * @private
+   * @method AnalyticsFrameworkTranslator#onInitialPlayStarting
+   * @param {string} eventName Core message bus event name
+   * @param {number} timeSinceInitialPlay The time since the initial play request was made
+   * @param {boolean} autoplayed Boolean parameter. True if video was autoplayed, false otherwise
+   * @param {boolean} hadPreroll True if the video had an ad play before it started.
+   *                     This includes midrolls that play before content due to an initial playhead time > 0.
+   *                     False otherwise.
+   * @param {number} position The initial position of the playhead upon playback start.
+   * @param {string} plugin The video plugin used for playback
+   * @param {string} technology The browser technology used - HTML5, Flash, Mixed, or Other
+   * @param {string} encoding The stream encoding type, i.e. MP4, HLS, Dash, etc.
+   * @param {string} streamUrl The URL of the content being played
+   * @param {string} drm The DRM being used, none if there is no DRM
+   * @param {boolean} isLive Boolean parameter. True if a live stream is playing. False if VOD.
+   */
+  var onInitialPlayStarting = privateMember(function(eventName, timeSinceInitialPlay, autoplayed,
+    hadPreroll, position, plugin, technology, encoding, streamUrl, drm, isLive)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.InitialPlayStartingData(OO.VERSION.core.releaseVersion, timeSinceInitialPlay,
+        autoplayed, hadPreroll, position, plugin, technology, encoding, streamUrl, drm, isLive);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.INITIAL_PLAY_STARTING, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.PLAYBACK_READY
+   * @private
+   * @method AnalyticsFrameworkTranslator#onPlaybackReady
+   * @param {string} eventName Core message bus event name
+   * @param {number} timeSincePlayerCreated The time between player creation and playback ready state
+   */
+  var onPlaybackReady = privateMember(function(eventName, timeSincePlayerCreated)
+  {
+    var param1;
+    try
+    {
+      var plugins = {};
+      if(OO.Video) {
+        plugins = OO.Video.getRegisteredPlugins();
+      }
+      var pluginNames = [];
+      if(plugins){
+        pluginNames = Object.getOwnPropertyNames(plugins);
+      }
+      param1 = new OO.Analytics.EVENT_DATA.PlaybackReadyData(OO.VERSION.core.releaseVersion, timeSincePlayerCreated, pluginNames);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.PLAYBACK_READY, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.API_ERROR
+   * @private
+   * @method AnalyticsFrameworkTranslator#onApiError
+   * @param {string} eventName Core message bus event name
+   * @param {object} errorCode The error code if any
+   * @param {string} errorMessage The error message
+   * @param {string} url The ad tag url post macro substitution
+   */
+  var onApiError = privateMember(function(eventName, errorCode, errorMessage, url)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.ApiErrorData(OO.VERSION.core.releaseVersion, errorCode, errorMessage, url);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.API_ERROR, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.BITRATE_INITIAL
+   * @private
+   * @method AnalyticsFrameworkTranslator#onBitrateInitial
+   * @param {string} eventName Core message bus event name
+   * @param {number} bitrate The bitrate at the start of playback
+   */
+  var onBitrateInitial = privateMember(function(eventName, bitrate)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.BitrateInitialData(bitrate);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.BITRATE_INITIAL, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.BITRATE_FIVE_SEC
+   * @private
+   * @method AnalyticsFrameworkTranslator#onBitrateFiveSec
+   * @param {string} eventName Core message bus event name
+   * @param {number} bitrate The bitrate at five seconds into the video
+   */
+  var onBitrateFiveSec = privateMember(function(eventName, bitrate)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.BitrateFiveSecData(bitrate);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.BITRATE_FIVE_SEC, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.BITRATE_STABLE
+   * @private
+   * @method AnalyticsFrameworkTranslator#onBitrateStable
+   * @param {string} eventName Core message bus event name
+   * @param {number} bitrate The bitrate at thirty seconds into the video
+   */
+  var onBitrateStable = privateMember(function(eventName, bitrate)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.BitrateStableData(bitrate);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.BITRATE_STABLE, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.PLAYBACK_START_ERROR
+   * @private
+   * @method AnalyticsFrameworkTranslator#onPlaybackStartError
+   * @param {string} eventName Core message bus event name
+   * @param {object} errorData The object containing the error information
+   */
+  var onPlaybackStartError = privateMember(function(eventName, errorData)
+  {
+    var param1;
+    try
+    {
+      var errorMessages = {};
+      var errorCodes = {};
+      if(errorData.pluginErrorMessage != null){
+        errorMessages.plugin = errorData.pluginErrorMessage;
+      }
+      if(errorData.mediaErrorMessage != null){
+        errorMessages.media = errorData.mediaErrorMessage;
+      }
+      if(errorData.ooyalaErrorMessage != null){
+        errorMessages.ooyala = errorData.ooyalaErrorMessage;
+      }
+      if(errorData.pluginErrorCode != null){
+        errorCodes.plugin = errorData.pluginErrorCode;
+      }
+      if(errorData.mediaErrorCode != null){
+        errorCodes.media = errorData.mediaErrorCode;
+      }
+      if(errorData.ooyalaErrorCode != null){
+        errorCodes.ooyala = errorData.ooyalaErrorCode;
+      }
+      param1 = new OO.Analytics.EVENT_DATA.PlaybackStartErrorData(errorCodes, errorMessages, errorData.drm);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.PLAYBACK_START_ERROR, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.PLUGIN_LOADED
+   * @private
+   * @method AnalyticsFrameworkTranslator#onPluginLoaded
+   * @param {string} pluginType Type of the loaded plugin - ads, playback, analytics, playlist, or skin
+   * @param {string} pluginName The name of the plugin loaded
+   * @param {number} loadTime The time it took for the plugin to reach the ready state
+   */
+  var onPluginLoaded = privateMember(function(eventName, pluginType, pluginName, loadTime)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.PluginLoadedData(OO.VERSION.core.releaseVersion, pluginType, pluginName, loadTime);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.PLUGIN_LOADED, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.PLAYBACK_MIDSTREAM_ERROR
+   * @private
+   * @method AnalyticsFrameworkTranslator#onPlaybackMidstreamError
+   * @param {string} eventName Core message bus event name
+   * @param {number} errorCode The error code if any
+   * @param {string} errorMessage The error message
+   * @param {number} position The playhead position the error occurred at
+   */
+  var onPlaybackMidstreamError = privateMember(function(eventName, errorData)
+  {
+    var param1;
+    try
+    {
+      var errorMessages = {};
+      var errorCodes = {};
+
+      if(errorData.pluginErrorMessage != null){
+        errorMessages.plugin = errorData.pluginErrorMessage;
+      }
+      if(errorData.mediaErrorMessage != null){
+        errorMessages.media = errorData.mediaErrorMessage;
+      }
+      if(errorData.ooyalaErrorMessage != null){
+        errorMessages.ooyala = errorData.ooyalaErrorMessage;
+      }
+      if(errorData.pluginErrorCode != null){
+        errorCodes.plugin = errorData.pluginErrorCode;
+      }
+      if(errorData.mediaErrorCode != null){
+        errorCodes.media = errorData.mediaErrorCode;
+      }
+      if(errorData.ooyalaErrorCode != null){
+        errorCodes.ooyala = errorData.ooyalaErrorCode;
+      }
+      param1 = new OO.Analytics.EVENT_DATA.PlaybackMidstreamErrorData(errorCodes, errorMessages, errorData.position);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.PLAYBACK_MIDSTREAM_ERROR, [param1]);
+  });
+
+/**
+   * Callback from core message bus event OO.EVENTS.AD_SDK_LOADED.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onLoadAdSdk
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName Name of the ad plugin that notified of the ad event
+   * @param {string} version Player core version
+   */
+  var onLoadAdSdk = privateMember(function(eventName, adPluginName, version)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.LoadAdSdkData(adPluginName, version);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_SDK_LOADED, [param1]);
+  });
+
+    /**
+   * Callback from core message bus event OO.EVENTS.AD_SDK_LOAD_FAILED.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onLoadAdSdkFailure
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName Name of the ad plugin that notified of the ad event
+   * @param {string} version Player core version
+   * @param {string} error Error message associated with the sdk load failure
+   */
+  var onLoadAdSdkFailure = privateMember(function(eventName, adPluginName, version, error)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.LoadAdSdkFailureData(adPluginName, version, error);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_SDK_LOAD_FAILURE, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_REQUEST.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdRequest
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName Name of the ad plugin that notified of the ad event
+   * @param {number} adPosition Position the ad is scheduled to play
+   */
+  var onAdRequest = privateMember(function(eventName, adPluginName, adPosition)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdRequestData(adPluginName, adPosition);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_REQUEST, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_REQUEST_SUCCESS.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdRequestSuccess
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin used
+   * @param {number} adPosition The position the ad is scheduled to play
+   * @param {number} responseTime The time in milliseconds that it took to get a response for the ad request
+   * @param {number} timeSinceInitialPlay The time in milliseconds from the initial play request time to ad request success
+   */
+  var onAdRequestSuccess = privateMember(function(eventName, adPluginName, adPosition, responseTime, timeSinceInitialPlay)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdRequestSuccessData(adPluginName, adPosition, responseTime, timeSinceInitialPlay);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_REQUEST_SUCCESS, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_REQUEST_EMPTY.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdRequestEmpty
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin that sent this event
+   * @param {string} adPosition The time the ad is scheduled to play
+   * @param {string} adTagUrl The ad tag url post macro substitution
+   * @param {object} errorCode The object containing error codes
+   * @param {string} errorMessage The error message
+   */
+  var onAdRequestEmpty = privateMember(function(eventName, adPluginName, adPosition, adTagUrl, errorCode, errorMessage)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdRequestEmptyData(adPluginName, adPosition, adTagUrl, errorCode, errorMessage);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_REQUEST_EMPTY, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_REQUEST_ERROR.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdRequestError
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin that sent this event
+   * @param {string} adPosition The time the ad is scheduled to play
+   * @param {string} adTagUrl The ad tag url post macro substitution
+   * @param {object} errorCode The object containing error codes
+   * @param {string} errorMessage The error message
+   * @param {boolean} isTimeout If ad request timed out or not
+   */
+  var onAdRequestError = privateMember(function(eventName, adPluginName, adPosition, adTagUrl, errorCode, errorMessage, isTimeout)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdRequestErrorData(adPluginName, adPosition, adTagUrl, errorCode, errorMessage, isTimeout);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_REQUEST_ERROR, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_PLAYBACK_ERROR.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdPlaybackError
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin that sent this event
+   * @param {string} adPosition The time the ad is scheduled to play
+   * @param {string} adTagUrl The ad tag url post macro substitution
+   * @param {object} errorCodes The object containing error codes
+   * @param {string} errorMessage The error message
+   * @param {array} pluginNames Array containing names of all video plugins registered
+   * @param {string} mediaFileUrl The url used to retrieve the ad media file
+   */
+  var onAdPlaybackError = privateMember(function(eventName, adPluginName, adPosition, adTagUrl, errorCodes, errorMessage, pluginNames, mediaFileUrl)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdPlaybackErrorData(adPluginName, adPosition, adTagUrl, errorCodes, errorMessage, pluginNames.pluginNames, mediaFileUrl);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_PLAYBACK_ERROR, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_SDK_IMPRESSION.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdSdkImpression
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin that sent this event
+   * @param {number} adPosition The time the ad is scheduled to play
+   * @param {number} adLoadTime The time in milliseconds between the ad request success and started
+   * @param {string} adProtocol The ad protocol (VAST / VPAID)
+   * @param {string} adType The ad type (LinearOverlay, LinearVideo, NonLinearOverlay, NonLinearVideo)
+   */
+  var onAdSdkImpression = privateMember(function(eventName, adPluginName, adPosition, adLoadTime, adProtocol, adType)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdSdkImpressionData(adPluginName, adPosition, adLoadTime, adProtocol, adType);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_SDK_IMPRESSION, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.AD_COMPLETED.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onAdCompleted
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin that sent this event
+   * @param {number} timeSinceImpression The time passed since the ad impression
+   *                                        was recorded in milliseconds
+   * @param {boolean} skipped True if ad was skipped by user.
+   * @param {string} adTagUrl The ad tag url post macro substitution
+   */
+  var onAdCompleted = privateMember(function(eventName, adPluginName, timeSinceImpression, skipped, adTagUrl)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.AdCompletedData(adPluginName, timeSinceImpression, skipped, adTagUrl);
+    }
+    catch(e)
+    {
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.AD_COMPLETED, [param1]);
+  });
+
+  /**
+   * Callback from core message bus event OO.EVENTS.WILL_PLAY_ADS.
    * @private
    * @method AnalyticsFrameworkTranslator#onWillPlayAds
    * @param {string} eventName Core message bus event name
@@ -27735,7 +34624,6 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
   var onWillPlayAds = privateMember(function(eventName)
   {
     adMode = true;
-    af.publishEvent(OO.Analytics.EVENTS.AD_BREAK_STARTED);
   });
 
   /**
@@ -27758,7 +34646,28 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
       logEventDataError(eventName);
       param1 = {};
     }
-    af.publishEvent(OO.Analytics.EVENTS.AD_POD_STARTED, [param1]);
+
+    var eventParam = [param1];
+    if (singleAdStarted)
+    {
+      sendAdPodStartedEvent(eventParam);
+    }
+    else
+    {
+      lastAdPodStartedParam = eventParam;
+    }
+  });
+
+  /**
+   * Publishes the OO.Analytics.AD_POD_STARTED analytics event.
+   * @private
+   * @method AnalyticsFrameworkTranslator#sendAdPodStartedEvent
+   * @param {object} param The desired parameter to publish with the event
+   */
+  var sendAdPodStartedEvent = privateMember(function(param)
+  {
+    param = param ? param : [{}];
+    af.publishEvent(OO.Analytics.EVENTS.AD_POD_STARTED, param);
   });
 
   /**
@@ -27771,17 +34680,20 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
    */
   var onAdPodEnded = privateMember(function(eventName, adId)
   {
-    var param1;
-    try
+    if (singleAdStarted)
     {
-      param1 = new OO.Analytics.EVENT_DATA.AdPodEndedData(adId);
+      var param1;
+      try
+      {
+        param1 = new OO.Analytics.EVENT_DATA.AdPodEndedData(adId);
+      }
+      catch(e)
+      {
+        logEventDataError(eventName);
+        param1 = {};
+      }
+      af.publishEvent(OO.Analytics.EVENTS.AD_POD_ENDED, [param1]);
     }
-    catch(e)
-    {
-      logEventDataError(eventName);
-      param1 = {};
-    }
-    af.publishEvent(OO.Analytics.EVENTS.AD_POD_ENDED, [param1]);
   });
 
   /**
@@ -27794,6 +34706,18 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
    */
   var onWillPlaySingleAd = privateMember(function(eventName, adMetadata)
   {
+    // If we have not started an ad yet, we need to publish the AD_BREAK
+    // and AD_POD started events
+    if (!singleAdStarted)
+    {
+      af.publishEvent(OO.Analytics.EVENTS.AD_BREAK_STARTED);
+
+      sendAdPodStartedEvent(lastAdPodStartedParam);
+      lastAdPodStartedParam = null;
+    }
+
+    singleAdStarted = true;
+
     impressionMade = false;
     var param1;
     try
@@ -27888,7 +34812,12 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
   {
     adMode = false;
     impressionMade = false;
-    af.publishEvent(OO.Analytics.EVENTS.AD_BREAK_ENDED);
+    if (singleAdStarted)
+    {
+      af.publishEvent(OO.Analytics.EVENTS.AD_BREAK_ENDED);
+    }
+    singleAdStarted = false;
+    lastAdPodStartedParam = null;
   });
 
   /**
@@ -27936,6 +34865,33 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
   var onAdsClickthroughOpened = privateMember(function(eventName)
   {
     af.publishEvent(OO.Analytics.EVENTS.AD_CLICKTHROUGH_OPENED);
+  });
+
+  /**
+   * Callback to map core message bus event to AnalyticsFramework event:
+   * OO.EVENTS.SDK_AD_EVENT -> OO.Analytics.EVENTS.SDK_AD_EVENT.
+   * @private
+   * @method AnalyticsFrameworkTranslator#onSdkAdEvent
+   * @param {string} eventName Core message bus event name
+   * @param {string} adPluginName The name of the ad plugin that sent this event
+   * @param {string} adEventName The name of this event from the ad plugin
+   * @param {object} adEventData An object containing details of the ad event. This may vary
+   *                               between ad plugin to ad plugin.
+   */
+  var onSdkAdEvent = privateMember(function(eventName, adPluginName, adEventName, adEventData)
+  {
+    var param1;
+    try
+    {
+      param1 = new OO.Analytics.EVENT_DATA.SdkAdEventData(adPluginName, adEventName, adEventData);
+    }
+    catch(e)
+    {
+      OO.log("Exception in AnalyticsFrameworkTranslator: " + e);
+      logEventDataError(eventName);
+      param1 = {};
+    }
+    af.publishEvent(OO.Analytics.EVENTS.SDK_AD_EVENT, [param1]);
   });
 
   /**
@@ -28044,14 +35000,14 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
    * @param {string} eventName Core message bus event name
    * @param {string} videoType The video type. It is either OO.VIDEO.MAIN or
    * OO.VIDEO.ADS.
-   * @param {string} code The error code number as a string
+   * @param {object} codes The object containing all error codes
    */
-  var onVideoPlayFailed = privateMember(function(eventName, videoType, code)
+  var onVideoPlayFailed = privateMember(function(eventName, videoType, codes)
   {
     var param1;
     try
     {
-      param1 = new OO.Analytics.EVENT_DATA.VideoErrorData(code);
+      param1 = new OO.Analytics.EVENT_DATA.VideoErrorData(codes.mediaErrorCode);
     }
     catch(e)
     {
@@ -28197,6 +35153,317 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
   return AnalyticsFrameworkTranslator;
 });
 
+(function(OO, $, _) {
+  //Reporter.js pulled from http://player.ooyala.com/static/cacheable/e2cf372a6253740de642bd014b679bfc/reporter.js on 5/10/17
+  (function(){var a=typeof process!=="undefined"&&process.versions&&process.versions.node?global:window;if(typeof a.Ooyala=="undefined")a.Ooyala={};Ooyala.Util={};var b=function(c){if(typeof c!="string")throw"The namespace name must be a string.";var d=c.split(".");if(!(d.length>0))throw"The namespace '"+c+"' is not valid.";for(var e=a,f=0;f<d.length;f++){var h=d[f];if(!(h.length>0))throw"The namespace '"+c+"' is not valid.";if(e[h]){var i=d.slice(0,f).join(".");if(typeof e[h]!="object")throw"Namespace error: the name '"+
+  i+"' already exists and is not a namespace.";}else e[h]={};e=e[h]}};b("Ooyala.Util");Ooyala.Util.createNamespace=b})();Ooyala.Util.getOwnProperties=function(a){var b=[];for(var c in a)a.hasOwnProperty(c)&&b.push(c);return b};Ooyala.Util.extend=function(a,b){for(var c in b)if(b.hasOwnProperty(c)&&a[c]==undefined)a[c]=b[c]};Ooyala.Util.createNamespace("Ooyala.Util");Ooyala.Util.bind=function(a,b){var c=Array.prototype.slice.call(arguments,2);return function(){return a.apply(b,c.concat(Array.prototype.slice.call(arguments)))}};Ooyala.Util.createNamespace("Ooyala.Util.Enumerable");
+  Ooyala.Util.extend(Ooyala.Util.Enumerable,{_checkFunction:function(a){if(typeof a!="function")throw new TypeError;},foreach:function(a,b){this._checkFunction(b);for(var c=0;c<a.length;c++)b.call(undefined,a[c])},map:function(a,b){this._checkFunction(b);var c=[];Ooyala.Util.Enumerable.foreach(a,function(d){c.push(b.call(undefined,d))});return c},select:function(a,b){this._checkFunction(b);var c=[];Ooyala.Util.Enumerable.foreach(a,function(d){b.call(undefined,d)&&c.push(d)});return c},reject:function(a,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          b){return this.select(a,function(c){return!b.call(undefined,c)})}});Ooyala.Util.createNamespace("Ooyala.Util.Http");Ooyala.Util.Http._XMLHttpRequestFactories=[function(){return new XMLHttpRequest},function(){return new ActiveXObject("Microsoft.XMLHTTP")},function(){return new ActiveXObject("MSXML2.XMLHTTP.3.0")},function(){return new ActiveXObject("MSXML2.XMLHTTP")}];Ooyala.Util.Http._XMLHttpRequestFactory=null;
+  Ooyala.Util.Http.createXMLHttpRequest=function(){if(Ooyala.Util.Http._XMLHttpRequestFactory!=null)return Ooyala.Util.Http._XMLHttpRequestFactory();for(var a=0;a<Ooyala.Util.Http._XMLHttpRequestFactories.length;a++)try{var b=Ooyala.Util.Http._XMLHttpRequestFactories[a],c=b();if(c!=null){Ooyala.Util.Http._XMLHttpRequestFactory=b;return c}}catch(d){}Ooyala.Util.Http._XMLHttpRequestFactory=function(){throw"XMLHttpRequest not supported.";};Ooyala.Util.Http._XMLHttpRequestFactory()};Ooyala.Util.CookieManager=function(a,b,c){this._cookieName=a;this._daysToLive=b;this._compareFn=c;this._keysValuesHash={};this._cookiesEnabled=window.navigator.cookieEnabled;Ooyala.Util.CookieManager.cookieNames.push(a)};Ooyala.Util.CookieManager.MAX_COOKIE_SIZE=2048;Ooyala.Util.CookieManager.cookieNames=[];
+  Ooyala.Util.CookieManager.prototype={deDupe:function(){for(var a=this._readAllCookies(this._cookieName),b=0;b<a.length;b++)this._updateHashFromString(a[b]);this._writeCookie(this._cookieName,this._updateStringFromHash());this._destroyCookies(this._cookieName)},get:function(a){if(!this._cookiesEnabled)return null;this._updateHashFromString(this._readCookie(this._cookieName));return(a=this._keysValuesHash[a])?a:null},set:function(a,b){if(this._cookiesEnabled){this._keysValuesHash[a]=b.toString();this._writeCookie(this._cookieName,
+    this._updateStringFromHash())}},_compare:function(a,b){return this._compareFn(this._keysValuesHash[b],this._keysValuesHash[a])},_updateHashFromString:function(a){if(a){a=a.split("&");for(var b=0;b<a.length;b++){var c=a[b],d=c.indexOf(":");if(d!=-1){var e=c.substring(0,d);c=c.substring(d+1);if(this._compareFn(this._keysValuesHash[e],c)<0)this._keysValuesHash[e]=c}}}},_updateStringFromHash:function(){for(var a=Ooyala.Util.getOwnProperties(this._keysValuesHash).sort(Ooyala.Util.bind(this._compare,this)),
+                                                                                                                                                                                                                                                                                                                                                                                                                            b="",c=this._cookieOverhead(this._cookieName),d=0;d<Ooyala.Util.CookieManager.cookieNames.length;d++){var e=Ooyala.Util.CookieManager.cookieNames[d];if(e!=this._cookieName)c+=this._cookieOverhead(e)+(this._readCookie(e)||"").length}for(d=0;d<a.length;d++){e=a[d];var f=this._keysValuesHash[e];if(c+b.length+e.length+f.length+(d==0?1:2)>Ooyala.Util.CookieManager.MAX_COOKIE_SIZE)break;b+=(d==0?"":"&")+e+":"+f}return b},_writeCookie:function(a,b){document.cookie=a+"="+b+"; expires="+this._getExpiryDate()+
+    "; path=/;"},_readCookie:function(a){var b=document.cookie;if(!b)return null;a=a+"=";b=b.split(";");for(var c=0;c<b.length;c++){for(var d=b[c];d.charAt(0)==" ";)d=d.substring(1);if(d.indexOf(a)==0){a=d.substring(a.length,d.length);return a.length>0?a:null}}return null},_readAllCookies:function(a){var b=document.cookie,c=[];if(!b)return c;a=a+"=";b=b.split(";");for(var d=0;d<b.length;d++){for(var e=b[d];e.charAt(0)==" ";)e=e.substring(1);if(e.indexOf(a)==0){e=e.substring(a.length,e.length);e.length>
+  0&&c.push(e)}}return c},_destroyCookies:function(a,b){if(a){b||(b=false);for(var c=document.location.pathname;;){var d=c.lastIndexOf("/");if(d===-1)break;if(d===0&&c.length===1)break;document.cookie=a+"=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path="+c+";";c=c.substring(0,d)}if(b)document.cookie=a+"=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;"}},_cookieOverhead:function(a){return a.length+this._getExpiryDate().length+10+9},_getExpiryDate:function(){var a=(new Date).getTime();return(new Date(a+
+    this._daysToLive*24*60*60*1E3)).toGMTString()}};Ooyala.Util.createNamespace("Ooyala.Util");
+  Ooyala.Util.extend(Ooyala.Util,{base64Encode:function(a){for(var b="",c,d,e,f,h,i,g=0;g<a.length;){c=a[g++];d=a[g++];e=a[g++];f=c>>2;c=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d))h=i=64;else if(isNaN(e))i=64;b=b+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".charAt(f)+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".charAt(c)+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".charAt(h)+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".charAt(i)}return b},utf8Encode:function(a){a=
+    a.replace(/\r\n/g,"\n");for(var b="",c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128)b+=String.fromCharCode(d);else{if(d>127&&d<2048)b+=String.fromCharCode(d>>6|192);else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128)}b+=String.fromCharCode(d&63|128)}}return b},encodeDouble:function(a){var b=Array(8),c=a,d={len:8,mLen:52,rt:0},e,f,h,i,g,j;h=d.mLen;i=d.len*8-d.mLen-1;j=(1<<i)-1;g=j>>1;a=c<0?1:0;c=Math.abs(c);if(isNaN(c)||c==Infinity){c=isNaN(c)?1:0;e=j}else{e=Math.floor(Math.log(c)/
+    Math.LN2);if(c*(f=Math.pow(2,-e))<1){e--;f*=2}c+=e+g>=1?d.rt/f:d.rt*Math.pow(2,1-g);if(c*f>=2){e++;f/=2}if(e+g>=j){c=0;e=j}else if(e+g>=1){c=(c*f-1)*Math.pow(2,h);e+=g}else{c=c*Math.pow(2,g-1)*Math.pow(2,h);e=0}}for(d=d.len-1;h>=8;b[0+d]=c&255,d+=-1,c/=256,h-=8);e=e<<h|c;for(i+=h;i>0;b[0+d]=e&255,d+=-1,e/=256,i-=8);b[0+d- -1]|=a*128;return b}});(function(){var a={Type:{STOP:0,VOID:1,BOOL:2,BYTE:3,I08:3,DOUBLE:4,I16:6,I32:8,I64:10,STRING:11,UTF7:11,STRUCT:12,MAP:13,SET:14,LIST:15,UTF8:16,UTF16:17},MessageType:{CALL:1,REPLY:2,EXCEPTION:3}};a.TException={};a.TException.prototype={initialize:function(b,c){this.message=b;this.code=c==null?0:c}};a.TApplicationExceptionType={UNKNOWN:0,UNKNOWN_METHOD:1,INVALID_MESSAGE_TYPE:2,WRONG_METHOD_NAME:3,BAD_SEQUENCE_ID:4,MISSING_RESULT:5};a.TApplicationException=function(b,c){this.message=b;this.code=c==
+  null?0:c};a.TApplicationException.prototype={read:function(b){var c,d=b.readStructBegin(fname);for(this.fname=d.fname;;){d=b.readFieldBegin();if(d.ftype==TType.STOP)break;c=d.fid;switch(c){case 1:if(d.ftype==Type.STRING){d=b.readString();this.message=d.value}else b.skip(d.ftype);break;case 2:if(d.ftype==Type.I32){d=b.readI32();this.code=d.value}else b.skip(d.ftype);break;default:b.skip(d.ftype);break}b.readFieldEnd()}b.readStructEnd()},write:function(b){b.writeStructBegin("TApplicationException");
+    if(this.message){b.writeFieldBegin("message",Type.STRING,1);b.writeString(this.getMessage());b.writeFieldEnd()}if(this.code){b.writeFieldBegin("type",Type.I32,2);b.writeI32(this.code);b.writeFieldEnd()}b.writeFieldStop();b.writeStructEnd()},getCode:function(){return this.code},getMessage:function(){return this.message}};a.Transport=function(b){this.url=b;this.rpos=this.wpos=0;this.recv_buf=this.send_buf=""};a.Transport.prototype={getXmlHttpRequestObject:function(){try{return new XMLHttpRequest}catch(b){}try{return new ActiveXObject("Msxml2.XMLHTTP")}catch(c){}try{return new ActiveXObject("Microsoft.XMLHTTP")}catch(d){}throw"Your browser doesn't support the XmlHttpRequest object.  Try upgrading to Firefox.";
+  },flush:function(){if(this.url==undefined||this.url=="")return this.send_buf;var b=this.getXmlHttpRequestObject();b.overrideMimeType&&b.overrideMimeType("application/json");b.open("POST",this.url,false);b.send(this.send_buf);if(b.readyState!=4)throw"encountered an unknown ajax ready state: "+b.readyState;if(b.status!=200)throw"encountered a unknown request status: "+b.status;this.recv_buf=b.responseText;this.wpos=this.recv_buf_sz=this.recv_buf.length;this.rpos=0},setRecvBuffer:function(b){this.recv_buf=
+    b;this.wpos=this.recv_buf_sz=this.recv_buf.length;this.rpos=0},isOpen:function(){return true},open:function(){},close:function(){},read:function(b){var c=this.wpos-this.rpos;if(c==0)return"";var d=b;if(c<b)d=c;b=this.read_buf.substr(this.rpos,d);this.rpos+=d;return b},readAll:function(){return this.recv_buf},write:function(b){this.send_buf=b},getSendBuffer:function(){return this.send_buf}};a.Protocol=function(b){this.transport=b};a.Protocol.Type={};a.Protocol.Type[a.Type.BOOL]='"tf"';a.Protocol.Type[a.Type.BYTE]=
+    '"i8"';a.Protocol.Type[a.Type.I16]='"i16"';a.Protocol.Type[a.Type.I32]='"i32"';a.Protocol.Type[a.Type.I64]='"i64"';a.Protocol.Type[a.Type.DOUBLE]='"dbl"';a.Protocol.Type[a.Type.STRUCT]='"rec"';a.Protocol.Type[a.Type.STRING]='"str"';a.Protocol.Type[a.Type.MAP]='"map"';a.Protocol.Type[a.Type.LIST]='"lst"';a.Protocol.Type[a.Type.SET]='"set"';a.Protocol.RType={};a.Protocol.RType.tf=a.Type.BOOL;a.Protocol.RType.i8=a.Type.BYTE;a.Protocol.RType.i16=a.Type.I16;a.Protocol.RType.i32=a.Type.I32;a.Protocol.RType.i64=
+    a.Type.I64;a.Protocol.RType.dbl=a.Type.DOUBLE;a.Protocol.RType.rec=a.Type.STRUCT;a.Protocol.RType.str=a.Type.STRING;a.Protocol.RType.map=a.Type.MAP;a.Protocol.RType.lst=a.Type.LIST;a.Protocol.RType.set=a.Type.SET;a.Protocol.Version=1;a.Protocol.prototype={getTransport:function(){return this.transport},writeMessageBegin:function(b,c,d){this.tstack=[];this.tpos=[];this.tstack.push([a.Protocol.Version,'"'+b+'"',c,d])},writeMessageEnd:function(){var b=this.tstack.pop();this.wobj=this.tstack.pop();this.wobj.push(b);
+    this.wbuf="["+this.wobj.join(",")+"]";this.transport.write(this.wbuf)},writeStructBegin:function(){this.tpos.push(this.tstack.length);this.tstack.push({})},writeStructEnd:function(){var b=this.tpos.pop(),c=this.tstack[b],d="{",e=true;for(var f in c){if(e)e=false;else d+=",";d+=f+":"+c[f]}d+="}";this.tstack[b]=d},writeFieldBegin:function(b,c,d){this.tpos.push(this.tstack.length);this.tstack.push({fieldId:'"'+d+'"',fieldType:a.Protocol.Type[c]})},writeFieldEnd:function(){var b=this.tstack.pop(),c=this.tstack.pop();
+    this.tstack[this.tstack.length-1][c.fieldId]="{"+c.fieldType+":"+b+"}";this.tpos.pop()},writeFieldStop:function(){},writeMapBegin:function(b,c){this.tpos.push(this.tstack.length);this.tstack.push([a.Protocol.Type[b],a.Protocol.Type[c],0])},writeMapEnd:function(){var b=this.tpos.pop();if(b!=this.tstack.length){(this.tstack.length-b-1)%2!=0&&this.tstack.push("");this.tstack[b][this.tstack[b].length-1]=(this.tstack.length-b-1)/2;for(var c="{",d=true;this.tstack.length>b+1;){var e=this.tstack.pop(),f=
+    this.tstack.pop();if(d)d=false;else c+=",";c+='"'+f+'":'+e}c+="}";this.tstack[b].push(c);this.tstack[b]="["+this.tstack[b].join(",")+"]"}},writeListBegin:function(b,c){this.tpos.push(this.tstack.length);this.tstack.push([a.Protocol.Type[b],c])},writeListEnd:function(){for(var b=this.tpos.pop();this.tstack.length>b+1;){var c=this.tstack[b+1];this.tstack.splice(b+1,1);this.tstack[b].push(c)}this.tstack[b]="["+this.tstack[b].join(",")+"]"},writeSetBegin:function(b,c){this.tpos.push(this.tstack.length);
+    this.tstack.push([a.Protocol.Type[b],c])},writeSetEnd:function(){for(var b=this.tpos.pop();this.tstack.length>b+1;){var c=this.tstack[b+1];this.tstack.splice(b+1,1);this.tstack[b].push(c)}this.tstack[b]="["+this.tstack[b].join(",")+"]"},writeBool:function(b){this.tstack.push(b?1:0)},writeByte:function(b){this.tstack.push(b)},writeI16:function(b){this.tstack.push(b)},writeI32:function(b){this.tstack.push(b)},writeI64:function(b){this.tstack.push(b)},writeDouble:function(b){this.tstack.push(b)},writeString:function(b){this.tstack.push('"'+
+    encodeURIComponent(b)+'"')},writeBinary:function(b){this.writeString(b)},readMessageBegin:function(){this.rstack=[];this.rpos=[];this.robj=eval(this.transport.readAll());var b={},c=this.robj.shift();if(c!=a.Protocol.Version)throw"Wrong thrift protocol version: "+c;b.fname=this.robj.shift();b.mtype=this.robj.shift();b.rseqid=this.robj.shift();this.rstack.push(this.robj.shift());return b},readMessageEnd:function(){},readStructBegin:function(){var b={};b.fname="";this.rstack[this.rstack.length-1]instanceof
+  Array&&this.rstack.push(this.rstack[this.rstack.length-1].shift());return b},readStructEnd:function(){this.rstack[this.rstack.length-2]instanceof Array&&this.rstack.pop()},readFieldBegin:function(){var b={},c=-1,d=a.Type.STOP;for(var e in this.rstack[this.rstack.length-1])if(e!=null){c=parseInt(e);this.rpos.push(this.rstack.length);var f=this.rstack[this.rstack.length-1][c];delete this.rstack[this.rstack.length-1][c];this.rstack.push(f);break}if(c!=-1)for(e in this.rstack[this.rstack.length-1])if(a.Protocol.RType[e]!=
+    null){d=a.Protocol.RType[e];this.rstack[this.rstack.length-1]=this.rstack[this.rstack.length-1][e]}b.fname="";b.ftype=d;b.fid=c;return b},readFieldEnd:function(){for(var b=this.rpos.pop();this.rstack.length>b;)this.rstack.pop()},readMapBegin:function(){var b=this.rstack.pop(),c={};c.ktype=a.Protocol.RType[b.shift()];c.vtype=a.Protocol.RType[b.shift()];c.size=b.shift();this.rpos.push(this.rstack.length);this.rstack.push(b.shift());return c},readMapEnd:function(){this.readFieldEnd()},readListBegin:function(){var b=
+    this.rstack[this.rstack.length-1],c={};c.etype=a.Protocol.RType[b.shift()];c.size=b.shift();this.rpos.push(this.rstack.length);this.rstack.push(b);return c},readListEnd:function(){this.readFieldEnd()},readSetBegin:function(b,c){return this.readListBegin(b,c)},readSetEnd:function(){return this.readListEnd()},readBool:function(){var b=this.readI32();b.value=b!=null&&b.value=="1"?true:false;return b},readByte:function(){return this.readI32()},readI16:function(){return this.readI32()},readI32:function(b){if(b==
+    undefined)b=this.rstack[this.rstack.length-1];var c={};if(b instanceof Array)c.value=b.length==0?undefined:b.shift();else if(b instanceof Object)for(var d in b){if(d!=null){this.rstack.push(b[d]);delete b[d];c.value=d;break}}else c.value=b;return c},readI64:function(){return this.readI32()},readDouble:function(){return this.readI32()},readString:function(){var b=this.readI32();b.value=decodeURIComponent(b.value);return b},readBinary:function(){return this.readString()},skip:function(){throw"skip not supported yet";
+  }};Ooyala.Thrift=a})();Ooyala.Thrift.BinaryProtocol=function(a){this.transport=a};Ooyala.Thrift.BinaryProtocol.VERSION_MASK=4294901760;Ooyala.Thrift.BinaryProtocol.VERSION_1=2147549184;Ooyala.Thrift.BinaryProtocol.TYPE_MASK=255;
+  Ooyala.Thrift.BinaryProtocol.prototype={getTransport:function(){return this.transport},writeMessageBegin:function(a,b,c){this.writeI16(Ooyala.Thrift.BinaryProtocol.VERSION_1>>16);this.writeI16(b);this.writeString(a);this.writeI32(c)},writeMessageEnd:function(){},writeStructBegin:function(){},writeStructEnd:function(){},writeFieldBegin:function(a,b,c){this.writeByte(b);this.writeI16(c)},writeFieldEnd:function(){},writeFieldStop:function(){this.writeByte(Ooyala.Thrift.Type.STOP)},writeMapBegin:function(a,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            b,c){this.writeByte(a);this.writeByte(b);this.writeI32(c)},writeMapEnd:function(){},writeListBegin:function(a,b){this.writeByte(a);this.writeI32(b)},writeListEnd:function(){},writeSetBegin:function(a,b){this.writeByte(a);this.writeI32(b)},writeSetEnd:function(){},writeBool:function(a){this.writeByte(a?1:0)},writeByte:function(a){this.transport.write([a])},writeI16:function(a){this.transport.write([(a&65280)>>8,a&255])},writeI32:function(a){var b=a&65535;this.writeI16((a&4294901760)>>16);this.writeI16(b)},
+    writeI64:function(a){var b=a&4294967295;this.writeI32(a/4294967296&4294967295);this.writeI32(b)},writeDouble:function(a){this.transport.write(Ooyala.Util.encodeDouble(a))},writeString:function(a){a=Ooyala.Util.utf8Encode(a);this.writeI32(a.length);for(var b=0;b<a.length;b++)this.writeByte(a.charCodeAt(b))},readMessageBegin:function(){},readMessageEnd:function(){},readStructBegin:function(){},readStructEnd:function(){},readFieldBegin:function(){},readFieldEnd:function(){},readMapBegin:function(){},
+    readMapEnd:function(){},readListBegin:function(){},readListEnd:function(){},readSetBegin:function(){},readSetEnd:function(){},readBool:function(){},readByte:function(){},readI16:function(){},readI32:function(){},readI64:function(){},readDouble:function(){},readString:function(){},skip:function(){throw"skip not supported yet";}};Ooyala.Thrift.MemoryBufferTransport=function(a){this.buf=a||[];this.index=0};Ooyala.Thrift.MemoryBufferTransport.prototype={isOpen:function(){return true},open:function(){},close:function(){},read:function(a){var b=this.buf.slice(this.index,this.index+a);this.index+=a;if(this.index>this.buf.length)this.index=this.buf.length;return b},readAll:function(){return this.buf},write:function(a){this.buf=this.buf.concat(a)},flush:function(){},resetBuffer:function(){this.buf=[];this.index=0}};Ooyala.Thrift.Serializer=function(){this.transport=new Ooyala.Thrift.MemoryBufferTransport(null);this.protocol=new Ooyala.Thrift.BinaryProtocol(this.transport)};Ooyala.Thrift.Serializer.prototype={serialize:function(a){this.transport.resetBuffer();a.write(this.protocol);return this.transport.readAll()}};if(typeof Ooyala==="undefined")Ooyala={};if(typeof Ooyala.AdsLogging==="undefined")Ooyala.AdsLogging={};Ooyala.AdsLogging.AdFormat={VIDEO:1,OVERLAY:2,ENDCAP:3,COMPANION:4};Ooyala.AdsLogging.AdSourceId={OOYALA:1,DOUBLECLICK:2,LIGHTNINGCAST:3,YUME:4,TREMOR:5,ADSENSE:6,TV2N:7,OAS:8,ADTECH:9,SCANSCOUT:10,ATLAS:11,FREEWHEEL:12,OPENX:13,LIVERAIL:14,VAST:15,ADIFY:16,DART_ENTERPRISE:17,CBSI:18,BRIGHTROLL:19,UNKNOWN:20,ADAPTV:21,VIDEOPLAZA:22,SPOTXCHANGE:23};
+  Ooyala.AdsLogging.AdPositionType={PREROLL:1,MIDROLL:2,POSTROLL:3,OVERLAY_POSITION:4,ENDSLATE:5,STANDALONE:6};Ooyala.AdsLogging.AdFailureReason={LOAD_ERROR:1,LOAD_TIMEOUT:2,LOAD_IO_ERROR:3,PREFETCH_ERROR:4,PREFETCH_TIMEOUT:5,PREFETCH_IO_ERROR:6,PLAY_ERROR:7,PLAY_TIMEOUT:8,PLAY_IO_ERROR:9,INVALID_PLAYER_CONFIGURATION:10,INVALID_AD_CONFIGURATION:11,AD_NOT_FOUND:12,EXCEPTION:13,AD_ERROR:14,INVALID_AD_RESPONSE:15,CONNECTION_ERROR:16,BUFFERING_TIMEOUT:17,POLICY_RESTRICTION:18};
+  Ooyala.AdsLogging.AD_FORMAT_MAP={1:"video",2:"overlay",3:"endcap",4:"companion"};Ooyala.AdsLogging.AD_SOURCE_MAP={1:"ooyala",2:"doubleclick",3:"lightningcast",4:"yume",5:"tremor",6:"adsense",7:"tv2n",8:"oas",9:"adtech",10:"scanscout",11:"atlas",12:"freewheel",13:"openx",14:"liverail",15:"vast",16:"adify",17:"dart_enterprise",18:"cbsi",19:"brightroll",21:"adap-tv",22:"videoplaza",23:"spotxchange",20:"[unknown]"};
+  Ooyala.AdsLogging.AD_POSITION_TYPE_MAP={1:"preroll",2:"midroll",3:"postroll",4:"overlay",5:"endslate",6:"standalone"};Ooyala.AdsLogging.AD_FAILURE_REASON_MAP={1:"loadError",2:"loadTimeout",3:"loadIOError",4:"prefetchError",5:"prefetchTimeout",6:"prefetchIOError",7:"playError",8:"playTimeout",9:"playIOError",10:"invalidPlayerConfiguration",11:"invalidAdConfiguration",12:"adNotFound",13:"exception",14:"adError",15:"invalidAdResponse",16:"connectionError",17:"bufferingTimeout",18:"policyRestriction"};
+  Ooyala.AdsLogging.AdParams=function(a){this.string_key="";this.integer_key=0;this.value="";if(a!=null){if(null!=a.string_key)this.string_key=a.string_key;if(null!=a.integer_key)this.integer_key=a.integer_key;if(null!=a.value)this.value=a.value}};Ooyala.AdsLogging.AdParams.prototype={};
+  Ooyala.AdsLogging.AdParams.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.string_key=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.integer_key=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.value=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.AdsLogging.AdParams.prototype.write=function(a){a.writeStructBegin("AdParams");if(null!=this.string_key){a.writeFieldBegin("string_key",Ooyala.Thrift.Type.STRING,1);a.writeString(this.string_key);a.writeFieldEnd()}if(null!=this.integer_key){a.writeFieldBegin("integer_key",Ooyala.Thrift.Type.I32,2);a.writeI32(this.integer_key);a.writeFieldEnd()}if(null!=this.value){a.writeFieldBegin("value",Ooyala.Thrift.Type.STRING,3);a.writeString(this.value);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.AdsLogging.AdClick=function(a){this.clickUrl="";this.realTime=this.playheadTimeMillis=0;if(a!=null){if(null!=a.clickUrl)this.clickUrl=a.clickUrl;if(null!=a.playheadTimeMillis)this.playheadTimeMillis=a.playheadTimeMillis;if(null!=a.realTime)this.realTime=a.realTime}};Ooyala.AdsLogging.AdClick.prototype={};
+  Ooyala.AdsLogging.AdClick.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.clickUrl=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.playheadTimeMillis=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.realTime=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.AdsLogging.AdClick.prototype.write=function(a){a.writeStructBegin("AdClick");if(null!=this.clickUrl){a.writeFieldBegin("clickUrl",Ooyala.Thrift.Type.STRING,1);a.writeString(this.clickUrl);a.writeFieldEnd()}if(null!=this.playheadTimeMillis){a.writeFieldBegin("playheadTimeMillis",Ooyala.Thrift.Type.I32,2);a.writeI32(this.playheadTimeMillis);a.writeFieldEnd()}if(null!=this.realTime){a.writeFieldBegin("realTime",Ooyala.Thrift.Type.I32,3);a.writeI32(this.realTime);a.writeFieldEnd()}a.writeFieldStop();
+    a.writeStructEnd()};
+  Ooyala.AdsLogging.AdSpot=function(a){this.adSourceContentId=this.parentContentReportingIdIndex=this.adPositionInMillis=this.ooyalaAdReportingIdIndex=this.adPositionType=this.adFormat=this.adSource=0;this.passthroughParameters=this.tagUrl="";this.adId=0;if(a!=null){if(null!=a.adSource)this.adSource=a.adSource;if(null!=a.adFormat)this.adFormat=a.adFormat;if(null!=a.adPositionType)this.adPositionType=a.adPositionType;if(null!=a.ooyalaAdReportingIdIndex)this.ooyalaAdReportingIdIndex=a.ooyalaAdReportingIdIndex;
+    if(null!=a.adPositionInMillis)this.adPositionInMillis=a.adPositionInMillis;if(null!=a.parentContentReportingIdIndex)this.parentContentReportingIdIndex=a.parentContentReportingIdIndex;if(null!=a.adSourceContentId)this.adSourceContentId=a.adSourceContentId;if(null!=a.tagUrl)this.tagUrl=a.tagUrl;if(null!=a.passthroughParameters)this.passthroughParameters=a.passthroughParameters;if(null!=a.adId)this.adId=a.adId}};Ooyala.AdsLogging.AdSpot.prototype={};
+  Ooyala.AdsLogging.AdSpot.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.adSource=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.adFormat=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.adPositionType=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.BYTE){b=
+    a.readByte();this.ooyalaAdReportingIdIndex=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.adPositionInMillis=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.parentContentReportingIdIndex=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.adSourceContentId=b.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.tagUrl=b.value}else a.skip(c);break;case 9:if(c==
+    Ooyala.Thrift.Type.STRING){b=a.readString();this.passthroughParameters=b.value}else a.skip(c);break;case 10:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.adId=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.AdsLogging.AdSpot.prototype.write=function(a){a.writeStructBegin("AdSpot");if(null!=this.adSource){a.writeFieldBegin("adSource",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.adSource);a.writeFieldEnd()}if(null!=this.adFormat){a.writeFieldBegin("adFormat",Ooyala.Thrift.Type.BYTE,2);a.writeByte(this.adFormat);a.writeFieldEnd()}if(null!=this.adPositionType){a.writeFieldBegin("adPositionType",Ooyala.Thrift.Type.BYTE,3);a.writeByte(this.adPositionType);a.writeFieldEnd()}if(null!=this.ooyalaAdReportingIdIndex){a.writeFieldBegin("ooyalaAdReportingIdIndex",
+    Ooyala.Thrift.Type.BYTE,4);a.writeByte(this.ooyalaAdReportingIdIndex);a.writeFieldEnd()}if(null!=this.adPositionInMillis){a.writeFieldBegin("adPositionInMillis",Ooyala.Thrift.Type.I32,5);a.writeI32(this.adPositionInMillis);a.writeFieldEnd()}if(null!=this.parentContentReportingIdIndex){a.writeFieldBegin("parentContentReportingIdIndex",Ooyala.Thrift.Type.BYTE,6);a.writeByte(this.parentContentReportingIdIndex);a.writeFieldEnd()}if(null!=this.adSourceContentId){a.writeFieldBegin("adSourceContentId",Ooyala.Thrift.Type.I32,
+    7);a.writeI32(this.adSourceContentId);a.writeFieldEnd()}if(null!=this.tagUrl){a.writeFieldBegin("tagUrl",Ooyala.Thrift.Type.STRING,8);a.writeString(this.tagUrl);a.writeFieldEnd()}if(null!=this.passthroughParameters){a.writeFieldBegin("passthroughParameters",Ooyala.Thrift.Type.STRING,9);a.writeString(this.passthroughParameters);a.writeFieldEnd()}if(null!=this.adId){a.writeFieldBegin("adId",Ooyala.Thrift.Type.I32,10);a.writeI32(this.adId);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.AdsLogging.AdTracking=function(a){this.playThroughCompletion=this.adSpotIndex=0;this.clickToVideo=false;this.clickUrl="";this.failureAfterAdImpression=this.dupClick=false;this.failureReason=0;if(a!=null){if(null!=a.adSpotIndex)this.adSpotIndex=a.adSpotIndex;if(null!=a.playThroughCompletion)this.playThroughCompletion=a.playThroughCompletion;if(null!=a.clickToVideo)this.clickToVideo=a.clickToVideo;if(null!=a.clickUrl)this.clickUrl=a.clickUrl;if(null!=a.dupClick)this.dupClick=a.dupClick;if(null!=
+    a.failureAfterAdImpression)this.failureAfterAdImpression=a.failureAfterAdImpression;if(null!=a.failureReason)this.failureReason=a.failureReason}};Ooyala.AdsLogging.AdTracking.prototype={};
+  Ooyala.AdsLogging.AdTracking.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.adSpotIndex=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.playThroughCompletion=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.clickToVideo=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.STRING){b=
+    a.readString();this.clickUrl=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.dupClick=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.failureAfterAdImpression=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.failureReason=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.AdsLogging.AdTracking.prototype.write=function(a){a.writeStructBegin("AdTracking");if(null!=this.adSpotIndex){a.writeFieldBegin("adSpotIndex",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.adSpotIndex);a.writeFieldEnd()}if(null!=this.playThroughCompletion){a.writeFieldBegin("playThroughCompletion",Ooyala.Thrift.Type.I16,2);a.writeI16(this.playThroughCompletion);a.writeFieldEnd()}if(null!=this.clickToVideo){a.writeFieldBegin("clickToVideo",Ooyala.Thrift.Type.BOOL,3);a.writeBool(this.clickToVideo);
+    a.writeFieldEnd()}if(null!=this.clickUrl){a.writeFieldBegin("clickUrl",Ooyala.Thrift.Type.STRING,4);a.writeString(this.clickUrl);a.writeFieldEnd()}if(null!=this.dupClick){a.writeFieldBegin("dupClick",Ooyala.Thrift.Type.BOOL,5);a.writeBool(this.dupClick);a.writeFieldEnd()}if(null!=this.failureAfterAdImpression){a.writeFieldBegin("failureAfterAdImpression",Ooyala.Thrift.Type.BOOL,6);a.writeBool(this.failureAfterAdImpression);a.writeFieldEnd()}if(null!=this.failureReason){a.writeFieldBegin("failureReason",
+    Ooyala.Thrift.Type.BYTE,7);a.writeByte(this.failureReason);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};if(typeof Ooyala==="undefined")Ooyala={};if(typeof Ooyala.CustomEventsLogging==="undefined")Ooyala.CustomEventsLogging={};Ooyala.CustomEventsLogging.Callee={AS:1,JS:2,OPF:3,OTHER:4};Ooyala.CustomEventsLogging.CalleeFormat={1:"actionscript api",2:"javascript api",3:"OPF api",4:"unknown api"};
+  Ooyala.CustomEventsLogging.CustomEvent=function(a){this.event="";this.operations=[];this.callee=0;this.process=false;this.value=0;if(a!=null){if(null!=a.event)this.event=a.event;if(null!=a.operations)this.operations=a.operations;if(null!=a.callee)this.callee=a.callee;if(null!=a.process)this.process=a.process;if(null!=a.value)this.value=a.value}};Ooyala.CustomEventsLogging.CustomEvent.prototype={};
+  Ooyala.CustomEventsLogging.CustomEvent.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING){var d=a.readString();this.event=d.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.LIST){b=0;this.operations=[];b=a.readListBegin().size;for(c=0;c<b;++c){d=null;d=a.readString();d=d.value;this.operations.push(d)}a.readListEnd()}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.BYTE){d=
+    a.readByte();this.callee=d.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.BOOL){d=a.readBool();this.process=d.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.I32){d=a.readI32();this.value=d.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.CustomEventsLogging.CustomEvent.prototype.write=function(a){a.writeStructBegin("CustomEvent");if(null!=this.event){a.writeFieldBegin("event",Ooyala.Thrift.Type.STRING,1);a.writeString(this.event);a.writeFieldEnd()}if(null!=this.operations){a.writeFieldBegin("operations",Ooyala.Thrift.Type.LIST,2);a.writeListBegin(Ooyala.Thrift.Type.STRING,this.operations.length);for(var b=0;b<this.operations.length;b++)a.writeString(this.operations[b]);a.writeListEnd();a.writeFieldEnd()}if(null!=this.callee){a.writeFieldBegin("callee",
+    Ooyala.Thrift.Type.BYTE,3);a.writeByte(this.callee);a.writeFieldEnd()}if(null!=this.process){a.writeFieldBegin("process",Ooyala.Thrift.Type.BOOL,4);a.writeBool(this.process);a.writeFieldEnd()}if(null!=this.value){a.writeFieldBegin("value",Ooyala.Thrift.Type.I32,5);a.writeI32(this.value);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};if(typeof Ooyala==="undefined")Ooyala={};if(typeof Ooyala.MetricsLogging==="undefined")Ooyala.MetricsLogging={};
+  Ooyala.MetricsLogging.MetricsKey={TIME_TO_UI_READY:1,TIME_TO_PLAYBACK_READY:2,TIME_TO_START_SCREEN_IMAGE_DISPLAYED:3,TIME_FROM_PLAY_CLICK_TO_PLAY:4,TIME_TO_START_PLAY_WITH_AUTOPLAY:5,TIME_TO_LOAD_AD:6,TIME_TO_PREFETCH_AD:7,TIME_TO_PLAY_AD:8,USER_VIEWABLE_LATENCY_FOR_AD:9,TIME_TO_LOAD_AD_FAILURE:10,TIME_TO_PREFETCH_AD_FAILURE:11,TIME_TO_PLAY_AD_FAILURE:12,USER_VIEWABLE_LATENCY_FOR_AD_FAILURE:13,TIME_SPENT_BUFFERING:20,TIME_FROM_LOAD_TO_API_READY:30,TIME_FROM_PLAY_TO_PLAYBACK_STARTED:31};
+  Ooyala.MetricsLogging.METRICS_KEY_TYPENAMES={1:"timeToUIReady",2:"timeToPlaybackReady",3:"timeToStartScreenImageDisplayed",5:"timeToStartPlayWithAutoplay",4:"timeFromPlayClickToPlay",6:"timeToLoadAd",7:"timeToPrefetchAd",8:"timeToPlayAd",9:"userViewableLatencyForAd",10:"timeToLoadAdFailure",11:"timeToPrefetchAdFailure",12:"timeToPlayAdFailure",13:"userViewableLatencyForAdFailure",20:"timeSpentBuffering",30:"timeFromLoadToAPIReady",31:"timeFromPlayToPlaybackStarted"};
+  Ooyala.MetricsLogging.Metric=function(a){this.key=0;this.values=[];if(a!=null){if(null!=a.key)this.key=a.key;if(null!=a.values)this.values=a.values}};Ooyala.MetricsLogging.Metric.prototype={};
+  Ooyala.MetricsLogging.Metric.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.I16){var d=a.readI16();this.key=d.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.LIST){b=0;this.values=[];b=a.readListBegin().size;for(c=0;c<b;++c){d=null;d=a.readI32();d=d.value;this.values.push(d)}a.readListEnd()}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.MetricsLogging.Metric.prototype.write=function(a){a.writeStructBegin("Metric");if(null!=this.key){a.writeFieldBegin("key",Ooyala.Thrift.Type.I16,1);a.writeI16(this.key);a.writeFieldEnd()}if(null!=this.values){a.writeFieldBegin("values",Ooyala.Thrift.Type.LIST,2);a.writeListBegin(Ooyala.Thrift.Type.I32,this.values.length);for(var b=0;b<this.values.length;b++)a.writeI32(this.values[b]);a.writeListEnd();a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};if(typeof Ooyala==="undefined")Ooyala={};if(typeof Ooyala.Logging==="undefined")Ooyala.Logging={};
+  Ooyala.Logging.PlayerEventType={UNKNOWN:0,DISPLAY:1,PLAY:2,PERCENTAGE_WATCHED:3,SEEK:4,REPLAY:5,PAUSE:6,BUCKETS_WATCHED:7,TOTAL_TIME_PLAYED:8,BITRATE_PLAYED:9,DOWNLOAD:10,CHUNK_FAILOVER:11,BUFFER:12,CV_INFO:13,AD_CLICK:14,AD_IMPRESSION:15,AD_PLAYTHROUGH:16,AD_PLAY_FAILED:17,METRIC:18,PLAYER_LOAD:19,BITRATE_TRANSITION:20,BITRATES_AVAILABLE:21,SHARE:22,PAY_PER_VIEW:23,SAS_AUTHORIZE:24,SAS_AUTHORIZE_V2:25,AD_REQUESTED:26,AD_MOUSEOVER:27,VIDEO_START:28,CUSTOM:29,RELATED_VIDEO_SELECTED:30,RELATED_VIDEOS_DISPLAYED:31,
+    PLAYTHROUGH_PERCENT:32};Ooyala.Logging.FileType={VIDEO_FILE:1,IMAGE:2,PLAYER:3,MODULE:4,XML:5};Ooyala.Logging.ChunkFailoverReason={UNKNOWN_REASON:0,READ_TIMEOUT:1,CONNECTION_TIMEOUT:2,CONNECTION_ERROR:3,CLOSE:4,DISCONNECTED:5};Ooyala.Logging.StreamFormat={VP6:1,H264:2,OTHER:3};Ooyala.Logging.PlayerEmbedType={JS:1,OBJECT:2,FLASH_IN_FLASH:3,EXTERNAL_ANALYTICS:4};Ooyala.Logging.BufferType={UNKNOWN_BUFFER_TYPE:0,LOW_BANDWIDTH:1,USER_INITIATED:2,CONNECTION_LOST:3};Ooyala.Logging.Gateway={PAYPAL:1,PAYMO:2};
+  Ooyala.Logging.PayPerViewCheckoutType={CHECKOUT_PRESENTED:1,CHECKOUT_STARTED:2,CHECKOUT_FINISHED:3,CHECKOUT_CANCELLED:4,CHECKOUT_FAILED:5};Ooyala.Logging.ReportingIdType={GLOBAL:1,VIDEO:2,CHANNEL:3,CHANNEL_SET:4,PROVIDER:5};Ooyala.Logging.UserInfoSource={AKAMAI:1,MAXMIND:2,ENCRYPTED_SAS:3};
+  Ooyala.Logging.PLAYER_EVENT_TYPENAMES={0:"unknown",1:"display",2:"play",3:"percentageWatched",4:"seek",5:"replay",6:"pause",7:"bucketsWatched",8:"totalTimePlayed",9:"bitratePlayed",10:"download",11:"chunkFailover",12:"buffer",13:"cvInfo",14:"adClick",27:"adMouseover",26:"adRequested",15:"adImpression",16:"adPlaythrough",17:"adPlayFailed",18:"metric",19:"playerLoad",20:"bitrateTransition",21:"bitratesAvailable",22:"share",23:"payPerView",24:"sasAuthorize",25:"sasAuthorizeV2",28:"videoStart",29:"customEvent",
+    30:"relatedVideoSelected",31:"relatedVideoDisplayed",32:"playthroughPercent"};Ooyala.Logging.FILE_TYPENAMES={1:"video",2:"image",3:"player",4:"module",5:"xml"};Ooyala.Logging.STREAM_FORMAT_TYPENAMES={1:"vp6",2:"h264",3:"other"};Ooyala.Logging.PLAYER_EMBED_TYPENAMES={1:"js",2:"object",3:"flashInFlash",4:"externalAnalytics"};Ooyala.Logging.BUFFER_TYPENAMES={0:"unknown",1:"lowBandwidth",2:"userInitiated",3:"connectionLost"};Ooyala.Logging.GATEWAY_TYPENAMES={1:"paypal",2:"paymo"};
+  Ooyala.Logging.PAY_PER_VIEW_CHECKOUT_TYPENAMES={1:"checkoutPresented",2:"checkoutStarted",3:"checkoutFinished",4:"checkoutCancelled",5:"checkoutFailed"};Ooyala.Logging.REPORTING_ID_TYPE_MAP={1:"global",2:"video",3:"channel",4:"channelSet",5:"provider"};
+  Ooyala.Logging.DownloadStats=function(a){this.servingDomainId=0;this.fileTypeToBytesDownloaded={};this.servingDomain="";this.timesToFirstByte=[];this.avgTimeToFirstByte=this.numLatencyPoints=this.downloadTime=0;this.percentSingleConnection=100;this.totalSingleStreamPlayTime=this.totalSingleStreamBytes=this.bytesDownloadedFromSingleConnection=0;this.filetype=1;this.timeToFirstByte=this.bytesDownloaded=0;if(a!=null){if(null!=a.servingDomainId)this.servingDomainId=a.servingDomainId;if(null!=a.fileTypeToBytesDownloaded)this.fileTypeToBytesDownloaded=
+    a.fileTypeToBytesDownloaded;if(null!=a.servingDomain)this.servingDomain=a.servingDomain;if(null!=a.timesToFirstByte)this.timesToFirstByte=a.timesToFirstByte;if(null!=a.downloadTime)this.downloadTime=a.downloadTime;if(null!=a.numLatencyPoints)this.numLatencyPoints=a.numLatencyPoints;if(null!=a.avgTimeToFirstByte)this.avgTimeToFirstByte=a.avgTimeToFirstByte;if(null!=a.percentSingleConnection)this.percentSingleConnection=a.percentSingleConnection;if(null!=a.bytesDownloadedFromSingleConnection)this.bytesDownloadedFromSingleConnection=
+    a.bytesDownloadedFromSingleConnection;if(null!=a.totalSingleStreamBytes)this.totalSingleStreamBytes=a.totalSingleStreamBytes;if(null!=a.totalSingleStreamPlayTime)this.totalSingleStreamPlayTime=a.totalSingleStreamPlayTime;if(null!=a.filetype)this.filetype=a.filetype;if(null!=a.bytesDownloaded)this.bytesDownloaded=a.bytesDownloaded;if(null!=a.timeToFirstByte)this.timeToFirstByte=a.timeToFirstByte}};Ooyala.Logging.DownloadStats.prototype={};
+  Ooyala.Logging.DownloadStats.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.servingDomainId=b.value}else a.skip(c);break;case 11:if(c==Ooyala.Thrift.Type.MAP){c=0;this.fileTypeToBytesDownloaded={};b=a.readMapBegin();c=b.size;for(var d=0;d<c;++d){val6=key5=0;b=a.readByte();key5=b.value;b=a.readI32();val6=b.value;this.fileTypeToBytesDownloaded[key5]=
+    val6}a.readMapEnd()}else a.skip(c);break;case 15:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.servingDomain=b.value}else a.skip(c);break;case 12:if(c==Ooyala.Thrift.Type.LIST){c=0;this.timesToFirstByte=[];b=a.readListBegin();c=b.size;for(d=0;d<c;++d){b=null;b=a.readI16();b=b.value;this.timesToFirstByte.push(b)}a.readListEnd()}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.downloadTime=b.value}else a.skip(c);break;case 13:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();
+    this.numLatencyPoints=b.value}else a.skip(c);break;case 14:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.avgTimeToFirstByte=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.percentSingleConnection=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.bytesDownloadedFromSingleConnection=b.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.totalSingleStreamBytes=b.value}else a.skip(c);break;case 9:if(c==
+    Ooyala.Thrift.Type.I32){b=a.readI32();this.totalSingleStreamPlayTime=b.value}else a.skip(c);break;case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.filetype=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.bytesDownloaded=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.timeToFirstByte=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.DownloadStats.prototype.write=function(a){a.writeStructBegin("DownloadStats");if(null!=this.servingDomainId){a.writeFieldBegin("servingDomainId",Ooyala.Thrift.Type.I32,2);a.writeI32(this.servingDomainId);a.writeFieldEnd()}if(null!=this.fileTypeToBytesDownloaded){a.writeFieldBegin("fileTypeToBytesDownloaded",Ooyala.Thrift.Type.MAP,11);var b=0;for(key in this.fileTypeToBytesDownloaded)this.fileTypeToBytesDownloaded.hasOwnProperty(key)&&b++;a.writeMapBegin(Ooyala.Thrift.Type.BYTE,Ooyala.Thrift.Type.I32,
+    b);for(var c in this.fileTypeToBytesDownloaded){b=this.fileTypeToBytesDownloaded[c];a.writeByte(c);a.writeI32(b)}a.writeMapEnd();a.writeFieldEnd()}if(null!=this.servingDomain){a.writeFieldBegin("servingDomain",Ooyala.Thrift.Type.STRING,15);a.writeString(this.servingDomain);a.writeFieldEnd()}if(null!=this.timesToFirstByte){a.writeFieldBegin("timesToFirstByte",Ooyala.Thrift.Type.LIST,12);a.writeListBegin(Ooyala.Thrift.Type.I16,this.timesToFirstByte.length);for(c=0;c<this.timesToFirstByte.length;c++)a.writeI16(this.timesToFirstByte[c]);
+    a.writeListEnd();a.writeFieldEnd()}if(null!=this.downloadTime){a.writeFieldBegin("downloadTime",Ooyala.Thrift.Type.I32,5);a.writeI32(this.downloadTime);a.writeFieldEnd()}if(null!=this.numLatencyPoints){a.writeFieldBegin("numLatencyPoints",Ooyala.Thrift.Type.I16,13);a.writeI16(this.numLatencyPoints);a.writeFieldEnd()}if(null!=this.avgTimeToFirstByte){a.writeFieldBegin("avgTimeToFirstByte",Ooyala.Thrift.Type.I16,14);a.writeI16(this.avgTimeToFirstByte);a.writeFieldEnd()}if(null!=this.percentSingleConnection){a.writeFieldBegin("percentSingleConnection",
+    Ooyala.Thrift.Type.BYTE,6);a.writeByte(this.percentSingleConnection);a.writeFieldEnd()}if(null!=this.bytesDownloadedFromSingleConnection){a.writeFieldBegin("bytesDownloadedFromSingleConnection",Ooyala.Thrift.Type.I32,7);a.writeI32(this.bytesDownloadedFromSingleConnection);a.writeFieldEnd()}if(null!=this.totalSingleStreamBytes){a.writeFieldBegin("totalSingleStreamBytes",Ooyala.Thrift.Type.I32,8);a.writeI32(this.totalSingleStreamBytes);a.writeFieldEnd()}if(null!=this.totalSingleStreamPlayTime){a.writeFieldBegin("totalSingleStreamPlayTime",
+    Ooyala.Thrift.Type.I32,9);a.writeI32(this.totalSingleStreamPlayTime);a.writeFieldEnd()}if(null!=this.filetype){a.writeFieldBegin("filetype",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.filetype);a.writeFieldEnd()}if(null!=this.bytesDownloaded){a.writeFieldBegin("bytesDownloaded",Ooyala.Thrift.Type.I32,3);a.writeI32(this.bytesDownloaded);a.writeFieldEnd()}if(null!=this.timeToFirstByte){a.writeFieldBegin("timeToFirstByte",Ooyala.Thrift.Type.I32,4);a.writeI32(this.timeToFirstByte);a.writeFieldEnd()}a.writeFieldStop();
+    a.writeStructEnd()};Ooyala.Logging.ChunkFailoverInfo=function(a){this.servingDomainId=this.reason=0;this.chunkShortUrl="";this.firstForUrl=this.firstForChunk=false;if(a!=null){if(null!=a.reason)this.reason=a.reason;if(null!=a.servingDomainId)this.servingDomainId=a.servingDomainId;if(null!=a.chunkShortUrl)this.chunkShortUrl=a.chunkShortUrl;if(null!=a.firstForChunk)this.firstForChunk=a.firstForChunk;if(null!=a.firstForUrl)this.firstForUrl=a.firstForUrl}};Ooyala.Logging.ChunkFailoverInfo.prototype={};
+  Ooyala.Logging.ChunkFailoverInfo.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.reason=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.servingDomainId=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.chunkShortUrl=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.BOOL){b=
+    a.readBool();this.firstForChunk=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.firstForUrl=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.ChunkFailoverInfo.prototype.write=function(a){a.writeStructBegin("ChunkFailoverInfo");if(null!=this.reason){a.writeFieldBegin("reason",Ooyala.Thrift.Type.I32,1);a.writeI32(this.reason);a.writeFieldEnd()}if(null!=this.servingDomainId){a.writeFieldBegin("servingDomainId",Ooyala.Thrift.Type.I32,2);a.writeI32(this.servingDomainId);a.writeFieldEnd()}if(null!=this.chunkShortUrl){a.writeFieldBegin("chunkShortUrl",Ooyala.Thrift.Type.STRING,3);a.writeString(this.chunkShortUrl);a.writeFieldEnd()}if(null!=
+    this.firstForChunk){a.writeFieldBegin("firstForChunk",Ooyala.Thrift.Type.BOOL,4);a.writeBool(this.firstForChunk);a.writeFieldEnd()}if(null!=this.firstForUrl){a.writeFieldBegin("firstForUrl",Ooyala.Thrift.Type.BOOL,5);a.writeBool(this.firstForUrl);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.PlayheadStatus=function(a){this.fromSeekTimeMillis=this.lastSeekTimeMillis=this.playheadTimeMillis=0;this.DEPRECATED_firstForVideo=this.DEPRECATED_firstForUser=false;if(a!=null){if(null!=a.playheadTimeMillis)this.playheadTimeMillis=a.playheadTimeMillis;if(null!=a.lastSeekTimeMillis)this.lastSeekTimeMillis=a.lastSeekTimeMillis;if(null!=a.fromSeekTimeMillis)this.fromSeekTimeMillis=a.fromSeekTimeMillis;if(null!=a.DEPRECATED_firstForUser)this.DEPRECATED_firstForUser=a.DEPRECATED_firstForUser;
+    if(null!=a.DEPRECATED_firstForVideo)this.DEPRECATED_firstForVideo=a.DEPRECATED_firstForVideo}};Ooyala.Logging.PlayheadStatus.prototype={};
+  Ooyala.Logging.PlayheadStatus.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.playheadTimeMillis=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.lastSeekTimeMillis=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.fromSeekTimeMillis=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.BOOL){b=
+    a.readBool();this.DEPRECATED_firstForUser=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.DEPRECATED_firstForVideo=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.PlayheadStatus.prototype.write=function(a){a.writeStructBegin("PlayheadStatus");if(null!=this.playheadTimeMillis){a.writeFieldBegin("playheadTimeMillis",Ooyala.Thrift.Type.I32,1);a.writeI32(this.playheadTimeMillis);a.writeFieldEnd()}if(null!=this.lastSeekTimeMillis){a.writeFieldBegin("lastSeekTimeMillis",Ooyala.Thrift.Type.I32,2);a.writeI32(this.lastSeekTimeMillis);a.writeFieldEnd()}if(null!=this.fromSeekTimeMillis){a.writeFieldBegin("fromSeekTimeMillis",Ooyala.Thrift.Type.I32,4);a.writeI32(this.fromSeekTimeMillis);
+    a.writeFieldEnd()}if(null!=this.DEPRECATED_firstForUser){a.writeFieldBegin("DEPRECATED_firstForUser",Ooyala.Thrift.Type.BOOL,3);a.writeBool(this.DEPRECATED_firstForUser);a.writeFieldEnd()}if(null!=this.DEPRECATED_firstForVideo){a.writeFieldBegin("DEPRECATED_firstForVideo",Ooyala.Thrift.Type.BOOL,5);a.writeBool(this.DEPRECATED_firstForVideo);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.CvObjectClickInfo=function(a){this.oid=this.trackId="";this.clickTime=this.mouseY=this.mouseX=0;this.link=this.label="";this.outline=[];if(a!=null){if(null!=a.trackId)this.trackId=a.trackId;if(null!=a.oid)this.oid=a.oid;if(null!=a.mouseX)this.mouseX=a.mouseX;if(null!=a.mouseY)this.mouseY=a.mouseY;if(null!=a.clickTime)this.clickTime=a.clickTime;if(null!=a.label)this.label=a.label;if(null!=a.link)this.link=a.link;if(null!=a.outline)this.outline=a.outline}};
+  Ooyala.Logging.CvObjectClickInfo.prototype={};
+  Ooyala.Logging.CvObjectClickInfo.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING){var d=a.readString();this.trackId=d.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.STRING){d=a.readString();this.oid=d.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.DOUBLE){d=a.readDouble();this.mouseX=d.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.DOUBLE){d=
+    a.readDouble();this.mouseY=d.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.DOUBLE){d=a.readDouble();this.clickTime=d.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.STRING){d=a.readString();this.label=d.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.STRING){d=a.readString();this.link=d.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.LIST){b=0;this.outline=[];b=a.readListBegin().size;for(c=0;c<b;++c){d=null;d=a.readDouble();d=d.value;this.outline.push(d)}a.readListEnd()}else a.skip(c);
+    break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.CvObjectClickInfo.prototype.write=function(a){a.writeStructBegin("CvObjectClickInfo");if(null!=this.trackId){a.writeFieldBegin("trackId",Ooyala.Thrift.Type.STRING,1);a.writeString(this.trackId);a.writeFieldEnd()}if(null!=this.oid){a.writeFieldBegin("oid",Ooyala.Thrift.Type.STRING,2);a.writeString(this.oid);a.writeFieldEnd()}if(null!=this.mouseX){a.writeFieldBegin("mouseX",Ooyala.Thrift.Type.DOUBLE,3);a.writeDouble(this.mouseX);a.writeFieldEnd()}if(null!=this.mouseY){a.writeFieldBegin("mouseY",
+    Ooyala.Thrift.Type.DOUBLE,4);a.writeDouble(this.mouseY);a.writeFieldEnd()}if(null!=this.clickTime){a.writeFieldBegin("clickTime",Ooyala.Thrift.Type.DOUBLE,5);a.writeDouble(this.clickTime);a.writeFieldEnd()}if(null!=this.label){a.writeFieldBegin("label",Ooyala.Thrift.Type.STRING,6);a.writeString(this.label);a.writeFieldEnd()}if(null!=this.link){a.writeFieldBegin("link",Ooyala.Thrift.Type.STRING,7);a.writeString(this.link);a.writeFieldEnd()}if(null!=this.outline){a.writeFieldBegin("outline",Ooyala.Thrift.Type.LIST,
+    8);a.writeListBegin(Ooyala.Thrift.Type.DOUBLE,this.outline.length);for(var b=0;b<this.outline.length;b++)a.writeDouble(this.outline[b]);a.writeListEnd();a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};Ooyala.Logging.WatchedBuckets=function(a){this.maxPerMille=this.minPerMille=0;if(a!=null){if(null!=a.minPerMille)this.minPerMille=a.minPerMille;if(null!=a.maxPerMille)this.maxPerMille=a.maxPerMille}};Ooyala.Logging.WatchedBuckets.prototype={};
+  Ooyala.Logging.WatchedBuckets.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.minPerMille=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.maxPerMille=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.WatchedBuckets.prototype.write=function(a){a.writeStructBegin("WatchedBuckets");if(null!=this.minPerMille){a.writeFieldBegin("minPerMille",Ooyala.Thrift.Type.I16,1);a.writeI16(this.minPerMille);a.writeFieldEnd()}if(null!=this.maxPerMille){a.writeFieldBegin("maxPerMille",Ooyala.Thrift.Type.I16,2);a.writeI16(this.maxPerMille);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.BitratePlayed=function(a){this.userBandwidthInKbps=this.audioKbps=this.videoFormat=this.videoKbps=this.timePlayed=0;if(a!=null){if(null!=a.timePlayed)this.timePlayed=a.timePlayed;if(null!=a.videoKbps)this.videoKbps=a.videoKbps;if(null!=a.videoFormat)this.videoFormat=a.videoFormat;if(null!=a.audioKbps)this.audioKbps=a.audioKbps;if(null!=a.userBandwidthInKbps)this.userBandwidthInKbps=a.userBandwidthInKbps}};Ooyala.Logging.BitratePlayed.prototype={};
+  Ooyala.Logging.BitratePlayed.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.timePlayed=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.videoKbps=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.videoFormat=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.I32){b=
+    a.readI32();this.audioKbps=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.userBandwidthInKbps=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.BitratePlayed.prototype.write=function(a){a.writeStructBegin("BitratePlayed");if(null!=this.timePlayed){a.writeFieldBegin("timePlayed",Ooyala.Thrift.Type.I32,1);a.writeI32(this.timePlayed);a.writeFieldEnd()}if(null!=this.videoKbps){a.writeFieldBegin("videoKbps",Ooyala.Thrift.Type.I32,2);a.writeI32(this.videoKbps);a.writeFieldEnd()}if(null!=this.videoFormat){a.writeFieldBegin("videoFormat",Ooyala.Thrift.Type.I32,3);a.writeI32(this.videoFormat);a.writeFieldEnd()}if(null!=this.audioKbps){a.writeFieldBegin("audioKbps",
+    Ooyala.Thrift.Type.I32,4);a.writeI32(this.audioKbps);a.writeFieldEnd()}if(null!=this.userBandwidthInKbps){a.writeFieldBegin("userBandwidthInKbps",Ooyala.Thrift.Type.I32,5);a.writeI32(this.userBandwidthInKbps);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.BitrateTransition=function(a){this.transitionTimeInMillis=this.newAudioKbps=this.oldAudioKbps=this.newVideoKbps=this.oldVideoKbps=0;if(a!=null){if(null!=a.oldVideoKbps)this.oldVideoKbps=a.oldVideoKbps;if(null!=a.newVideoKbps)this.newVideoKbps=a.newVideoKbps;if(null!=a.oldAudioKbps)this.oldAudioKbps=a.oldAudioKbps;if(null!=a.newAudioKbps)this.newAudioKbps=a.newAudioKbps;if(null!=a.transitionTimeInMillis)this.transitionTimeInMillis=a.transitionTimeInMillis}};
+  Ooyala.Logging.BitrateTransition.prototype={};
+  Ooyala.Logging.BitrateTransition.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.oldVideoKbps=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.newVideoKbps=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.oldAudioKbps=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.I32){b=
+    a.readI32();this.newAudioKbps=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.transitionTimeInMillis=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.BitrateTransition.prototype.write=function(a){a.writeStructBegin("BitrateTransition");if(null!=this.oldVideoKbps){a.writeFieldBegin("oldVideoKbps",Ooyala.Thrift.Type.I32,1);a.writeI32(this.oldVideoKbps);a.writeFieldEnd()}if(null!=this.newVideoKbps){a.writeFieldBegin("newVideoKbps",Ooyala.Thrift.Type.I32,2);a.writeI32(this.newVideoKbps);a.writeFieldEnd()}if(null!=this.oldAudioKbps){a.writeFieldBegin("oldAudioKbps",Ooyala.Thrift.Type.I32,3);a.writeI32(this.oldAudioKbps);a.writeFieldEnd()}if(null!=
+    this.newAudioKbps){a.writeFieldBegin("newAudioKbps",Ooyala.Thrift.Type.I32,4);a.writeI32(this.newAudioKbps);a.writeFieldEnd()}if(null!=this.transitionTimeInMillis){a.writeFieldBegin("transitionTimeInMillis",Ooyala.Thrift.Type.I32,5);a.writeI32(this.transitionTimeInMillis);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.Sharing=function(a){this.urlCopy=this.twitter=this.facebook=this.stumbleUpon=this.digg=this.embedCodeCopy=this.email=false;if(a!=null){if(null!=a.email)this.email=a.email;if(null!=a.embedCodeCopy)this.embedCodeCopy=a.embedCodeCopy;if(null!=a.digg)this.digg=a.digg;if(null!=a.stumbleUpon)this.stumbleUpon=a.stumbleUpon;if(null!=a.facebook)this.facebook=a.facebook;if(null!=a.twitter)this.twitter=a.twitter;if(null!=a.urlCopy)this.urlCopy=a.urlCopy}};Ooyala.Logging.Sharing.prototype={};
+  Ooyala.Logging.Sharing.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.email=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.embedCodeCopy=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.digg=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();
+    this.stumbleUpon=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.facebook=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.twitter=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.urlCopy=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.Sharing.prototype.write=function(a){a.writeStructBegin("Sharing");if(null!=this.email){a.writeFieldBegin("email",Ooyala.Thrift.Type.BOOL,1);a.writeBool(this.email);a.writeFieldEnd()}if(null!=this.embedCodeCopy){a.writeFieldBegin("embedCodeCopy",Ooyala.Thrift.Type.BOOL,2);a.writeBool(this.embedCodeCopy);a.writeFieldEnd()}if(null!=this.digg){a.writeFieldBegin("digg",Ooyala.Thrift.Type.BOOL,3);a.writeBool(this.digg);a.writeFieldEnd()}if(null!=this.stumbleUpon){a.writeFieldBegin("stumbleUpon",
+    Ooyala.Thrift.Type.BOOL,4);a.writeBool(this.stumbleUpon);a.writeFieldEnd()}if(null!=this.facebook){a.writeFieldBegin("facebook",Ooyala.Thrift.Type.BOOL,5);a.writeBool(this.facebook);a.writeFieldEnd()}if(null!=this.twitter){a.writeFieldBegin("twitter",Ooyala.Thrift.Type.BOOL,6);a.writeBool(this.twitter);a.writeFieldEnd()}if(null!=this.urlCopy){a.writeFieldBegin("urlCopy",Ooyala.Thrift.Type.BOOL,7);a.writeBool(this.urlCopy);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.PersonalizationBucketInfo=function(a){this.bucketInfo="";if(a!=null)if(null!=a.bucketInfo)this.bucketInfo=a.bucketInfo};Ooyala.Logging.PersonalizationBucketInfo.prototype={};Ooyala.Logging.PersonalizationBucketInfo.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING)this.bucketInfo=a.readString().value;else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.PersonalizationBucketInfo.prototype.write=function(a){a.writeStructBegin("PersonalizationBucketInfo");if(null!=this.bucketInfo){a.writeFieldBegin("bucketInfo",Ooyala.Thrift.Type.STRING,1);a.writeString(this.bucketInfo);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.PayPerView=function(a){this.mobilePrice=this.price=this.gateway=this.checkoutType=0;this.currency="";this.playheadTimeInMillis=this.previewWindowInMillis=0;this.error="";if(a!=null){if(null!=a.checkoutType)this.checkoutType=a.checkoutType;if(null!=a.gateway)this.gateway=a.gateway;if(null!=a.price)this.price=a.price;if(null!=a.mobilePrice)this.mobilePrice=a.mobilePrice;if(null!=a.currency)this.currency=a.currency;if(null!=a.previewWindowInMillis)this.previewWindowInMillis=a.previewWindowInMillis;
+    if(null!=a.playheadTimeInMillis)this.playheadTimeInMillis=a.playheadTimeInMillis;if(null!=a.error)this.error=a.error}};Ooyala.Logging.PayPerView.prototype={};
+  Ooyala.Logging.PayPerView.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.checkoutType=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.gateway=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.DOUBLE){b=a.readDouble();this.price=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.DOUBLE){b=
+    a.readDouble();this.mobilePrice=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.currency=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.previewWindowInMillis=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.playheadTimeInMillis=b.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.error=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.PayPerView.prototype.write=function(a){a.writeStructBegin("PayPerView");if(null!=this.checkoutType){a.writeFieldBegin("checkoutType",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.checkoutType);a.writeFieldEnd()}if(null!=this.gateway){a.writeFieldBegin("gateway",Ooyala.Thrift.Type.BYTE,2);a.writeByte(this.gateway);a.writeFieldEnd()}if(null!=this.price){a.writeFieldBegin("price",Ooyala.Thrift.Type.DOUBLE,3);a.writeDouble(this.price);a.writeFieldEnd()}if(null!=this.mobilePrice){a.writeFieldBegin("mobilePrice",
+    Ooyala.Thrift.Type.DOUBLE,4);a.writeDouble(this.mobilePrice);a.writeFieldEnd()}if(null!=this.currency){a.writeFieldBegin("currency",Ooyala.Thrift.Type.STRING,5);a.writeString(this.currency);a.writeFieldEnd()}if(null!=this.previewWindowInMillis){a.writeFieldBegin("previewWindowInMillis",Ooyala.Thrift.Type.I32,6);a.writeI32(this.previewWindowInMillis);a.writeFieldEnd()}if(null!=this.playheadTimeInMillis){a.writeFieldBegin("playheadTimeInMillis",Ooyala.Thrift.Type.I32,7);a.writeI32(this.playheadTimeInMillis);
+    a.writeFieldEnd()}if(null!=this.error){a.writeFieldBegin("error",Ooyala.Thrift.Type.STRING,8);a.writeString(this.error);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.SasAuthorize=function(a){this.authorized=false;this.latency=this.requestTime=0;this.messages=this.codes="";this.isAuthorizedInPlayerXML=false;if(a!=null){if(null!=a.authorized)this.authorized=a.authorized;if(null!=a.requestTime)this.requestTime=a.requestTime;if(null!=a.latency)this.latency=a.latency;if(null!=a.codes)this.codes=a.codes;if(null!=a.messages)this.messages=a.messages;if(null!=a.isAuthorizedInPlayerXML)this.isAuthorizedInPlayerXML=a.isAuthorizedInPlayerXML}};
+  Ooyala.Logging.SasAuthorize.prototype={};
+  Ooyala.Logging.SasAuthorize.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.authorized=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.requestTime=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.latency=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.STRING){b=
+    a.readString();this.codes=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.messages=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.isAuthorizedInPlayerXML=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.SasAuthorize.prototype.write=function(a){a.writeStructBegin("SasAuthorize");if(null!=this.authorized){a.writeFieldBegin("authorized",Ooyala.Thrift.Type.BOOL,1);a.writeBool(this.authorized);a.writeFieldEnd()}if(null!=this.requestTime){a.writeFieldBegin("requestTime",Ooyala.Thrift.Type.I32,2);a.writeI32(this.requestTime);a.writeFieldEnd()}if(null!=this.latency){a.writeFieldBegin("latency",Ooyala.Thrift.Type.I32,3);a.writeI32(this.latency);a.writeFieldEnd()}if(null!=this.codes){a.writeFieldBegin("codes",
+    Ooyala.Thrift.Type.STRING,4);a.writeString(this.codes);a.writeFieldEnd()}if(null!=this.messages){a.writeFieldBegin("messages",Ooyala.Thrift.Type.STRING,5);a.writeString(this.messages);a.writeFieldEnd()}if(null!=this.isAuthorizedInPlayerXML){a.writeFieldBegin("isAuthorizedInPlayerXML",Ooyala.Thrift.Type.BOOL,6);a.writeBool(this.isAuthorizedInPlayerXML);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.SasAuthorizeV2=function(a){this.rootEmbedCode=this.requestId="";this.clientSideLatencyForLastRequest=this.clientSideLatency=this.serverSideLatency=this.responseCode=0;this.continent=this.country="";if(a!=null){if(null!=a.requestId)this.requestId=a.requestId;if(null!=a.rootEmbedCode)this.rootEmbedCode=a.rootEmbedCode;if(null!=a.responseCode)this.responseCode=a.responseCode;if(null!=a.serverSideLatency)this.serverSideLatency=a.serverSideLatency;if(null!=a.clientSideLatency)this.clientSideLatency=
+    a.clientSideLatency;if(null!=a.clientSideLatencyForLastRequest)this.clientSideLatencyForLastRequest=a.clientSideLatencyForLastRequest;if(null!=a.country)this.country=a.country;if(null!=a.continent)this.continent=a.continent}};Ooyala.Logging.SasAuthorizeV2.prototype={};
+  Ooyala.Logging.SasAuthorizeV2.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.requestId=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.rootEmbedCode=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.responseCode=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.DOUBLE){b=
+    a.readDouble();this.serverSideLatency=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.DOUBLE){b=a.readDouble();this.clientSideLatency=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.DOUBLE){b=a.readDouble();this.clientSideLatencyForLastRequest=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.country=b.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.continent=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.SasAuthorizeV2.prototype.write=function(a){a.writeStructBegin("SasAuthorizeV2");if(null!=this.requestId){a.writeFieldBegin("requestId",Ooyala.Thrift.Type.STRING,1);a.writeString(this.requestId);a.writeFieldEnd()}if(null!=this.rootEmbedCode){a.writeFieldBegin("rootEmbedCode",Ooyala.Thrift.Type.STRING,2);a.writeString(this.rootEmbedCode);a.writeFieldEnd()}if(null!=this.responseCode){a.writeFieldBegin("responseCode",Ooyala.Thrift.Type.I32,3);a.writeI32(this.responseCode);a.writeFieldEnd()}if(null!=
+    this.serverSideLatency){a.writeFieldBegin("serverSideLatency",Ooyala.Thrift.Type.DOUBLE,4);a.writeDouble(this.serverSideLatency);a.writeFieldEnd()}if(null!=this.clientSideLatency){a.writeFieldBegin("clientSideLatency",Ooyala.Thrift.Type.DOUBLE,5);a.writeDouble(this.clientSideLatency);a.writeFieldEnd()}if(null!=this.clientSideLatencyForLastRequest){a.writeFieldBegin("clientSideLatencyForLastRequest",Ooyala.Thrift.Type.DOUBLE,6);a.writeDouble(this.clientSideLatencyForLastRequest);a.writeFieldEnd()}if(null!=
+    this.country){a.writeFieldBegin("country",Ooyala.Thrift.Type.STRING,7);a.writeString(this.country);a.writeFieldEnd()}if(null!=this.continent){a.writeFieldBegin("continent",Ooyala.Thrift.Type.STRING,8);a.writeString(this.continent);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.ReportingIdDescriptor=function(a){this.adSetId=this.syndicationDestinationIdIndex=this.parentContentIdIndex=this.providerReportingIdIndex=this.reportingIdType=0;if(a!=null){if(null!=a.reportingIdType)this.reportingIdType=a.reportingIdType;if(null!=a.providerReportingIdIndex)this.providerReportingIdIndex=a.providerReportingIdIndex;if(null!=a.parentContentIdIndex)this.parentContentIdIndex=a.parentContentIdIndex;if(null!=a.syndicationDestinationIdIndex)this.syndicationDestinationIdIndex=
+    a.syndicationDestinationIdIndex;if(null!=a.adSetId)this.adSetId=a.adSetId}};Ooyala.Logging.ReportingIdDescriptor.prototype={};
+  Ooyala.Logging.ReportingIdDescriptor.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.reportingIdType=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.providerReportingIdIndex=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.parentContentIdIndex=b.value}else a.skip(c);break;
+    case 4:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.syndicationDestinationIdIndex=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.adSetId=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.ReportingIdDescriptor.prototype.write=function(a){a.writeStructBegin("ReportingIdDescriptor");if(null!=this.reportingIdType){a.writeFieldBegin("reportingIdType",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.reportingIdType);a.writeFieldEnd()}if(null!=this.providerReportingIdIndex){a.writeFieldBegin("providerReportingIdIndex",Ooyala.Thrift.Type.BYTE,2);a.writeByte(this.providerReportingIdIndex);a.writeFieldEnd()}if(null!=this.parentContentIdIndex){a.writeFieldBegin("parentContentIdIndex",
+    Ooyala.Thrift.Type.BYTE,3);a.writeByte(this.parentContentIdIndex);a.writeFieldEnd()}if(null!=this.syndicationDestinationIdIndex){a.writeFieldBegin("syndicationDestinationIdIndex",Ooyala.Thrift.Type.BYTE,4);a.writeByte(this.syndicationDestinationIdIndex);a.writeFieldEnd()}if(null!=this.adSetId){a.writeFieldBegin("adSetId",Ooyala.Thrift.Type.I32,5);a.writeI32(this.adSetId);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.PlayerEvent=function(a){this.reportingIdIndex=0;this.reportingIdIndices=[];this.eventType=0;this.param2=this.param1="";this.download=new Ooyala.Logging.DownloadStats;this.chunkFailover=new Ooyala.Logging.ChunkFailoverInfo;this.playhead=new Ooyala.Logging.PlayheadStatus;this.cvinfo=new Ooyala.Logging.CvObjectClickInfo;this.DEPRECATED_adClick=new Ooyala.AdsLogging.AdClick;this.buckets=new Ooyala.Logging.WatchedBuckets;this.timePlayed=0;this.bitratePlayed=new Ooyala.Logging.BitratePlayed;
+    this.adTracking=new Ooyala.AdsLogging.AdTracking;this.metric=new Ooyala.MetricsLogging.Metric;this.lastEventTime=0;this.firstForVideo=this.firstForRootContent=this.firstForPlayer=false;this.bufferType=0;this.bitrateTransition=new Ooyala.Logging.BitrateTransition;this.bitratesAvailable=[];this.sharing=new Ooyala.Logging.Sharing;this.payPerView=new Ooyala.Logging.PayPerView;this.sasAuthorize=new Ooyala.Logging.SasAuthorize;this.sasAuthorizeV2=new Ooyala.Logging.SasAuthorizeV2;this.autoplay=false;this.customEvent=
+      new Ooyala.CustomEventsLogging.CustomEvent;this.personalizationBucketInfo=new Ooyala.Logging.PersonalizationBucketInfo;this.reportingIdIndexToPlayheadPositionMillis={};this.seqnum=this.playthroughPercent=0;if(a!=null){if(null!=a.reportingIdIndex)this.reportingIdIndex=a.reportingIdIndex;if(null!=a.reportingIdIndices)this.reportingIdIndices=a.reportingIdIndices;if(null!=a.eventType)this.eventType=a.eventType;if(null!=a.param1)this.param1=a.param1;if(null!=a.param2)this.param2=a.param2;if(null!=a.download)this.download=
+      a.download;if(null!=a.chunkFailover)this.chunkFailover=a.chunkFailover;if(null!=a.playhead)this.playhead=a.playhead;if(null!=a.cvinfo)this.cvinfo=a.cvinfo;if(null!=a.DEPRECATED_adClick)this.DEPRECATED_adClick=a.DEPRECATED_adClick;if(null!=a.buckets)this.buckets=a.buckets;if(null!=a.timePlayed)this.timePlayed=a.timePlayed;if(null!=a.bitratePlayed)this.bitratePlayed=a.bitratePlayed;if(null!=a.adTracking)this.adTracking=a.adTracking;if(null!=a.metric)this.metric=a.metric;if(null!=a.lastEventTime)this.lastEventTime=
+      a.lastEventTime;if(null!=a.firstForPlayer)this.firstForPlayer=a.firstForPlayer;if(null!=a.firstForRootContent)this.firstForRootContent=a.firstForRootContent;if(null!=a.firstForVideo)this.firstForVideo=a.firstForVideo;if(null!=a.bufferType)this.bufferType=a.bufferType;if(null!=a.bitrateTransition)this.bitrateTransition=a.bitrateTransition;if(null!=a.bitratesAvailable)this.bitratesAvailable=a.bitratesAvailable;if(null!=a.sharing)this.sharing=a.sharing;if(null!=a.payPerView)this.payPerView=a.payPerView;
+      if(null!=a.sasAuthorize)this.sasAuthorize=a.sasAuthorize;if(null!=a.sasAuthorizeV2)this.sasAuthorizeV2=a.sasAuthorizeV2;if(null!=a.autoplay)this.autoplay=a.autoplay;if(null!=a.customEvent)this.customEvent=a.customEvent;if(null!=a.personalizationBucketInfo)this.personalizationBucketInfo=a.personalizationBucketInfo;if(null!=a.reportingIdIndexToPlayheadPositionMillis)this.reportingIdIndexToPlayheadPositionMillis=a.reportingIdIndexToPlayheadPositionMillis;if(null!=a.playthroughPercent)this.playthroughPercent=
+        a.playthroughPercent;if(null!=a.seqnum)this.seqnum=a.seqnum}};Ooyala.Logging.PlayerEvent.prototype={};
+  Ooyala.Logging.PlayerEvent.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.reportingIdIndex=b.value}else a.skip(c);break;case 11:if(c==Ooyala.Thrift.Type.LIST){c=0;this.reportingIdIndices=[];b=a.readListBegin();c=b.size;for(var d=0;d<c;++d){b=null;b=a.readByte();b=b.value;this.reportingIdIndices.push(b)}a.readListEnd()}else a.skip(c);break;case 2:if(c==
+    Ooyala.Thrift.Type.BYTE){b=a.readByte();this.eventType=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.param1=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.param2=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.STRUCT){this.download=new Ooyala.Logging.DownloadStats;this.download.read(a)}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.STRUCT){this.chunkFailover=new Ooyala.Logging.ChunkFailoverInfo;
+    this.chunkFailover.read(a)}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.STRUCT){this.playhead=new Ooyala.Logging.PlayheadStatus;this.playhead.read(a)}else a.skip(c);break;case 9:if(c==Ooyala.Thrift.Type.STRUCT){this.cvinfo=new Ooyala.Logging.CvObjectClickInfo;this.cvinfo.read(a)}else a.skip(c);break;case 10:if(c==Ooyala.Thrift.Type.STRUCT){this.DEPRECATED_adClick=new Ooyala.AdsLogging.AdClick;this.DEPRECATED_adClick.read(a)}else a.skip(c);break;case 12:if(c==Ooyala.Thrift.Type.STRUCT){this.buckets=
+    new Ooyala.Logging.WatchedBuckets;this.buckets.read(a)}else a.skip(c);break;case 13:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.timePlayed=b.value}else a.skip(c);break;case 14:if(c==Ooyala.Thrift.Type.STRUCT){this.bitratePlayed=new Ooyala.Logging.BitratePlayed;this.bitratePlayed.read(a)}else a.skip(c);break;case 15:if(c==Ooyala.Thrift.Type.STRUCT){this.adTracking=new Ooyala.AdsLogging.AdTracking;this.adTracking.read(a)}else a.skip(c);break;case 16:if(c==Ooyala.Thrift.Type.STRUCT){this.metric=
+    new Ooyala.MetricsLogging.Metric;this.metric.read(a)}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.lastEventTime=b.value}else a.skip(c);break;case 17:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.firstForPlayer=b.value}else a.skip(c);break;case 18:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.firstForRootContent=b.value}else a.skip(c);break;case 19:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.firstForVideo=b.value}else a.skip(c);break;case 20:if(c==Ooyala.Thrift.Type.BYTE){b=
+    a.readByte();this.bufferType=b.value}else a.skip(c);break;case 21:if(c==Ooyala.Thrift.Type.STRUCT){this.bitrateTransition=new Ooyala.Logging.BitrateTransition;this.bitrateTransition.read(a)}else a.skip(c);break;case 22:if(c==Ooyala.Thrift.Type.LIST){c=0;this.bitratesAvailable=[];b=a.readListBegin();c=b.size;for(d=0;d<c;++d){b=null;b=a.readI16();b=b.value;this.bitratesAvailable.push(b)}a.readListEnd()}else a.skip(c);break;case 23:if(c==Ooyala.Thrift.Type.STRUCT){this.sharing=new Ooyala.Logging.Sharing;
+    this.sharing.read(a)}else a.skip(c);break;case 24:if(c==Ooyala.Thrift.Type.STRUCT){this.payPerView=new Ooyala.Logging.PayPerView;this.payPerView.read(a)}else a.skip(c);break;case 25:if(c==Ooyala.Thrift.Type.STRUCT){this.sasAuthorize=new Ooyala.Logging.SasAuthorize;this.sasAuthorize.read(a)}else a.skip(c);break;case 26:if(c==Ooyala.Thrift.Type.STRUCT){this.sasAuthorizeV2=new Ooyala.Logging.SasAuthorizeV2;this.sasAuthorizeV2.read(a)}else a.skip(c);break;case 28:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();
+    this.autoplay=b.value}else a.skip(c);break;case 29:if(c==Ooyala.Thrift.Type.STRUCT){this.customEvent=new Ooyala.CustomEventsLogging.CustomEvent;this.customEvent.read(a)}else a.skip(c);break;case 30:if(c==Ooyala.Thrift.Type.STRUCT){this.personalizationBucketInfo=new Ooyala.Logging.PersonalizationBucketInfo;this.personalizationBucketInfo.read(a)}else a.skip(c);break;case 31:if(c==Ooyala.Thrift.Type.MAP){c=0;this.reportingIdIndexToPlayheadPositionMillis={};b=a.readMapBegin();c=b.size;for(d=0;d<c;++d){val43=
+    key42=0;b=a.readByte();key42=b.value;b=a.readI32();val43=b.value;this.reportingIdIndexToPlayheadPositionMillis[key42]=val43}a.readMapEnd()}else a.skip(c);break;case 32:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.playthroughPercent=b.value}else a.skip(c);break;case 33:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.seqnum=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.PlayerEvent.prototype.write=function(a){a.writeStructBegin("PlayerEvent");if(null!=this.reportingIdIndex){a.writeFieldBegin("reportingIdIndex",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.reportingIdIndex);a.writeFieldEnd()}if(null!=this.reportingIdIndices){a.writeFieldBegin("reportingIdIndices",Ooyala.Thrift.Type.LIST,11);a.writeListBegin(Ooyala.Thrift.Type.BYTE,this.reportingIdIndices.length);for(var b=0;b<this.reportingIdIndices.length;b++)a.writeByte(this.reportingIdIndices[b]);
+    a.writeListEnd();a.writeFieldEnd()}if(null!=this.eventType){a.writeFieldBegin("eventType",Ooyala.Thrift.Type.BYTE,2);a.writeByte(this.eventType);a.writeFieldEnd()}if(null!=this.param1){a.writeFieldBegin("param1",Ooyala.Thrift.Type.STRING,3);a.writeString(this.param1);a.writeFieldEnd()}if(null!=this.param2){a.writeFieldBegin("param2",Ooyala.Thrift.Type.STRING,4);a.writeString(this.param2);a.writeFieldEnd()}if(null!=this.download){a.writeFieldBegin("download",Ooyala.Thrift.Type.STRUCT,5);this.download.write(a);
+    a.writeFieldEnd()}if(null!=this.chunkFailover){a.writeFieldBegin("chunkFailover",Ooyala.Thrift.Type.STRUCT,7);this.chunkFailover.write(a);a.writeFieldEnd()}if(null!=this.playhead){a.writeFieldBegin("playhead",Ooyala.Thrift.Type.STRUCT,8);this.playhead.write(a);a.writeFieldEnd()}if(null!=this.cvinfo){a.writeFieldBegin("cvinfo",Ooyala.Thrift.Type.STRUCT,9);this.cvinfo.write(a);a.writeFieldEnd()}if(null!=this.DEPRECATED_adClick){a.writeFieldBegin("DEPRECATED_adClick",Ooyala.Thrift.Type.STRUCT,10);this.DEPRECATED_adClick.write(a);
+    a.writeFieldEnd()}if(null!=this.buckets){a.writeFieldBegin("buckets",Ooyala.Thrift.Type.STRUCT,12);this.buckets.write(a);a.writeFieldEnd()}if(null!=this.timePlayed){a.writeFieldBegin("timePlayed",Ooyala.Thrift.Type.I32,13);a.writeI32(this.timePlayed);a.writeFieldEnd()}if(null!=this.bitratePlayed){a.writeFieldBegin("bitratePlayed",Ooyala.Thrift.Type.STRUCT,14);this.bitratePlayed.write(a);a.writeFieldEnd()}if(null!=this.adTracking){a.writeFieldBegin("adTracking",Ooyala.Thrift.Type.STRUCT,15);this.adTracking.write(a);
+    a.writeFieldEnd()}if(null!=this.metric){a.writeFieldBegin("metric",Ooyala.Thrift.Type.STRUCT,16);this.metric.write(a);a.writeFieldEnd()}if(null!=this.lastEventTime){a.writeFieldBegin("lastEventTime",Ooyala.Thrift.Type.I32,6);a.writeI32(this.lastEventTime);a.writeFieldEnd()}if(null!=this.firstForPlayer){a.writeFieldBegin("firstForPlayer",Ooyala.Thrift.Type.BOOL,17);a.writeBool(this.firstForPlayer);a.writeFieldEnd()}if(null!=this.firstForRootContent){a.writeFieldBegin("firstForRootContent",Ooyala.Thrift.Type.BOOL,
+    18);a.writeBool(this.firstForRootContent);a.writeFieldEnd()}if(null!=this.firstForVideo){a.writeFieldBegin("firstForVideo",Ooyala.Thrift.Type.BOOL,19);a.writeBool(this.firstForVideo);a.writeFieldEnd()}if(null!=this.bufferType){a.writeFieldBegin("bufferType",Ooyala.Thrift.Type.BYTE,20);a.writeByte(this.bufferType);a.writeFieldEnd()}if(null!=this.bitrateTransition){a.writeFieldBegin("bitrateTransition",Ooyala.Thrift.Type.STRUCT,21);this.bitrateTransition.write(a);a.writeFieldEnd()}if(null!=this.bitratesAvailable){a.writeFieldBegin("bitratesAvailable",
+    Ooyala.Thrift.Type.LIST,22);a.writeListBegin(Ooyala.Thrift.Type.I16,this.bitratesAvailable.length);for(b=0;b<this.bitratesAvailable.length;b++)a.writeI16(this.bitratesAvailable[b]);a.writeListEnd();a.writeFieldEnd()}if(null!=this.sharing){a.writeFieldBegin("sharing",Ooyala.Thrift.Type.STRUCT,23);this.sharing.write(a);a.writeFieldEnd()}if(null!=this.payPerView){a.writeFieldBegin("payPerView",Ooyala.Thrift.Type.STRUCT,24);this.payPerView.write(a);a.writeFieldEnd()}if(null!=this.sasAuthorize){a.writeFieldBegin("sasAuthorize",
+    Ooyala.Thrift.Type.STRUCT,25);this.sasAuthorize.write(a);a.writeFieldEnd()}if(null!=this.sasAuthorizeV2){a.writeFieldBegin("sasAuthorizeV2",Ooyala.Thrift.Type.STRUCT,26);this.sasAuthorizeV2.write(a);a.writeFieldEnd()}if(null!=this.autoplay){a.writeFieldBegin("autoplay",Ooyala.Thrift.Type.BOOL,28);a.writeBool(this.autoplay);a.writeFieldEnd()}if(null!=this.customEvent){a.writeFieldBegin("customEvent",Ooyala.Thrift.Type.STRUCT,29);this.customEvent.write(a);a.writeFieldEnd()}if(null!=this.personalizationBucketInfo){a.writeFieldBegin("personalizationBucketInfo",
+    Ooyala.Thrift.Type.STRUCT,30);this.personalizationBucketInfo.write(a);a.writeFieldEnd()}if(null!=this.reportingIdIndexToPlayheadPositionMillis){a.writeFieldBegin("reportingIdIndexToPlayheadPositionMillis",Ooyala.Thrift.Type.MAP,31);b=0;for(key in this.reportingIdIndexToPlayheadPositionMillis)this.reportingIdIndexToPlayheadPositionMillis.hasOwnProperty(key)&&b++;a.writeMapBegin(Ooyala.Thrift.Type.BYTE,Ooyala.Thrift.Type.I32,b);for(var c in this.reportingIdIndexToPlayheadPositionMillis){b=this.reportingIdIndexToPlayheadPositionMillis[c];
+    a.writeByte(c);a.writeI32(b)}a.writeMapEnd();a.writeFieldEnd()}if(null!=this.playthroughPercent){a.writeFieldBegin("playthroughPercent",Ooyala.Thrift.Type.I32,32);a.writeI32(this.playthroughPercent);a.writeFieldEnd()}if(null!=this.seqnum){a.writeFieldBegin("seqnum",Ooyala.Thrift.Type.I32,33);a.writeI32(this.seqnum);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.User=function(a){this.city=this.county=this.region=this.country="";this.lon=this.lat=0;this.clientIP="";this.source=this.pmsaCode=this.dmaCode=0;this.cookie="";if(a!=null){if(null!=a.country)this.country=a.country;if(null!=a.region)this.region=a.region;if(null!=a.county)this.county=a.county;if(null!=a.city)this.city=a.city;if(null!=a.lat)this.lat=a.lat;if(null!=a.lon)this.lon=a.lon;if(null!=a.clientIP)this.clientIP=a.clientIP;if(null!=a.dmaCode)this.dmaCode=a.dmaCode;if(null!=a.pmsaCode)this.pmsaCode=
+    a.pmsaCode;if(null!=a.source)this.source=a.source;if(null!=a.cookie)this.cookie=a.cookie}};Ooyala.Logging.User.prototype={};
+  Ooyala.Logging.User.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.country=b.value}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.region=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.county=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.STRING){b=
+    a.readString();this.city=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.lat=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.lon=b.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.clientIP=b.value}else a.skip(c);break;case 9:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.dmaCode=b.value}else a.skip(c);break;case 10:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.pmsaCode=b.value}else a.skip(c);
+    break;case 11:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.source=b.value}else a.skip(c);break;case 12:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.cookie=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.User.prototype.write=function(a){a.writeStructBegin("User");if(null!=this.country){a.writeFieldBegin("country",Ooyala.Thrift.Type.STRING,1);a.writeString(this.country);a.writeFieldEnd()}if(null!=this.region){a.writeFieldBegin("region",Ooyala.Thrift.Type.STRING,2);a.writeString(this.region);a.writeFieldEnd()}if(null!=this.county){a.writeFieldBegin("county",Ooyala.Thrift.Type.STRING,3);a.writeString(this.county);a.writeFieldEnd()}if(null!=this.city){a.writeFieldBegin("city",Ooyala.Thrift.Type.STRING,
+    4);a.writeString(this.city);a.writeFieldEnd()}if(null!=this.lat){a.writeFieldBegin("lat",Ooyala.Thrift.Type.I32,6);a.writeI32(this.lat);a.writeFieldEnd()}if(null!=this.lon){a.writeFieldBegin("lon",Ooyala.Thrift.Type.I32,7);a.writeI32(this.lon);a.writeFieldEnd()}if(null!=this.clientIP){a.writeFieldBegin("clientIP",Ooyala.Thrift.Type.STRING,8);a.writeString(this.clientIP);a.writeFieldEnd()}if(null!=this.dmaCode){a.writeFieldBegin("dmaCode",Ooyala.Thrift.Type.I16,9);a.writeI16(this.dmaCode);a.writeFieldEnd()}if(null!=
+    this.pmsaCode){a.writeFieldBegin("pmsaCode",Ooyala.Thrift.Type.I16,10);a.writeI16(this.pmsaCode);a.writeFieldEnd()}if(null!=this.source){a.writeFieldBegin("source",Ooyala.Thrift.Type.BYTE,11);a.writeByte(this.source);a.writeFieldEnd()}if(null!=this.cookie){a.writeFieldBegin("cookie",Ooyala.Thrift.Type.STRING,12);a.writeString(this.cookie);a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};
+  Ooyala.Logging.PlayerLogEntry=function(a){this.version=1;this.user=new Ooyala.Logging.User;this.logTime=0;this.logServer=this.userAgent=this.ipaddr="";this.userTimezone=this.userTime=0;this.documentUrl=this.country=this.guid="";this.authenticationTime=0;this.reportingIds=[];this.reportingIdDescriptors=[];this.tags=[];this.timezoneIds=[];this.clientStat="";this.events=[];this.adSpots=[];this.flashCookieAge=this.playerEmbedType=this.rootContentReportingIdIndex=this.providerReportingIdIndex=0;this.isUntrustedDocUrl=
+    false;this.bucketInfo="";this.customEvents=[];this.accountId="";this.variationIds=[];this.playerBrandingId="";this.userTimeMillis=this.logTimeMillis=this.randomSessionSeed=this.sessionStartTimeMillis=0;if(a!=null){if(null!=a.version)this.version=a.version;if(null!=a.user)this.user=a.user;if(null!=a.logTime)this.logTime=a.logTime;if(null!=a.ipaddr)this.ipaddr=a.ipaddr;if(null!=a.userAgent)this.userAgent=a.userAgent;if(null!=a.logServer)this.logServer=a.logServer;if(null!=a.userTime)this.userTime=a.userTime;
+    if(null!=a.userTimezone)this.userTimezone=a.userTimezone;if(null!=a.guid)this.guid=a.guid;if(null!=a.country)this.country=a.country;if(null!=a.documentUrl)this.documentUrl=a.documentUrl;if(null!=a.authenticationTime)this.authenticationTime=a.authenticationTime;if(null!=a.reportingIds)this.reportingIds=a.reportingIds;if(null!=a.reportingIdDescriptors)this.reportingIdDescriptors=a.reportingIdDescriptors;if(null!=a.tags)this.tags=a.tags;if(null!=a.timezoneIds)this.timezoneIds=a.timezoneIds;if(null!=
+      a.clientStat)this.clientStat=a.clientStat;if(null!=a.events)this.events=a.events;if(null!=a.adSpots)this.adSpots=a.adSpots;if(null!=a.providerReportingIdIndex)this.providerReportingIdIndex=a.providerReportingIdIndex;if(null!=a.rootContentReportingIdIndex)this.rootContentReportingIdIndex=a.rootContentReportingIdIndex;if(null!=a.playerEmbedType)this.playerEmbedType=a.playerEmbedType;if(null!=a.flashCookieAge)this.flashCookieAge=a.flashCookieAge;if(null!=a.isUntrustedDocUrl)this.isUntrustedDocUrl=a.isUntrustedDocUrl;
+    if(null!=a.bucketInfo)this.bucketInfo=a.bucketInfo;if(null!=a.customEvents)this.customEvents=a.customEvents;if(null!=a.accountId)this.accountId=a.accountId;if(null!=a.variationIds)this.variationIds=a.variationIds;if(null!=a.playerBrandingId)this.playerBrandingId=a.playerBrandingId;if(null!=a.sessionStartTimeMillis)this.sessionStartTimeMillis=a.sessionStartTimeMillis;if(null!=a.randomSessionSeed)this.randomSessionSeed=a.randomSessionSeed;if(null!=a.logTimeMillis)this.logTimeMillis=a.logTimeMillis;
+    if(null!=a.userTimeMillis)this.userTimeMillis=a.userTimeMillis}};Ooyala.Logging.PlayerLogEntry.prototype={};
+  Ooyala.Logging.PlayerLogEntry.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.version=b.value}else a.skip(c);break;case 21:if(c==Ooyala.Thrift.Type.STRUCT){this.user=new Ooyala.Logging.User;this.user.read(a)}else a.skip(c);break;case 2:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.logTime=b.value}else a.skip(c);break;case 3:if(c==Ooyala.Thrift.Type.STRING){b=
+    a.readString();this.ipaddr=b.value}else a.skip(c);break;case 16:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.userAgent=b.value}else a.skip(c);break;case 22:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.logServer=b.value}else a.skip(c);break;case 8:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.userTime=b.value}else a.skip(c);break;case 9:if(c==Ooyala.Thrift.Type.I16){b=a.readI16();this.userTimezone=b.value}else a.skip(c);break;case 4:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();
+    this.guid=b.value}else a.skip(c);break;case 5:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.country=b.value}else a.skip(c);break;case 6:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.documentUrl=b.value}else a.skip(c);break;case 7:if(c==Ooyala.Thrift.Type.I32){b=a.readI32();this.authenticationTime=b.value}else a.skip(c);break;case 10:if(c==Ooyala.Thrift.Type.LIST){c=0;this.reportingIds=[];b=a.readListBegin();c=b.size;for(var d=0;d<c;++d){b=null;b=a.readString();b=b.value;this.reportingIds.push(b)}a.readListEnd()}else a.skip(c);
+    break;case 20:if(c==Ooyala.Thrift.Type.LIST){b=0;this.reportingIdDescriptors=[];b=a.readListBegin();b=b.size;for(c=0;c<b;++c){d=null;d=new Ooyala.Logging.ReportingIdDescriptor;d.read(a);this.reportingIdDescriptors.push(d)}a.readListEnd()}else a.skip(c);break;case 24:if(c==Ooyala.Thrift.Type.LIST){c=0;this.tags=[];b=a.readListBegin();c=b.size;for(d=0;d<c;++d){b=null;b=a.readString();b=b.value;this.tags.push(b)}a.readListEnd()}else a.skip(c);break;case 12:if(c==Ooyala.Thrift.Type.LIST){c=0;this.timezoneIds=
+    [];b=a.readListBegin();c=b.size;for(d=0;d<c;++d){b=null;b=a.readI32();b=b.value;this.timezoneIds.push(b)}a.readListEnd()}else a.skip(c);break;case 13:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.clientStat=b.value}else a.skip(c);break;case 11:if(c==Ooyala.Thrift.Type.LIST){b=0;this.events=[];b=a.readListBegin();b=b.size;for(c=0;c<b;++c){d=null;d=new Ooyala.Logging.PlayerEvent;d.read(a);this.events.push(d)}a.readListEnd()}else a.skip(c);break;case 14:if(c==Ooyala.Thrift.Type.LIST){b=0;this.adSpots=
+    [];b=a.readListBegin();b=b.size;for(c=0;c<b;++c){d=null;d=new Ooyala.AdsLogging.AdSpot;d.read(a);this.adSpots.push(d)}a.readListEnd()}else a.skip(c);break;case 17:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.providerReportingIdIndex=b.value}else a.skip(c);break;case 18:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.rootContentReportingIdIndex=b.value}else a.skip(c);break;case 15:if(c==Ooyala.Thrift.Type.BYTE){b=a.readByte();this.playerEmbedType=b.value}else a.skip(c);break;case 19:if(c==
+    Ooyala.Thrift.Type.I32){b=a.readI32();this.flashCookieAge=b.value}else a.skip(c);break;case 23:if(c==Ooyala.Thrift.Type.BOOL){b=a.readBool();this.isUntrustedDocUrl=b.value}else a.skip(c);break;case 25:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.bucketInfo=b.value}else a.skip(c);break;case 26:if(c==Ooyala.Thrift.Type.LIST){b=0;this.customEvents=[];b=a.readListBegin();b=b.size;for(c=0;c<b;++c){d=null;d=new Ooyala.CustomEventsLogging.CustomEvent;d.read(a);this.customEvents.push(d)}a.readListEnd()}else a.skip(c);
+    break;case 27:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.accountId=b.value}else a.skip(c);break;case 28:if(c==Ooyala.Thrift.Type.LIST){c=0;this.variationIds=[];b=a.readListBegin();c=b.size;for(d=0;d<c;++d){b=null;b=a.readI32();b=b.value;this.variationIds.push(b)}a.readListEnd()}else a.skip(c);break;case 29:if(c==Ooyala.Thrift.Type.STRING){b=a.readString();this.playerBrandingId=b.value}else a.skip(c);break;case 30:if(c==Ooyala.Thrift.Type.I64){b=a.readI64();this.sessionStartTimeMillis=
+    b.value}else a.skip(c);break;case 31:if(c==Ooyala.Thrift.Type.I64){b=a.readI64();this.randomSessionSeed=b.value}else a.skip(c);break;case 32:if(c==Ooyala.Thrift.Type.I64){b=a.readI64();this.logTimeMillis=b.value}else a.skip(c);break;case 33:if(c==Ooyala.Thrift.Type.I64){b=a.readI64();this.userTimeMillis=b.value}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.PlayerLogEntry.prototype.write=function(a){a.writeStructBegin("PlayerLogEntry");if(null!=this.version){a.writeFieldBegin("version",Ooyala.Thrift.Type.BYTE,1);a.writeByte(this.version);a.writeFieldEnd()}if(null!=this.user){a.writeFieldBegin("user",Ooyala.Thrift.Type.STRUCT,21);this.user.write(a);a.writeFieldEnd()}if(null!=this.logTime){a.writeFieldBegin("logTime",Ooyala.Thrift.Type.I32,2);a.writeI32(this.logTime);a.writeFieldEnd()}if(null!=this.ipaddr){a.writeFieldBegin("ipaddr",Ooyala.Thrift.Type.STRING,
+    3);a.writeString(this.ipaddr);a.writeFieldEnd()}if(null!=this.userAgent){a.writeFieldBegin("userAgent",Ooyala.Thrift.Type.STRING,16);a.writeString(this.userAgent);a.writeFieldEnd()}if(null!=this.logServer){a.writeFieldBegin("logServer",Ooyala.Thrift.Type.STRING,22);a.writeString(this.logServer);a.writeFieldEnd()}if(null!=this.userTime){a.writeFieldBegin("userTime",Ooyala.Thrift.Type.I32,8);a.writeI32(this.userTime);a.writeFieldEnd()}if(null!=this.userTimezone){a.writeFieldBegin("userTimezone",Ooyala.Thrift.Type.I16,
+    9);a.writeI16(this.userTimezone);a.writeFieldEnd()}if(null!=this.guid){a.writeFieldBegin("guid",Ooyala.Thrift.Type.STRING,4);a.writeString(this.guid);a.writeFieldEnd()}if(null!=this.country){a.writeFieldBegin("country",Ooyala.Thrift.Type.STRING,5);a.writeString(this.country);a.writeFieldEnd()}if(null!=this.documentUrl){a.writeFieldBegin("documentUrl",Ooyala.Thrift.Type.STRING,6);a.writeString(this.documentUrl);a.writeFieldEnd()}if(null!=this.authenticationTime){a.writeFieldBegin("authenticationTime",
+    Ooyala.Thrift.Type.I32,7);a.writeI32(this.authenticationTime);a.writeFieldEnd()}if(null!=this.reportingIds){a.writeFieldBegin("reportingIds",Ooyala.Thrift.Type.LIST,10);a.writeListBegin(Ooyala.Thrift.Type.STRING,this.reportingIds.length);for(var b=0;b<this.reportingIds.length;b++)a.writeString(this.reportingIds[b]);a.writeListEnd();a.writeFieldEnd()}if(null!=this.reportingIdDescriptors){a.writeFieldBegin("reportingIdDescriptors",Ooyala.Thrift.Type.LIST,20);a.writeListBegin(Ooyala.Thrift.Type.STRUCT,
+    this.reportingIdDescriptors.length);for(b=0;b<this.reportingIdDescriptors.length;b++)this.reportingIdDescriptors[b].write(a);a.writeListEnd();a.writeFieldEnd()}if(null!=this.tags){a.writeFieldBegin("tags",Ooyala.Thrift.Type.LIST,24);a.writeListBegin(Ooyala.Thrift.Type.STRING,this.tags.length);for(b=0;b<this.tags.length;b++)a.writeString(this.tags[b]);a.writeListEnd();a.writeFieldEnd()}if(null!=this.timezoneIds){a.writeFieldBegin("timezoneIds",Ooyala.Thrift.Type.LIST,12);a.writeListBegin(Ooyala.Thrift.Type.I32,
+    this.timezoneIds.length);for(b=0;b<this.timezoneIds.length;b++)a.writeI32(this.timezoneIds[b]);a.writeListEnd();a.writeFieldEnd()}if(null!=this.clientStat){a.writeFieldBegin("clientStat",Ooyala.Thrift.Type.STRING,13);a.writeString(this.clientStat);a.writeFieldEnd()}if(null!=this.events){a.writeFieldBegin("events",Ooyala.Thrift.Type.LIST,11);a.writeListBegin(Ooyala.Thrift.Type.STRUCT,this.events.length);for(b=0;b<this.events.length;b++)this.events[b].write(a);a.writeListEnd();a.writeFieldEnd()}if(null!=
+    this.adSpots){a.writeFieldBegin("adSpots",Ooyala.Thrift.Type.LIST,14);a.writeListBegin(Ooyala.Thrift.Type.STRUCT,this.adSpots.length);for(b=0;b<this.adSpots.length;b++)this.adSpots[b].write(a);a.writeListEnd();a.writeFieldEnd()}if(null!=this.providerReportingIdIndex){a.writeFieldBegin("providerReportingIdIndex",Ooyala.Thrift.Type.BYTE,17);a.writeByte(this.providerReportingIdIndex);a.writeFieldEnd()}if(null!=this.rootContentReportingIdIndex){a.writeFieldBegin("rootContentReportingIdIndex",Ooyala.Thrift.Type.BYTE,
+    18);a.writeByte(this.rootContentReportingIdIndex);a.writeFieldEnd()}if(null!=this.playerEmbedType){a.writeFieldBegin("playerEmbedType",Ooyala.Thrift.Type.BYTE,15);a.writeByte(this.playerEmbedType);a.writeFieldEnd()}if(null!=this.flashCookieAge){a.writeFieldBegin("flashCookieAge",Ooyala.Thrift.Type.I32,19);a.writeI32(this.flashCookieAge);a.writeFieldEnd()}if(null!=this.isUntrustedDocUrl){a.writeFieldBegin("isUntrustedDocUrl",Ooyala.Thrift.Type.BOOL,23);a.writeBool(this.isUntrustedDocUrl);a.writeFieldEnd()}if(null!=
+    this.bucketInfo){a.writeFieldBegin("bucketInfo",Ooyala.Thrift.Type.STRING,25);a.writeString(this.bucketInfo);a.writeFieldEnd()}if(null!=this.customEvents){a.writeFieldBegin("customEvents",Ooyala.Thrift.Type.LIST,26);a.writeListBegin(Ooyala.Thrift.Type.STRUCT,this.customEvents.length);for(b=0;b<this.customEvents.length;b++)this.customEvents[b].write(a);a.writeListEnd();a.writeFieldEnd()}if(null!=this.accountId){a.writeFieldBegin("accountId",Ooyala.Thrift.Type.STRING,27);a.writeString(this.accountId);
+    a.writeFieldEnd()}if(null!=this.variationIds){a.writeFieldBegin("variationIds",Ooyala.Thrift.Type.LIST,28);a.writeListBegin(Ooyala.Thrift.Type.I32,this.variationIds.length);for(b=0;b<this.variationIds.length;b++)a.writeI32(this.variationIds[b]);a.writeListEnd();a.writeFieldEnd()}if(null!=this.playerBrandingId){a.writeFieldBegin("playerBrandingId",Ooyala.Thrift.Type.STRING,29);a.writeString(this.playerBrandingId);a.writeFieldEnd()}if(null!=this.sessionStartTimeMillis){a.writeFieldBegin("sessionStartTimeMillis",
+    Ooyala.Thrift.Type.I64,30);a.writeI64(this.sessionStartTimeMillis);a.writeFieldEnd()}if(null!=this.randomSessionSeed){a.writeFieldBegin("randomSessionSeed",Ooyala.Thrift.Type.I64,31);a.writeI64(this.randomSessionSeed);a.writeFieldEnd()}if(null!=this.logTimeMillis){a.writeFieldBegin("logTimeMillis",Ooyala.Thrift.Type.I64,32);a.writeI64(this.logTimeMillis);a.writeFieldEnd()}if(null!=this.userTimeMillis){a.writeFieldBegin("userTimeMillis",Ooyala.Thrift.Type.I64,33);a.writeI64(this.userTimeMillis);a.writeFieldEnd()}a.writeFieldStop();
+    a.writeStructEnd()};if(typeof Ooyala==="undefined")Ooyala={};if(typeof Ooyala.Logging==="undefined")Ooyala.Logging={};Ooyala.Logging.Session=function(a){this.log_entries=[];if(a!=null)if(null!=a.log_entries)this.log_entries=a.log_entries};Ooyala.Logging.Session.prototype={};
+  Ooyala.Logging.Session.prototype.read=function(a){for(var b=a.readStructBegin();;){b=a.readFieldBegin();var c=b.ftype;if(c==Ooyala.Thrift.Type.STOP)break;switch(b.fid){case 1:if(c==Ooyala.Thrift.Type.LIST){b=0;this.log_entries=[];b=a.readListBegin().size;for(c=0;c<b;++c){var d=null;d=new Ooyala.Logging.PlayerLogEntry;d.read(a);this.log_entries.push(d)}a.readListEnd()}else a.skip(c);break;default:a.skip(c)}a.readFieldEnd()}a.readStructEnd()};
+  Ooyala.Logging.Session.prototype.write=function(a){a.writeStructBegin("Session");if(null!=this.log_entries){a.writeFieldBegin("log_entries",Ooyala.Thrift.Type.LIST,1);a.writeListBegin(Ooyala.Thrift.Type.STRUCT,this.log_entries.length);for(var b=0;b<this.log_entries.length;b++)this.log_entries[b].write(a);a.writeListEnd();a.writeFieldEnd()}a.writeFieldStop();a.writeStructEnd()};/*
+   http://www.gnu.org/licenses/gpl.html [GNU General Public License]
+   @param {jQuery} {sha1:function(string))
+   @return string
+   */
+  Ooyala.Util.createNamespace("Ooyala.ThirdParty.CRC32");
+  (function(){Ooyala.ThirdParty.CRC32.computeCrc=function(a){var b=a;a=void 0;b=b;b=b.replace(/\x0d\x0a/g,"\n");for(var c="",d=0;d<b.length;d++){var e=b.charCodeAt(d);if(e<128)c+=String.fromCharCode(e);else{if(e>127&&e<2048)c+=String.fromCharCode(e>>6|192);else{c+=String.fromCharCode(e>>12|224);c+=String.fromCharCode(e>>6&63|128)}c+=String.fromCharCode(e&63|128)}}b=c;if(typeof a=="undefined")a=0;e=e=0;a^=-1;c=0;for(d=b.length;c<d;c++){e=(a^b.charCodeAt(c))&255;e="0x"+"00000000 77073096 EE0E612C 990951BA 076DC419 706AF48F E963A535 9E6495A3 0EDB8832 79DCB8A4 E0D5E91E 97D2D988 09B64C2B 7EB17CBD E7B82D07 90BF1D91 1DB71064 6AB020F2 F3B97148 84BE41DE 1ADAD47D 6DDDE4EB F4D4B551 83D385C7 136C9856 646BA8C0 FD62F97A 8A65C9EC 14015C4F 63066CD9 FA0F3D63 8D080DF5 3B6E20C8 4C69105E D56041E4 A2677172 3C03E4D1 4B04D447 D20D85FD A50AB56B 35B5A8FA 42B2986C DBBBC9D6 ACBCF940 32D86CE3 45DF5C75 DCD60DCF ABD13D59 26D930AC 51DE003A C8D75180 BFD06116 21B4F4B5 56B3C423 CFBA9599 B8BDA50F 2802B89E 5F058808 C60CD9B2 B10BE924 2F6F7C87 58684C11 C1611DAB B6662D3D 76DC4190 01DB7106 98D220BC EFD5102A 71B18589 06B6B51F 9FBFE4A5 E8B8D433 7807C9A2 0F00F934 9609A88E E10E9818 7F6A0DBB 086D3D2D 91646C97 E6635C01 6B6B51F4 1C6C6162 856530D8 F262004E 6C0695ED 1B01A57B 8208F4C1 F50FC457 65B0D9C6 12B7E950 8BBEB8EA FCB9887C 62DD1DDF 15DA2D49 8CD37CF3 FBD44C65 4DB26158 3AB551CE A3BC0074 D4BB30E2 4ADFA541 3DD895D7 A4D1C46D D3D6F4FB 4369E96A 346ED9FC AD678846 DA60B8D0 44042D73 33031DE5 AA0A4C5F DD0D7CC9 5005713C 270241AA BE0B1010 C90C2086 5768B525 206F85B3 B966D409 CE61E49F 5EDEF90E 29D9C998 B0D09822 C7D7A8B4 59B33D17 2EB40D81 B7BD5C3B C0BA6CAD EDB88320 9ABFB3B6 03B6E20C 74B1D29A EAD54739 9DD277AF 04DB2615 73DC1683 E3630B12 94643B84 0D6D6A3E 7A6A5AA8 E40ECF0B 9309FF9D 0A00AE27 7D079EB1 F00F9344 8708A3D2 1E01F268 6906C2FE F762575D 806567CB 196C3671 6E6B06E7 FED41B76 89D32BE0 10DA7A5A 67DD4ACC F9B9DF6F 8EBEEFF9 17B7BE43 60B08ED5 D6D6A3E8 A1D1937E 38D8C2C4 4FDFF252 D1BB67F1 A6BC5767 3FB506DD 48B2364B D80D2BDA AF0A1B4C 36034AF6 41047A60 DF60EFC3 A867DF55 316E8EEF 4669BE79 CB61B38C BC66831A 256FD2A0 5268E236 CC0C7795 BB0B4703 220216B9 5505262F C5BA3BBE B2BD0B28 2BB45A92 5CB36A04 C2D7FFA7 B5D0CF31 2CD99E8B 5BDEAE1D 9B64C2B0 EC63F226 756AA39C 026D930A 9C0906A9 EB0E363F 72076785 05005713 95BF4A82 E2B87A14 7BB12BAE 0CB61B38 92D28E9B E5D5BE0D 7CDCEFB7 0BDBDF21 86D3D2D4 F1D4E242 68DDB3F8 1FDA836E 81BE16CD F6B9265B 6FB077E1 18B74777 88085AE6 FF0F6A70 66063BCA 11010B5C 8F659EFF F862AE69 616BFFD3 166CCF45 A00AE278 D70DD2EE 4E048354 3903B3C2 A7672661 D06016F7 4969474D 3E6E77DB AED16A4A D9D65ADC 40DF0B66 37D83BF0 A9BCAE53 DEBB9EC5 47B2CF7F 30B5FFE9 BDBDF21C CABAC28A 53B39330 24B4A3A6 BAD03605 CDD70693 54DE5729 23D967BF B3667A2E C4614AB8 5D681B02 2A6F2B94 B40BBE37 C30C8EA1 5A05DF1B 2D02EF8D".substr(e*
+      9,8);a=a>>>8^e}a=a^-1;return(a>>>1)*2+(a&1)}})();Ooyala.Util.createNamespace("Ooyala.ThirdParty.SHA256");
+  (function(){function a(f,h){var i=(f&65535)+(h&65535);return(f>>16)+(h>>16)+(i>>16)<<16|i&65535}function b(f,h){return f>>>h|f<<32-h}function c(f,h){var i=Array(1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,
+    666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298),g=Array(1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225),j=Array(64),l,n,o,r,m,p,q,s,t,k,u,v;f[h>>5]|=128<<24-h%32;f[(h+
+  64>>9<<4)+15]=h;for(t=0;t<f.length;t+=16){l=g[0];n=g[1];o=g[2];r=g[3];m=g[4];p=g[5];q=g[6];s=g[7];for(k=0;k<64;k++){j[k]=k<16?f[k+t]:a(a(a(b(j[k-2],17)^b(j[k-2],19)^j[k-2]>>>10,j[k-7]),b(j[k-15],7)^b(j[k-15],18)^j[k-15]>>>3),j[k-16]);u=a(a(a(a(s,b(m,6)^b(m,11)^b(m,25)),m&p^~m&q),i[k]),j[k]);v=a(b(l,2)^b(l,13)^b(l,22),l&n^l&o^n&o);s=q;q=p;p=m;m=a(r,u);r=o;o=n;n=l;l=a(u,v)}g[0]=a(l,g[0]);g[1]=a(n,g[1]);g[2]=a(o,g[2]);g[3]=a(r,g[3]);g[4]=a(m,g[4]);g[5]=a(p,g[5]);g[6]=a(q,g[6]);g[7]=a(s,g[7])}return g}
+    function d(f){for(var h=[],i=(1<<e)-1,g=0;g<f.length*e;g+=e)h[g>>5]|=(f.charCodeAt(g/e)&i)<<24-g%32;return h}var e=8;Ooyala.ThirdParty.SHA256.sha256ToHexString=function(f){f=c(d(f),f.length*e);for(var h="",i=0;i<f.length*4;i++)h+="0123456789abcdef".charAt(f[i>>2]>>(3-i%4)*8+4&15)+"0123456789abcdef".charAt(f[i>>2]>>(3-i%4)*8&15);return h};Ooyala.ThirdParty.SHA256.sha256ToBase64String=function(f){f=c(d(f),f.length*e);for(var h="",i=0;i<f.length*4;i+=3)for(var g=(f[i>>2]>>8*(3-i%4)&255)<<16|(f[i+1>>
+      2]>>8*(3-(i+1)%4)&255)<<8|f[i+2>>2]>>8*(3-(i+2)%4)&255,j=0;j<4;j++)h+=i*8+j*6>f.length*32?"":"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(g>>6*(3-j)&63);return h};Ooyala.ThirdParty.SHA256.sha256ToString=function(f){f=c(d(f),f.length*e);for(var h="",i=(1<<e)-1,g=0;g<f.length*32;g+=e)h+=String.fromCharCode(f[g>>5]>>>24-g%32&i);return h}})();Ooyala.Constants={LOGGING_SERVER_DOMAIN:(window.location.protocol=="https:"?"https:":"http:")+"//l.ooyala.com",IFRAME_PINGER_PATH:"/analytics/iframe.html",SAS_URL:(window.location.protocol=="https:"?"https:":"http:")+"//player.ooyala.com/sas/analytics",HIGH_PRIORITY_EVENT:0,LOW_PRIORITY_EVENT:1,HIGH_PRIORITY_EVENT_FLUSH_INTERVAL_MS:1E3,LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS:1E4,MIN_DURATION_FOR_STEP_BACKOFF:24E4};Ooyala.Util.createNamespace("Ooyala.Pinger");Ooyala.Pinger.ALIVE_MESSAGE="&handshake!";Ooyala.Pinger.COOKIE_NAME="gi";Ooyala.Pinger.DAYS_TO_LIVE=7300;Ooyala.Pinger._numCompare=function(){return-1};Ooyala.Pinger.RegisterMessageListener=function(a){window.addEventListener?window.addEventListener("message",a,false):window.attachEvent("onmessage",a)};Ooyala.Pinger.RemoveMessageListener=function(a){window.removeEventListener?window.removeEventListener("message",a):window.detachEvent("onmessage",a)};
+  Ooyala.Pinger._createAndSetGuid=function(){var a=(new Date).getTime(),b=window.navigator.userAgent,c=Math.random();c=c>0?c.toString(16).split(".")[1]:"00000000";a=Ooyala.ThirdParty.SHA256.sha256ToBase64String(a+b+c);(new Ooyala.Util.CookieManager(Ooyala.Pinger.COOKIE_NAME,Ooyala.Pinger.DAYS_TO_LIVE,Ooyala.Pinger._numCompare)).set("guid",a);return a};
+  Ooyala.Pinger.getOrCreateGuid=function(){var a=(new Ooyala.Util.CookieManager(Ooyala.Pinger.COOKIE_NAME,Ooyala.Pinger.DAYS_TO_LIVE,Ooyala.Pinger._numCompare)).get("guid");if(a==null)a=Ooyala.Pinger._createAndSetGuid();return a};Ooyala.Pinger.Listener=function(a){this._reconstructor=new Ooyala.Pinger.ChunkReconstructor(a)};Ooyala.Pinger.Listener.POLL_INTERVAL=500;
+  Ooyala.Pinger.Listener.prototype={_pollAndSend:function(){var a=window.location.hash;if(a.length>1){window.location.hash="";this._reconstructor.push(a.substring(1))}window.setTimeout(Ooyala.Util.bind(this._pollAndSend,this),Ooyala.Pinger.Listener.POLL_INTERVAL)},_messageHandler:function(a){this._reconstructor.push(a.data)},start:function(){if(window.postMessage){try{parent.postMessage(Ooyala.Pinger.ALIVE_MESSAGE+";"+Ooyala.Pinger.getOrCreateGuid(),"*")}catch(a){}Ooyala.Pinger.RegisterMessageListener(Ooyala.Util.bind(this._messageHandler,
+    this))}else this._pollAndSend()}};Ooyala.Pinger.ChunkReconstructor=function(a){this._receiver=a;this._reset()};
+  Ooyala.Pinger.ChunkReconstructor.prototype={_parseChunk:function(a){var b=a.split("~");if(b.length!=3){window.console&&console.log("Warning - Ooyala iframe is receiving data from non-Ooyala sources. Shouldn't be the case, ignored the data: "+a);return null}a={};a.data=b[0];a.id=parseInt(b[1]);a.count=parseInt(b[2]);if(a.id<=0||a.count<=0||a.id>a.count)throw"Bad chunk ID or total chunk count in ping chunk.";return a},_reset:function(){this._data="";this._totalChunks=this._chunksSeen=0},_handleChunk:function(a){if(this._totalChunks==
+    0){if(!(a.id>1))if(a.count==1)this._receiver.sendPing(a.data);else{this._chunksSeen=1;this._totalChunks=a.count;this._data=a.data}}else if(a.count==this._totalChunks&&a.id==this._chunksSeen+1)if(a.count==a.id){a=this._data+a.data;this._reset();this._receiver.sendPing(a)}else{this._chunksSeen+=1;this._data+=a.data}else{this._reset();this._handleChunk(a)}},push:function(a){a=this._parseChunk(a);a!==null&&this._handleChunk(a)}};Ooyala.Pinger.ServerPinger=function(a){this._pingUrl=a};
+  Ooyala.Pinger.MAX_XVERIFY_HEADER_LENGTH=7500;Ooyala.Pinger.ServerPinger.prototype={sendPing:function(a){if(a.length>Ooyala.Pinger.MAX_XVERIFY_HEADER_LENGTH)throw"Ping (length = "+a.length+") is too long.";var b=Ooyala.Util.Http.createXMLHttpRequest();b.open("POST",this._pingUrl,true);b.setRequestHeader("X-Verify",a);b.send(null)}};Ooyala.Util.createNamespace("Ooyala.Pinger");Ooyala.Pinger.OuterPinger=function(a){this._pingerIFrameWindow=this._pingerIFrame=null;this._browserCompatible=true;this._onReadyFn=a;this._initializePingerIFrame();this._bufferedChunks=[];this._scheduleFlushInMillis(Ooyala.Pinger.OuterPinger.SEND_INTERVAL_MILLIS)};Ooyala.Pinger.OuterPinger.IFRAME_BASE_URL=Ooyala.Constants.LOGGING_SERVER_DOMAIN+Ooyala.Constants.IFRAME_PINGER_PATH;Ooyala.Pinger.OuterPinger.MAX_MESSAGE_LENGTH=7500;
+  Ooyala.Pinger.OuterPinger.MAX_CHUNKS_PER_MESSAGE=2;Ooyala.Pinger.OuterPinger.MAX_CHUNK_LENGTH=Math.ceil(Ooyala.Pinger.OuterPinger.MAX_MESSAGE_LENGTH/Ooyala.Pinger.OuterPinger.MAX_CHUNKS_PER_MESSAGE);Ooyala.Pinger.OuterPinger.SEND_INTERVAL_MILLIS=1E3;
+  Ooyala.Pinger.OuterPinger.prototype={sendMessage:function(a){if(window.navigator.userAgent.indexOf("Netgem")!==-1){if(a.length>7500)throw"Ping (length = "+a.length+") is too long.";var b=Ooyala.Util.Http.createXMLHttpRequest();b.open("POST",Ooyala.Constants.LOGGING_SERVER_DOMAIN+"/verify",true);b.setRequestHeader("X-Verify",a);b.send(null)}else if(this._browserCompatible)this._bufferedChunks=this._bufferedChunks.concat(this._convertMessageToChunks(a))},_convertMessageToChunks:function(a){if(a.length<=
+    Ooyala.Pinger.OuterPinger.MAX_MESSAGE_LENGTH){for(var b=[],c=Math.ceil(a.length/Ooyala.Pinger.OuterPinger.MAX_CHUNK_LENGTH),d=0;d<c;d++){var e=a.substr(d*Ooyala.Pinger.OuterPinger.MAX_CHUNK_LENGTH,Ooyala.Pinger.OuterPinger.MAX_CHUNK_LENGTH)+"~"+(d+1).toString()+"~"+c.toString();b.push(e)}return b}else throw Error("Message (length = "+a.length+") is too long.");},_flushNextChunk:function(){var a=this._bufferedChunks.length>0?this._bufferedChunks.shift():null;if(a)window.postMessage?this._pingerIFrameWindow.postMessage(a,
+    Ooyala.Constants.LOGGING_SERVER_DOMAIN):this._pingerIFrame.setAttribute("src",Ooyala.Pinger.OuterPinger.IFRAME_BASE_URL+"#"+a);this._scheduleFlushInMillis(Ooyala.Pinger.OuterPinger.SEND_INTERVAL_MILLIS)},_scheduleFlushInMillis:function(a){setTimeout(Ooyala.Util.bind(this._flushNextChunk,this),a)},_getUnusedId:function(a){for(var b=0;document.getElementById(a+b.toString());)b+=1;return a+b.toString()},_initializePingerIFrame:function(){var a=this._getUnusedId("OoyalaPingerIFrame");if(window.postMessage){this._pingerIFrame=
+    document.createElement("iframe");this._setUpHiddenIFrame(this._pingerIFrame,a);document.body.appendChild(this._pingerIFrame);this._pingerIFrameWindow=window.frames[a];Ooyala.Pinger.RegisterMessageListener(Ooyala.Util.bind(this._handleHandshake,this))}else if(window.navigator.userAgent.indexOf("Netgem")!==-1){document.write("<IFRAME id='"+a+"'></IFRAME>");this._pingerIFrame=document.getElementById(a);this._setUpHiddenIFrame(this._pingerIFrame,a);this._pingerIFrameWindow=null;this._onReadyFn&&this._onReadyFn()}else if(window.ActiveXObject){var b=
+    new ActiveXObject("htmlfile");b.open();b.write("<html><body><iframe id='"+a+"' src='"+Ooyala.Pinger.OuterPinger.IFRAME_BASE_URL+"'></iframe></body></html>");b.close();this._pingerIFrame=b.getElementById(a);this._pingerIFrameWindow=null;this._pingerIFrameDocument=b;this._onReadyFn&&this._onReadyFn()}else this._browserCompatible=false},_handleHandshake:function(a){if(!(!a||typeof a.data!="string")){a=a.data.split(";");a.length==2&&a[0]==Ooyala.Pinger.ALIVE_MESSAGE&&this._onReadyFn&&this._onReadyFn(a[1])}},
+    _setUpHiddenIFrame:function(a,b){a.setAttribute("name",b);a.setAttribute("id",b);a.setAttribute("src",Ooyala.Pinger.OuterPinger.IFRAME_BASE_URL);a.style.visibility="hidden";a.style["border-style"]="none";a.style.width="1px";a.style.height="1px";a.style.position="absolute";a.style.top="-5px";a.style.left="-5px"}};Ooyala.PlaytimeTracker=function(a,b,c,d){this._lastPlayheadPosition=0;this._totalTimeBetweenPlayheadUpdates=Ooyala.PlaytimeTracker.INITIAL_ESTIMATE_FOR_TIME_BETWEEN_PLAYHEAD_UPDATES;this._numPlayheadUpdateDataPoints=1;this._bucketsWatched=Ooyala.Util.Enumerable.map(Array(Ooyala.PlaytimeTracker.NUM_BUCKETS),function(){return false});this._numBucketsWatched=0;this._updateWasSeek=false;this._lastBucketWatchedIndex=0;this._duration=a;this._reportTimePlayedHandle=b;this._reportBucketWatchedHandle=c;this._reportPercentageWatchedHandle=
+    d};Ooyala.PlaytimeTracker.INITIAL_ESTIMATE_FOR_TIME_BETWEEN_PLAYHEAD_UPDATES=250;Ooyala.PlaytimeTracker.MILLIS_BETWEEN_PLAYHEAD_UPDATES_FOR_SEEK=5E3;Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET=25;Ooyala.PlaytimeTracker.NUM_BUCKETS=1E3/Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET;
+  Ooyala.PlaytimeTracker.prototype={processPlayheadUpdate:function(a){var b=this._computeTimeDiff(a),c=this._getRangeBucketsWatched(a),d=c[0];c=c[1];this._lastPlayheadPosition=a;b>0&&this._reportTimePlayedHandle(b,a);a=0;for(d=d;d<c;d++){if(!this._bucketsWatched[d]){this._bucketsWatched[d]=true;a++}b=this._bucketToMinMaxPerMille(d);this._reportBucketWatchedHandle.call(undefined,b[0],b[1])}if(a>0){c=this._numBucketsWatched*Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET+1;this._numBucketsWatched+=a;this._reportPercentageWatchedHandle.call(undefined,
+    c,this._numBucketsWatched*Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET)}},_computeTimeDiff:function(a){if(a==0){this._updateWasSeek=true;return 0}if(a-this._lastPlayheadPosition>Ooyala.PlaytimeTracker.MILLIS_BETWEEN_PLAYHEAD_UPDATES_FOR_SEEK||a<this._lastPlayheadPosition){this._updateWasSeek=true;return this._estimatedTimeBetweenPlayheadUpdates()}else{a=a-this._lastPlayheadPosition;this._updateEstimatedTimeBetweenPlayheadUpdates(a);this._updateWasSeek=false;return a}},_getRangeBucketsWatched:function(a){var b=
+    [0,0];if(a==0)return b;if(this._updateWasSeek){a=this._timeToBucket(a);a==-1&&a++;b=[a,a+1]}else{b=this._timeToBucket(this._lastPlayheadPosition)+1;a=this._timeToBucket(a);b=[b,a+1]}return b},_timeToBucket:function(a){if(a<0)return 0;if(a>=this._duration)return Ooyala.PlaytimeTracker.NUM_BUCKETS-1;return this._perMilleToBucket(parseInt(a/this._duration*1E3))},_perMilleToBucket:function(a){if(a==0)return-1;return parseInt((a-1)/Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET)},_bucketToMinMaxPerMille:function(a){return[a*
+  Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET+1,(a+1)*Ooyala.PlaytimeTracker.PER_MILLE_PER_BUCKET]},_estimatedTimeBetweenPlayheadUpdates:function(){return this._totalTimeBetweenPlayheadUpdates/this._numPlayheadUpdateDataPoints},_updateEstimatedTimeBetweenPlayheadUpdates:function(a){this._totalTimeBetweenPlayheadUpdates+=a;this._numPlayheadUpdateDataPoints+=1}};Ooyala.HistoryTracker=function(){this._cookieManager=new Ooyala.Util.CookieManager(Ooyala.HistoryTracker.COOKIE_NAME,Ooyala.HistoryTracker.DAYS_TO_LIVE,Ooyala.HistoryTracker.timestampCompare);this._cookieManager.deDupe()};Ooyala.HistoryTracker.COOKIE_NAME="Ooyala";Ooyala.HistoryTracker.DAYS_TO_LIVE=365;Ooyala.HistoryTracker.timestampCompare=function(a,b){var c=a==null?0:parseFloat(a),d=b==null?0:parseFloat(b);return c-d};
+  Ooyala.HistoryTracker.prototype={getAndSetLastEventTime:function(a,b){if(a==null||b==null)return null;var c=a+"|"+b,d=this._cookieManager.get(c);d=d==null?null:parseFloat(d);this._currentTimestamp();this._cookieManager.set(c,this._currentTimestamp());return d},_currentTimestamp:function(){return Math.round((new Date).getTime()/1E3)}};Ooyala.Reporter=function(a,b){if(!a)throw"No Provider Code was provided to the Reporter";this._id=Ooyala.Reporter._next_id.toString();Ooyala.Reporter._next_id+=1;Ooyala.Reporter._map[this._id]=this;this._pCode=a;this._playerLoaded=false;this._resetState(null,null);var c=b&&b.accountId;if(typeof c!=="string")c=null;var d=b&&b.guid;if(typeof d!=="string")d=null;var e=b&&b.documentUrl;if(typeof e!=="string")e=null;var f=b&&b.playerBrandingId;if(typeof f!=="string")f=null;this._logger=new Ooyala.ThriftLogger(this._pCode,
+    c,d,e,f);this._historyTracker=new Ooyala.HistoryTracker;this._logger.wait("SAS_Response");this._requestSasInformation();this._logger.logPlayerEvents(this._createEventWithLastEventTime(Ooyala.Logging.PlayerEventType.PLAYER_LOAD,[Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX,Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX]));this._playerLoaded=true;this._adSpot=new Ooyala.AdsLogging.AdSpot;this._adInfo={};(c=b&&b.tags)&&this.setTags(c);this._nextPlaythroughToReport=this._playthroughReportFrequency=
+    25};Ooyala.Reporter._next_id=0;Ooyala.Reporter._map={};
+  Ooyala.Reporter._NULL_PLAYER_EVENT_FIELDS=["bitratePlayed","download","chunkFailover","playhead","cvinfo","DEPRECATED_adClick","buckets","adTracking","metric","bitrateTransition","sharing","payPerView","sasAuthorize","sasAuthorizeV2","personalizationBucketInfo","customEvent","reportingIdIndex","lastEventTime","timePlayed","firstForPlayer","param1","param2","firstForRootContent","firstForVideo","bufferType","bitratesAvailable","reportingIdIndexToPlayheadPositionMillis","autoplay","playthroughPercent",
+    "seqnum"];Ooyala.Reporter.AdSource={OOYALA:1,DOUBLECLICK:2,LIGHTNINGCAST:3,YUME:4,TREMOR:5,ADSENSE:6,TV2N:7,OAS:8,ADTECH:9,SCANSCOUT:10,ATLAS:11,FREEWHEEL:12,OPENX:13,LIVERAIL:14,VAST:15,ADIFY:16,DART_ENTERPRISE:17,CBSI:18,BRIGHTROLL:19,UNKNOWN:20,ADAPTV:21,VIDEOPLAZA:22,SPOTXCHANGE:23};Ooyala.Reporter.AdPositionType={PREROLL:1,MIDROLL:2,POSTROLL:3,OVERLAY:4,ENDSLATE:5,STANDALONE:6};Ooyala.Reporter.AdFormat={VIDEO:1,OVERLAY:2,ENDCAP:3,COMPANION:4};
+  Ooyala.Reporter.AdFailureReason={LOAD_ERROR:1,LOAD_TIMEOUT:2,LOAD_IO_ERROR:3,PREFETCH_ERROR:4,PREFETCH_TIMEOUT:5,PREFETCH_IO_ERROR:6,PLAY_ERROR:7,PLAY_TIMEOUT:8,PLAY_IO_ERROR:9,INVALID_PLAYER_CONFIGURATION:10,INVALID_AD_CONFIGURATION:11,AD_NOT_FOUND:12,EXCEPTION:13,AD_ERROR:14,INVALID_AD_RESPONSE:15,CONNECTION_ERROR:16,BUFFERING_TIMEOUT:17,POLICY_RESTRICTION:18};
+  Ooyala.Reporter.prototype={reportPlayerLoad:function(){},initializeVideo:function(a,b){if(window.Ooyala){this._resetState(a,b);this._backoff=Ooyala.Backoff.getAppropriateBackoff(b);this._logger.initializeVideo(a,this._backoff);this._reportGeneralEvent(Ooyala.Logging.PlayerEventType.DISPLAY,this._reportedDisplays,this._firstDisplayForPlayer);this._firstDisplayForPlayer=false;this._nextPlaythroughToReport=this._playthroughReportFrequency}},reportPlayRequested:function(){if(window.Ooyala){this._reportGeneralEvent(Ooyala.Logging.PlayerEventType.PLAY,
+    this._reportedPlays,this._firstPlayForPlayer);this._firstPlayForPlayer=false}},reportPlayStarted:function(){this.reportPlayRequested()},reportVideoStarted:function(){if(window.Ooyala){this._reportGeneralEvent(Ooyala.Logging.PlayerEventType.VIDEO_START,this._reportedVideoStarts,this._firstVideoStartForPlayer);this._firstVideoStartForPlayer=false}},reportPlayheadUpdate:function(a){if(window.Ooyala){this._backoff.setPlayheadPosition(a);this._tracker.processPlayheadUpdate(a);if(a>0){this._reportGeneralEvent(Ooyala.Logging.PlayerEventType.PLAY,
+    this._reportedPlays,this._firstPlayForPlayer);this._reportGeneralEvent(Ooyala.Logging.PlayerEventType.VIDEO_START,this._reportedVideoStarts,this._firstVideoStartForPlayer)}}},reportReplay:function(){window.Ooyala&&this._logger.logPlayerEvents(this._createEventWithLastEventTime(Ooyala.Logging.PlayerEventType.REPLAY,[Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX,Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX,Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]))},setAdSource:function(a,b,c){if(typeof a!==
+    "number"||a<=0||a>Object.keys(Ooyala.Reporter.AdSource).length)a=Ooyala.Reporter.AdSource.UNKNOWN;this._adSpot.adSource=a;if(a===Ooyala.Reporter.AdSource.OOYALA){if(!b||typeof b!=="string"||b.length!==32)throw"No valid embed code specified";this._adInfo.ooyalaEmbedCode=b;if(c&&typeof c!=="string")throw"Invalid Ad Click URL";this._adInfo.clickUrl=c}},setAdFormat:function(a){if(typeof a!=="number"||a<=0||a>Object.keys(Ooyala.Reporter.AdFormat).length)throw"Invalid Ad Format";this._adSpot.adFormat=a},
+    setAdPositionType:function(a){if(typeof a!=="number"||a<=0||a>Object.keys(Ooyala.Reporter.AdPositionType).length)throw"Invalid Ad Position Type";this._adSpot.adPositionType=a},setAdPosition:function(a){if(typeof a!=="number")throw"Invalid Ad Position";this._adSpot.adPositionInMillis=a},setAdSourceContentId:function(a){if(typeof a!=="number")throw"Ad Source Content ID should be a number.";this._adSpot.adSourceContentId=a},setAdTagUrl:function(a){if(typeof a!=="string")throw"Invalid Tag URL";this._adSpot.tagUrl=
+      a},setAdId:function(a){if(typeof a!=="number")throw"Ad ID should be a number.";this._adSpot.adId=a},setAdPassthroughParameters:function(a){if(typeof a!=="object")throw"Passthrough params should be given as an object.";this._adSpot.passthroughParameters=a},resetAdInformation:function(){window.Ooyala&&this._resetAdState()},reportAdRequest:function(){this._reportAdEvent(Ooyala.Logging.PlayerEventType.AD_REQUESTED,new Ooyala.AdsLogging.AdTracking)},reportAdImpression:function(){this._adInfo.adImpression=
+      true;this._reportAdEvent(Ooyala.Logging.PlayerEventType.AD_IMPRESSION,new Ooyala.AdsLogging.AdTracking)},reportAdClickToSite:function(){var a=this._clickTracking();if(this._adSpot.adSource===1)a.clickUrl=this._adInfo.clickUrl;this._reportAdEvent(Ooyala.Logging.PlayerEventType.AD_CLICK,a)},reportAdClickToVideo:function(){var a=this._clickTracking();a.clickToVideo=true;this._reportAdEvent(Ooyala.Logging.PlayerEventType.AD_CLICK,a)},reportAdPlaythrough:function(a,b){if(typeof a!=="number"||typeof b!==
+      "number")throw"Playhead time and total time should be numbers.";if(!(b<=0)){a>=b*0.25&&this._reportPlaythroughIfNotReported(25);a>=b*0.5&&this._reportPlaythroughIfNotReported(50);a>=b*0.75&&this._reportPlaythroughIfNotReported(75);a>=b&&this._reportPlaythroughIfNotReported(100)}},reportAdPlayFailure:function(a){if(a&&(typeof a!=="number"||a<=0||a>Object.keys(Ooyala.Reporter.AdFailureReason).length))throw"Invalid Ad Failure Reason";var b=new Ooyala.AdsLogging.AdTracking;if(this._adInfo.adImpression)b.failureAfterAdImpression=
+      true;if(a)b.failureReason=a;this._reportAdEvent(Ooyala.Logging.PlayerEventType.AD_PLAY_FAILED,b)},reportDiscoveryImpression:function(a,b){if(window.Ooyala){if(a.constructor!==Array)throw"The relatedVideos argument must be an Array";else if(a.length===0)throw"The relatedVideos array must not be empty";else if(!a[0].bucket_info)throw"The relatedVideos[0] element does not have a bucket_info";var c=this._createPlayerEvent(Ooyala.Logging.PlayerEventType.RELATED_VIDEOS_DISPLAYED,[Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX,
+      Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX,Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]),d=null;d=b?this._updateBucketInfoWithCustomData(a[0].bucket_info,b):a[0].bucket_info;c.personalizationBucketInfo=new Ooyala.Logging.PersonalizationBucketInfo;c.personalizationBucketInfo.bucketInfo=d;this._logger.logPlayerEvents([c])}},reportDiscoveryClick:function(a,b){if(window.Ooyala){if(a.bucket_info){if(!a.embed_code)throw"The clickedVideo argument does not have an embed_code";}else throw"The clickedVideo argument does not have a bucket_info";
+      var c=[Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX],d=null;d=a.pcode?this._logger.getOrCreateExtraPcodeId(a.pcode):Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX;c.push(d);d=this._logger.getOrCreateExtraEmbedCodeId(a.embed_code,d);c.push(d);c=this._createPlayerEvent(Ooyala.Logging.PlayerEventType.RELATED_VIDEO_SELECTED,c);d=null;d=b?this._updateBucketInfoWithCustomData(a.bucket_info,b):a.bucket_info;c.personalizationBucketInfo=new Ooyala.Logging.PersonalizationBucketInfo;c.personalizationBucketInfo.bucketInfo=
+        d;this._logger.logPlayerEvents([c])}},getSessionStartTimeMillis:function(){return this._logger.getSessionStartTimeMillis()},getRandomSessionSeed:function(){return this._logger.getRandomSessionSeed()},getAndIncrementNextEventSeqnum:function(){return this._logger.getAndIncrementNextEventSeqnum()},_reportAdEvent:function(a,b){if(window.Ooyala){var c=[Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX,Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX,Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX];if(this._adSpot.adSource===
+      1){var d=this._logger.addReportingId(this._adInfo.ooyalaEmbedCode);c.push(d)}c=this._createPlayerEvent(a,c);c.adTracking=b;c.adTracking.adSpotIndex=this._logger.getOrCreateAdSpotIndex(this._adSpot);this._adSpot.parentContentReportingIdIndex=Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX;this._logger.logPlayerEvents([c])}},_clickTracking:function(){var a=new Ooyala.AdsLogging.AdTracking;if(this._adInfo.clicked)a.dupClick=true;else this._adInfo.clicked=true;return a},_reportPlaythroughIfNotReported:function(a){if(!this._adInfo.playthrough)this._adInfo.playthrough=
+      Array(4);if(!this._adInfo.playthrough[a/25-1]){this._adInfo.playthrough[a/25-1]=true;var b=new Ooyala.AdsLogging.AdTracking;b.playThroughCompletion=a;this._reportAdEvent(Ooyala.Logging.PlayerEventType.AD_PLAYTHROUGH,b)}},setTags:function(a){this._logger.removeAllTags();for(var b=0;b<a.length;b++)this._logger.addTag(a[b]);return true},getTags:function(){return this._logger.getTags()},_reportTimePlayed:function(a,b){var c=this._createPlayerEvent(Ooyala.Logging.PlayerEventType.TOTAL_TIME_PLAYED,[Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX,
+      Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX,Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]);c.timePlayed=a;c.reportingIdIndexToPlayheadPositionMillis={};c.reportingIdIndexToPlayheadPositionMillis[Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]=b;this._logger.logPlayerEvents([c])},_reportBucketWatched:function(a,b){for(this._reportBucketWatchedEvent(Ooyala.Logging.PlayerEventType.BUCKETS_WATCHED,[Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX],a,b);b/10>this._nextPlaythroughToReport||this._nextPlaythroughToReport==
+    100&&b/10>95;){this._reportPlaythrough(this._nextPlaythroughToReport,[Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]);this._nextPlaythroughToReport+=this._playthroughReportFrequency}},_reportPercentageWatched:function(a,b){this._reportBucketWatchedEvent(Ooyala.Logging.PlayerEventType.PERCENTAGE_WATCHED,[Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX],a,b)},_reportBucketWatchedEvent:function(a,b,c,d){a=this._createPlayerEvent(a,b);a.buckets=new Ooyala.Logging.WatchedBuckets;a.buckets.minPerMille=c;a.buckets.maxPerMille=
+      d;this._logger.logPlayerEvents([a])},_reportPlaythrough:function(a,b){var c=this._createPlayerEvent(Ooyala.Logging.PlayerEventType.PLAYTHROUGH_PERCENT,b);c.playthroughPercent=a;this._logger.logPlayerEvents([c])},_filterAndUpdateAlreadyReported:function(a,b){return Ooyala.Util.Enumerable.select(a,function(c){if(!b[c])return b[c]=true;return false})},_reportGeneralEvent:function(a,b,c){var d=[];b=this._filterAndUpdateAlreadyReported([Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX],b);if(b.length>0){b.push(Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX);
+      b.push(Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX);d=this._createEventWithLastEventTime(a,b);c&&Ooyala.Util.Enumerable.foreach(d,function(e){e.firstForPlayer=true})}this._logger.logPlayerEvents(d);return d},_createEventWithLastEventTime:function(a,b){for(var c=[],d=0;d<b.length;d++){var e=this._createPlayerEvent(a,b[d]),f=this._getReportingCode(b[d]);e.lastEventTime=this._historyTracker.getAndSetLastEventTime(f,a);c.push(e)}return c},_getReportingCode:function(a){switch(a){case Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX:return this._embedCode;
+      case Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX:return this._pCode;case Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX:return Ooyala.ThriftLogger.OOYALA_GLOBAL_ID}return""},_createPlayerEvent:function(a,b){var c=new Ooyala.Logging.PlayerEvent;Ooyala.Util.Enumerable.foreach(Ooyala.Reporter._NULL_PLAYER_EVENT_FIELDS,function(e){c[e]=null});c.eventType=a;if(b.constructor.toString().indexOf("Array")==-1)c.reportingIdIndices.push(b);else for(var d=0;d<b.length;d++)c.reportingIdIndices.push(b[d]);return c},
+    _resetState:function(a,b){var c=Ooyala.Util.bind(this._reportTimePlayed,this),d=Ooyala.Util.bind(this._reportBucketWatched,this),e=Ooyala.Util.bind(this._reportPercentageWatched,this);this._tracker=new Ooyala.PlaytimeTracker(b,c,d,e);this._embedCode=a;this._reportedDisplays={};this._firstDisplayForPlayer=true;this._reportedPlays={};this._firstPlayForPlayer=true;this._reportedVideoStarts={};this._firstVideoStartForPlayer=true},_resetAdState:function(){this._adInfo={};this._adSpot=new Ooyala.AdsLogging.AdSpot},
+    _requestSasInformation:function(){var a="id="+this._id+"&pcode="+encodeURIComponent(this._pCode);var b=Ooyala.Constants.SAS_URL+"?"+a;var c=Ooyala.Util.Http.createXMLHttpRequest();c.open("GET",b,true);c.onreadystatechange=function(){if(c.readyState==4){if(c.status==200){Ooyala.Reporter.processSAS(JSON.parse(c.response));}else{console.log("SAS Analytics Invocation Error: "+c.status);}}};c.send();},_setSASInfo:function(a){this._logger.setKey(a.key);this._logger.setTimezoneId(a.timezone);this._logger.setAuthenticationTime(a.authentication_time);this._logger.setGeoData(a.geo_data);
+      this._logger.signal("SAS_Response")},_updateBucketInfoWithCustomData:function(a,b){if(a&&a.length>0&&a.charAt(0)=="2"){var c=JSON.parse(a.substring(1)),d=JSON.parse(window.atob(c.encoded));if(d.custom)for(var e in b){if(b.hasOwnProperty(e))d.custom[e]=b[e]}else d.custom=b;c.encoded=window.btoa(JSON.stringify(d));return"2"+JSON.stringify(c)}else throw"Not a version 2 bucket_info: "+a;}};Ooyala.Reporter.processSAS=function(a){var b=Ooyala.Reporter._map[a.id];b&&b._setSASInfo(a)};Ooyala.Util.createNamespace("Ooyala.Signing");Ooyala.Signing.getSignature=function(a,b){return Ooyala.ThirdParty.SHA256.sha256ToBase64String(a+b)};Ooyala.Signing.getXVerify=function(a,b){var c=Ooyala.Signing.getSignature(a,b),d=Ooyala.ThirdParty.CRC32.computeCrc(a);return a+"&sig="+c.substr(1,20)+"&crc="+d.toString()};Ooyala.Util.createNamespace("Ooyala.Backoff");Ooyala.Backoff.getAppropriateBackoff=function(a){return a>Ooyala.Constants.MIN_DURATION_FOR_LINEAR_BACKOFF?new Ooyala.Backoff.StepBackoff(a):new Ooyala.Backoff.NoBackoff};Ooyala.Backoff.StepBackoff=function(a){this._duration=a;this._playheadPosition=0;this.resetBackoffBehavior()};Ooyala.Backoff.StepBackoff.DURATION_FLUSH_FREQUENCY={};
+  Ooyala.Backoff.StepBackoff.DURATION_FLUSH_FREQUENCY[Ooyala.Constants.LOW_PRIORITY_EVENT]=[[Ooyala.Constants.MIN_DURATION_FOR_STEP_BACKOFF*5,Ooyala.Constants.LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS*18],[Ooyala.Constants.MIN_DURATION_FOR_STEP_BACKOFF*2,Ooyala.Constants.LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS*6],[Ooyala.Constants.MIN_DURATION_FOR_STEP_BACKOFF,Ooyala.Constants.LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS*3],[-Infinity,Ooyala.Constants.LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS]];
+  Ooyala.Backoff.StepBackoff.DURATION_FLUSH_FREQUENCY[Ooyala.Constants.HIGH_PRIORITY_EVENT]=[[Ooyala.Constants.MIN_DURATION_FOR_STEP_BACKOFF*2,Ooyala.Constants.HIGH_PRIORITY_EVENT_FLUSH_INTERVAL_MS*30],[Ooyala.Constants.MIN_DURATION_FOR_STEP_BACKOFF,Ooyala.Constants.HIGH_PRIORITY_EVENT_FLUSH_INTERVAL_MS*10],[-Infinity,Ooyala.Constants.HIGH_PRIORITY_EVENT_FLUSH_INTERVAL_MS]];
+  Ooyala.Backoff.StepBackoff.prototype={setPlayheadPosition:function(a){this._playheadPosition=a},getFlushInterval:function(a){for(var b=Ooyala.Backoff.StepBackoff.DURATION_FLUSH_FREQUENCY[a],c=this._playheadPosition-this._resetPosition,d=null,e=0;e<b.length;e++){var f=b[e];if(f[0]<c){d=f;break}}return d!==null?d[1]:a==Ooyala.Constants.HIGH_PRIORITY_EVENT?Ooyala.Constants.HIGH_PRIORITY_EVENT_FLUSH_INTERVAL_MS:Ooyala.Constants.LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS},resetBackoffBehavior:function(){this._resetPosition=
+    this._playheadPosition}};Ooyala.Backoff.NoBackoff=function(){};Ooyala.Backoff.NoBackoff.prototype={setPlayheadPosition:function(){},resetBackoffBehavior:function(){},getFlushInterval:function(a){if(a==Ooyala.Constants.HIGH_PRIORITY_EVENT)return Ooyala.Constants.HIGH_PRIORITY_EVENT_FLUSH_INTERVAL_MS;return Ooyala.Constants.LOW_PRIORITY_EVENT_FLUSH_INTERVAL_MS}};Ooyala.ThriftLogger=function(a,b,c,d,e){var f=this._createReportingIdDescriptor(Ooyala.Logging.ReportingIdType.GLOBAL),h=this._createReportingIdDescriptor(Ooyala.Logging.ReportingIdType.PROVIDER);this._reportingIdDescriptors=[f,h];this._reportingIds=[Ooyala.ThriftLogger.OOYALA_GLOBAL_ID,a];this._playerEvents=[];this._totalTimePlayedEvent=null;this._serializer=new Ooyala.Thrift.Serializer;this._logTimer=new Ooyala.LogTimer;this._waitConditions=[];this._documentUrl=d?d:window.location.href;this._signingKey=
+    "";this._backoff=new Ooyala.Backoff.NoBackoff;this._adSpots=[];this._adSpotToIndex={};this._tags=[];this._flushInturruptedByWaitConditions=false;this._timezoneId=27;this._user=null;this._guid=c;this._accountId=b;this._playerBrandingId=e;this._sessionStartTimeMillis=Math.round((new Date).getTime());this._randomSessionSeed=Math.round(Math.random()*4503599627370496);this._nextEventSeqnum=1;this.wait("pinger_ready");this._pinger=new Ooyala.Pinger.OuterPinger(Ooyala.Util.bind(this._onReady,this))};
+  Ooyala.ThriftLogger.OOYALA_GLOBAL_ID="o";Ooyala.ThriftLogger.GLOBAL_REPORTING_ID_INDEX=0;Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX=1;Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX=2;Ooyala.ThriftLogger.ANALYTICS_VERSION=2;Ooyala.ThriftLogger.MAX_PLAYER_EVENTS=42;Ooyala.ThriftLogger.EVENT_PRIORITIES={HIGH:Ooyala.Constants.HIGH_PRIORITY_EVENT,LOW:Ooyala.Constants.LOW_PRIORITY_EVENT};
+  Ooyala.ThriftLogger.HIGH_PRIORITY_EVENT_TYPES=[Ooyala.Logging.PlayerEventType.UNKNOWN,Ooyala.Logging.PlayerEventType.DISPLAY,Ooyala.Logging.PlayerEventType.PLAY,Ooyala.Logging.PlayerEventType.PERCENTAGE_WATCHED,Ooyala.Logging.PlayerEventType.SEEK,Ooyala.Logging.PlayerEventType.REPLAY,Ooyala.Logging.PlayerEventType.PAUSE,Ooyala.Logging.PlayerEventType.BUCKETS_WATCHED,Ooyala.Logging.PlayerEventType.AD_CLICK,Ooyala.Logging.PlayerEventType.AD_IMPRESSION,Ooyala.Logging.PlayerEventType.AD_PLAYTHROUGH,Ooyala.Logging.PlayerEventType.AD_PLAY_FAILED,
+    Ooyala.Logging.PlayerEventType.PLAYER_LOAD,Ooyala.Logging.PlayerEventType.SHARE,Ooyala.Logging.PlayerEventType.PAY_PER_VIEW,Ooyala.Logging.PlayerEventType.SAS_AUTHORIZE,Ooyala.Logging.PlayerEventType.SAS_AUTHORIZE_V2,Ooyala.Logging.PlayerEventType.AD_REQUESTED,Ooyala.Logging.PlayerEventType.AD_MOUSEOVER,Ooyala.Logging.PlayerEventType.VIDEO_START,Ooyala.Logging.PlayerEventType.CUSTOM,Ooyala.Logging.PlayerEventType.RELATED_VIDEO_SELECTED,Ooyala.Logging.PlayerEventType.RELATED_VIDEOS_DISPLAYED];
+  Ooyala.ThriftLogger.LOW_PRIORITY_EVENT_TYPES=[Ooyala.Logging.PlayerEventType.TOTAL_TIME_PLAYED,Ooyala.Logging.PlayerEventType.BITRATE_PLAYED,Ooyala.Logging.PlayerEventType.DOWNLOAD,Ooyala.Logging.PlayerEventType.CHUNK_FAILOVER,Ooyala.Logging.PlayerEventType.BUFFER,Ooyala.Logging.PlayerEventType.CV_INFO,Ooyala.Logging.PlayerEventType.METRIC,Ooyala.Logging.PlayerEventType.BITRATE_TRANSITION,Ooyala.Logging.PlayerEventType.BITRATES_AVAILABLE];Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY=null;
+  Ooyala.ThriftLogger.BUCKETIZED_EVENT_TYPES=[Ooyala.Logging.PlayerEventType.PERCENTAGE_WATCHED,Ooyala.Logging.PlayerEventType.BUCKETS_WATCHED];Ooyala.ThriftLogger._NULL_PLAYER_LOG_ENTRY_FIELDS=["logTime","ipaddr","userAgent","logServer","country","clientStat","adSpots","rootContentReportingIdIndex","flashCookieAge","bucketInfo","accountId","logTimeMillis"];Ooyala.ThriftLogger._NULL_USER_FIELDS=["region","county","city","lat","lon","dmaCode","pmsaCode","cookie","clientIP"];
+  Ooyala.ThriftLogger.prototype={initializeVideo:function(a,b){this._backoff=b||new Ooyala.Backoff.NoBackoff;if(this._reportingIds.length>=3&&this._reportingIds[Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]!=a){this.flushEventBufferInAtMostMillis(0);this._reportingIds[Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX]=a}else if(this._reportingIds.length<3){var c=this._createReportingIdDescriptor(Ooyala.Logging.ReportingIdType.VIDEO);c.providerReportingIdIndex=Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX;
+    this._reportingIdDescriptors.push(c);this._reportingIds.push(a)}this._clearExtraReportingIds()},getOrCreateExtraPcodeId:function(a){for(var b=-1,c=0;c<this._reportingIds.length;c++)if(this._reportingIds[c]===a)b=c;if(b>=0)return b;else{b=this._reportingIds.length;this._reportingIds.push(a);this._reportingIdDescriptors.push(this._createReportingIdDescriptor(Ooyala.Logging.ReportingIdType.PROVIDER));return b}},getOrCreateExtraEmbedCodeId:function(a,b){for(var c=-1,d=0;d<this._reportingIds.length;d++)if(this._reportingIds[d]===
+    a)c=d;if(c>=0)return c;else{c=this._reportingIds.length;this._reportingIds.push(a);d=this._createReportingIdDescriptor(Ooyala.Logging.ReportingIdType.VIDEO);d.providerReportingIdIndex=b;this._reportingIdDescriptors.push(d);return c}},_clearExtraReportingIds:function(){if(this._reportingIds.length>3){this._reportingIds=this._reportingIds.slice(0,3);this._reportingIdDescriptors=this._reportingIdDescriptors.slice(0,3)}},getOrCreateAdSpotIndex:function(a){var b=this._adSpotToIndex[a];if(!b){this._adSpotToIndex[a]=
+    b=this._adSpots.length;this._adSpots.push(a)}return b},addReportingId:function(a){this._reportingIds.push(a);a=this._createReportingIdDescriptor(Ooyala.Logging.ReportingIdType.VIDEO);a.providerReportingIdIndex=Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX;this._reportingIdDescriptors.push(a);return this._reportingIds.length-1},logPlayerEvents:function(a){for(var b=0;b<a.length;b++)this._logPlayerEvent(a[b]);this._playerEvents.length>=Ooyala.ThriftLogger.MAX_PLAYER_EVENTS&&this.flushEventBufferInAtMostMillis(0)},
+    flushEventBufferInAtMostMillis:function(a){!a||a<=0?this.flushEventBuffer():this._logTimer.setLogTimeout(Ooyala.Util.bind(this.flushEventBuffer,this),a)},flushEventBuffer:function(){if(this._playerEvents.length!=0)if(this._waitConditions.length>0)this._flushInturruptedByWaitConditions=true;else{var a=this._serializer.serialize(this._playerEventsToPlayerLogEntry());a=Ooyala.Util.base64Encode(a);this._pinger.sendMessage(Ooyala.Signing.getXVerify(a,this._signingKey));this._resetPlayerEvents();this._clearExtraReportingIds()}},
+    arrayIndexOf:function(a,b){for(var c=0;c<a.length;c++)if(a[c]===b)return c;return-1},wait:function(a){this._waitConditions.push(a)},signal:function(a){a=this.arrayIndexOf(this._waitConditions,a);if(a<0)return false;this._waitConditions[a]=this._waitConditions[this._waitConditions.length-1];this._waitConditions.pop();if(this._waitConditions.length==0&&this._flushInturruptedByWaitConditions){this._flushInturruptedByWaitConditions=false;this.flushEventBuffer()}return true},setKey:function(a){this._signingKey=
+      a},setTimezoneId:function(a){this._timezoneId=a},setAuthenticationTime:function(a){this._authenticationTime=a},setGeoData:function(a){var b=new Ooyala.Logging.User;Ooyala.Util.Enumerable.foreach(Ooyala.ThriftLogger._NULL_USER_FIELDS,function(c){b[c]=null});b.country=a;b.source=Ooyala.Logging.UserInfoSource.ENCRYPTED_SAS;this._user=b},addTag:function(a){if(this.arrayIndexOf(this._tags,a)>=0)return false;this._tags.push(a);return true},getTags:function(){return[].concat(this._tags)},removeTag:function(a){a=
+      this.arrayIndexOf(this._tags,a);if(a<0)return false;this._tags[a]=this._tags[this._tags.length-1];this._tags.pop();return true},removeAllTags:function(){this._tags=[];return true},getSessionStartTimeMillis:function(){return this._sessionStartTimeMillis},getRandomSessionSeed:function(){return this._randomSessionSeed},getAndIncrementNextEventSeqnum:function(){var a=this._nextEventSeqnum;this._nextEventSeqnum+=1;return a},_onReady:function(a){this._guid=this._guid||a;this.signal("pinger_ready")},_logPlayerEvent:function(a){switch(a.eventType){case Ooyala.Logging.PlayerEventType.TOTAL_TIME_PLAYED:this._logTotalTimePlayedEvent(a);
+      break;default:this._playerEvents.push(a);break}this.flushEventBufferInAtMostMillis(this._playerEventTypeToFlushInterval(a.eventType))},_logTotalTimePlayedEvent:function(a){var b=this._totalTimePlayedEvent;if(b){b.timePlayed+=a.timePlayed;b.reportingIdIndexToPlayheadPositionMillis=a.reportingIdIndexToPlayheadPositionMillis}else{this._totalTimePlayedEvent=a;this._playerEvents.push(a)}},_playerEventTypeToFlushInterval:function(a){Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY||this._initializeEventTypeToPriorityHash();
+      return this._backoff.getFlushInterval(Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY[a]||Ooyala.ThriftLogger.EVENT_PRIORITIES.HIGH)},_initializeEventTypeToPriorityHash:function(){if(!Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY){Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY={};for(var a=0;a<Ooyala.ThriftLogger.HIGH_PRIORITY_EVENT_TYPES.length;a++){var b=Ooyala.ThriftLogger.HIGH_PRIORITY_EVENT_TYPES[a];Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY[b]=Ooyala.ThriftLogger.EVENT_PRIORITIES.HIGH}for(a=0;a<Ooyala.ThriftLogger.LOW_PRIORITY_EVENT_TYPES.length;a++){b=
+      Ooyala.ThriftLogger.LOW_PRIORITY_EVENT_TYPES[a];Ooyala.ThriftLogger.EVENT_TYPE_TO_PRIORITY[b]=Ooyala.ThriftLogger.EVENT_PRIORITIES.LOW}}},_compressAllBucketizedEvents:function(a){for(var b=0;b<Ooyala.ThriftLogger.BUCKETIZED_EVENT_TYPES.length;b++)a=this._compressBucketizedEventsForType(Ooyala.ThriftLogger.BUCKETIZED_EVENT_TYPES[b],a);return a},_compressBucketizedEventsForType:function(a,b){if(!this._isBucketizedEventType(a))return b;var c=Ooyala.Util.Enumerable.select(b,function(i){return i.eventType==
+      a});if(!c||c.length<2)return b;c.sort(function(i,g){return i.buckets.minPerMille-g.buckets.minPerMille||i.buckets.maxPerMille-g.buckets.maxPerMille});for(var d=[],e=c.shift(),f=false;c.length!=0;){var h=c.shift();if(e.buckets.maxPerMille!=h.buckets.minPerMille-1){d.push(e);e=h}else{e.buckets.maxPerMille=h.buckets.maxPerMille;f=true}}if(!f)return b;d.push(e);b=Ooyala.Util.Enumerable.reject(b,function(i){return i.eventType==a});return b=b.concat(d)},_isBucketizedEventType:function(a){for(var b=0;b<
+    Ooyala.ThriftLogger.BUCKETIZED_EVENT_TYPES.length;b++)if(a==Ooyala.ThriftLogger.BUCKETIZED_EVENT_TYPES[b])return true;return false},_resetPlayerEvents:function(){this._playerEvents=[];this._totalTimePlayedEvent=null},_playerEventsToPlayerLogEntry:function(){var a=new Ooyala.Logging.PlayerLogEntry,b=new Date,c=b.getTimezoneOffset();Ooyala.Util.Enumerable.foreach(Ooyala.ThriftLogger._NULL_PLAYER_LOG_ENTRY_FIELDS,function(d){a[d]=null});a.user=this._user;a.guid=this._guid;a.playerBrandingId=this._playerBrandingId;
+      a.version=Ooyala.ThriftLogger.ANALYTICS_VERSION;a.userTimeMillis=Math.round(b.getTime());a.userTime=Math.round(a.userTimeMillis/1E3);a.userTimezone=c;a.documentUrl=this._documentUrl;a.authenticationTime=this._authenticationTime;a.reportingIds=this._reportingIds.slice(0);if(Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX<a.reportingIds.length)a.rootContentReportingIdIndex=Ooyala.ThriftLogger.VIDEO_REPORTING_ID_INDEX;a.reportingIdDescriptors=this._reportingIdDescriptors.slice(0);a.timezoneIds=[0];a.tags=
+        this._tags;a.sessionStartTimeMillis=this._sessionStartTimeMillis;a.randomSessionSeed=this._randomSessionSeed;if(this._accountId)a.accountId=this._accountId;for(b=0;b<this._playerEvents.length;b++){c=this._playerEvents[b];if(c.adTracking&&typeof c.adTracking.adSpotIndex==="number"){if(!a.adSpots)a.adSpots=[];a.adSpots.push(this._adSpots[c.adTracking.adSpotIndex])}}for(;a.timezoneIds.length<a.reportingIds.length;)a.timezoneIds.push(this._timezoneId);a.events=this._compressAllBucketizedEvents(this._playerEvents);
+      a.providerReportingIdIndex=Ooyala.ThriftLogger.PROVIDER_REPORTING_ID_INDEX;a.playerEmbedType=Ooyala.Logging.PlayerEmbedType.EXTERNAL_ANALYTICS;a.isUntrustedDocUrl=false;for(b=0;b<a.events.length;b++){a.events[b].seqnum=this._nextEventSeqnum;this._nextEventSeqnum+=1}return a},_isPlayerLogEntryValid:function(a){if(!a.events||a.events.length==0||!a.documentUrl||a.documentUrl.length==0||!a.reportingIds||a.reportingIds.length==0||!a.reportingIdDescriptors||a.reportingIdDescriptors.length==0)return false;
+      return true},_createReportingIdDescriptor:function(a){var b=new Ooyala.Logging.ReportingIdDescriptor;b.reportingIdType=a;Ooyala.Util.Enumerable.foreach(["providerReportingIdIndex","parentContentIdIndex","syndicationDestinationIdIndex","adSetId"],function(c){b[c]=null});return b}};Ooyala.LogTimer=function(){this._nextTimeout=this._timeoutId=null};
+  Ooyala.LogTimer.prototype={setLogTimeout:function(a,b){var c=(new Date).getTime(),d=c+b;if(this._nextTimeout!==null&&d>this._nextTimeout||d<c)return false;this._clearLogTimer();this._nextTimeout=d;c=Ooyala.Util.bind(this._clearTimerAndCallCallback,this,a);this._timeoutId=setTimeout(c,b);return true},_clearTimerAndCallCallback:function(a){this._clearLogTimer();a()},_clearLogTimer:function(){if(this._timeoutId!==null){clearTimeout(this._timeoutId);this._nextTimeout=this._timeoutId=null}}};global=this;global.Ooyala=Ooyala;global.Ooyala.Reporter=Ooyala.Reporter;global.Ooyala.Reporter.prototype.reportPlayerLoad=Ooyala.Reporter.prototype.reportPlayerLoad;global.Ooyala.Reporter.prototype.initializeVideo=Ooyala.Reporter.prototype.initializeVideo;global.Ooyala.Reporter.prototype.reportPlayheadUpdate=Ooyala.Reporter.prototype.reportPlayheadUpdate;global.Ooyala.Reporter.prototype.reportReplay=Ooyala.Reporter.prototype.reportReplay;
+  //end Reporter.js
+}(OO, OO.$, OO._));
+
+(function(OO, $, _) {
+  //analtyics.js pulled from https://analytics.ooyala.com/static/v3/analytics.js on 9/1/17
+!function(){var t=function(t,e){if("undefined"!=typeof WinJS)return void WinJS.Namespace.define(t,{});var i="undefined"!=typeof process&&process.versions&&!!process.versions.node,n=i?global:e;"undefined"!=typeof window&&(n=window),n||console.log((new Error).stack);for(var a=t.split("."),s=n,o=0;o<a.length;o++){var r=a[o];if(s[r]){var l=a.slice(0,o).join(".");if("object"!=typeof s[r])throw new Error("Namespace error: the name '"+l+"' already exists and is not a namespace.")}else s[r]={};s=s[r]}};t("Ooyala.Util",this),Ooyala.Util.createNamespace=t}(),function(){Ooyala.Util.createNamespace("Ooyala.Analytics",this),Ooyala.Analytics._GuidManager=function(){this._guid_key_name="ooyala_guid"},Ooyala.Analytics._GuidManager.prototype={_isGuidInLocalStorage:function(){return"undefined"!=typeof Storage&&null!==localStorage.getItem(this._guid_key_name)},_getGuidFromLocalStorage:function(){return"undefined"!=typeof Storage?localStorage.getItem(this._guid_key_name):null},_getRandomString:function(){return(new Date).getTime()+Math.random().toString(16).split(".")[1]},_generateGuid:function(){return Ooyala.ThirdParty.SHA256.sha256ToBase64String(this._getRandomString())},_setGuid:function(t){return"undefined"!=typeof Storage&&(localStorage.setItem(this._guid_key_name,t),!0)},getOrGenerateGuid:function(){if(this._isGuidInLocalStorage())return this._getGuidFromLocalStorage();var t=this._generateGuid();return this._setGuid(t),t}}}(),Ooyala.Util.createNamespace("Ooyala.ThirdParty.SHA256",this),function(){function t(t,e){var i=(65535&t)+(65535&e),n=(t>>16)+(e>>16)+(i>>16);return n<<16|65535&i}function e(t,e){return t>>>e|t<<32-e}function i(t,e){return t>>>e}function n(t,e,i){return t&e^~t&i}function a(t,e,i){return t&e^t&i^e&i}function s(t){return e(t,2)^e(t,13)^e(t,22)}function o(t){return e(t,6)^e(t,11)^e(t,25)}function r(t){return e(t,7)^e(t,18)^i(t,3)}function l(t){return e(t,17)^e(t,19)^i(t,10)}function c(e,i){var c,u,h,_,d,y,f,p,m,E,T,A,I=new Array(1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298),g=new Array(1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225),S=new Array(64);e[i>>5]|=128<<24-i%32,e[(i+64>>9<<4)+15]=i;for(var m=0;m<e.length;m+=16){c=g[0],u=g[1],h=g[2],_=g[3],d=g[4],y=g[5],f=g[6],p=g[7];for(var E=0;E<64;E++)E<16?S[E]=e[E+m]:S[E]=t(t(t(l(S[E-2]),S[E-7]),r(S[E-15])),S[E-16]),T=t(t(t(t(p,o(d)),n(d,y,f)),I[E]),S[E]),A=t(s(c),a(c,u,h)),p=f,f=y,y=d,d=t(_,T),_=h,h=u,u=c,c=t(T,A);g[0]=t(c,g[0]),g[1]=t(u,g[1]),g[2]=t(h,g[2]),g[3]=t(_,g[3]),g[4]=t(d,g[4]),g[5]=t(y,g[5]),g[6]=t(f,g[6]),g[7]=t(p,g[7])}return g}function u(t){for(var e=Array(),i=(1<<y)-1,n=0;n<t.length*y;n+=y)e[n>>5]|=(t.charCodeAt(n/y)&i)<<24-n%32;return e}function h(t){for(var e="",i=(1<<y)-1,n=0;n<32*t.length;n+=y)e+=String.fromCharCode(t[n>>5]>>>24-n%32&i);return e}function _(t){for(var e=f?"0123456789ABCDEF":"0123456789abcdef",i="",n=0;n<4*t.length;n++)i+=e.charAt(t[n>>2]>>8*(3-n%4)+4&15)+e.charAt(t[n>>2]>>8*(3-n%4)&15);return i}function d(t){for(var e="",i="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",n="",a=0;a<4*t.length;a+=3)for(var s=(t[a>>2]>>8*(3-a%4)&255)<<16|(t[a+1>>2]>>8*(3-(a+1)%4)&255)<<8|t[a+2>>2]>>8*(3-(a+2)%4)&255,o=0;o<4;o++)n+=8*a+6*o>32*t.length?e:i.charAt(s>>6*(3-o)&63);return n}var y=8,f=0;Ooyala.ThirdParty.SHA256.sha256ToHexString=function(t){return _(c(u(t),t.length*y))},Ooyala.ThirdParty.SHA256.sha256ToBase64String=function(t){return d(c(u(t),t.length*y))},Ooyala.ThirdParty.SHA256.sha256ToString=function(t){return h(c(u(t),t.length*y))}}(),function(t){"use strict";function e(t){var t={eventName:t.name,time:(new Date).toISOString()};return t}function i(t){var e=Date.now()+this._priorityIntervals[t];e<this._flushTime&&(this._flushTimeout&&clearTimeout(this._flushTimeout),this._flushTimeout=setTimeout(function(){o.call(this)}.bind(this),this._priorityIntervals[t]),this._flushTime=Date.now()+this._priorityIntervals[t])}function n(t){new Ooyala.HttpRequester(t,this._iqEndpoint)}function a(t){if(t>0){var i=e(g.PLAYHEAD_UPDATE);i.playheadPositionMillis=Math.floor(t),v.call(this,i,g.PLAYHEAD_UPDATE.priority)}}function s(t){if(t>0){var i=e(g.TIME_PLAYED);i.timePlayedMillis=t,v.call(this,i,g.TIME_PLAYED.priority),this._timePlayed=0}}function o(){var t=Date.now()/1e3,e=new Date;this._base.clientTime=e.toISOString(),s.call(this,this._timePlayedMillis),a.call(this,this._playheadPositionMillis),this._base.events=this._pendingEvents,n.call(this,this._base),this._pendingEvents=[],this._flushTime=Number.MAX_VALUE,this._lastFlush=t}function r(t){for(;t/10>this._nextPlaythroughToReport||100==this._nextPlaythroughToReport&&t/10>95;){var i=e(g.PLAYTHROUGH_PERCENT);i.percent=Math.floor(this._nextPlaythroughToReport),v.call(this,i,g.PLAYTHROUGH_PERCENT.priority),this._nextPlaythroughToReport+=25}}function l(t){for(var e=t/this._buckets.count,i=0;i<this._buckets.count;i++)this._buckets.startingTimes[i]=i*e}function c(t){for(var e=!1,i=0,n=0;!e;)i===this._buckets.count||this._buckets.startingTimes[i]>t?(n=i-1,e=!0):i+=1;return n}function u(t){this._buckets.watched[t]||(this._buckets.watched[t]=!0,h.call(this,t)),this._buckets.current!==t&&(_.call(this,t),this._buckets.current=t)}function h(t){var i=e(g.PERCENTAGE_WATCHED);i.startMille=25*t+1,i.endMille=25*t+25,v.call(this,i,g.PERCENTAGE_WATCHED.priority),this._buckets.watchedCount++,r.call(this,i.endMille)}function _(t){var i=e(g.BUCKETS_WATCHED);i.startMille=25*t+1,i.endMille=25*t+25,v.call(this,i,g.BUCKETS_WATCHED.priority)}function d(t){var i=e(t);v.call(this,i,t.priority)}function y(t){var e=new Error(t.message);return e.name=t.name,e}function f(){this._buckets={watched:[],current:-1,startingTimes:[],count:40,watchedCount:0},this._nextPlaythroughToReport=25,this._playheadPositionMillis=0,this._timePlayed=0,this._lastTimePlayed=0,this._timePlayedMillis=0,this._base.source={},this._base.plugins=[]}function p(t,e,i,n,a,s){var o={},r={};if(o.uiTag=i,o.contentSource=n,t.hasOwnProperty("ooyalaDiscoveryContext"))r=t.ooyalaDiscoveryContext;else{if(!t.hasOwnProperty("bucket_info")){var l=y(S.MISSING_DISCOVERY_CONTEXT);throw l.message=l.message.replace("{{asset}}",JSON.stringify(t)),l}r.version="1",r.data=m(t.bucket_info)}return e&&(r.customData=e),o.ooyalaDiscoveryContext=JSON.stringify(r),o.pageSize=a,o.assetPosition=s,o}function m(t){if(t&&t.length>0&&"2"==t.charAt(0)){var e=JSON.parse(t.substring(1));return window.atob(e.encoded)}var i=y(S.INVALID_BUCKET_INFO);throw i.message=i.message.replace("{{bucket_info}}",t),i}function E(t){var e=Ooyala.Analytics.MediaContentType.OOYALA_CONTENT,i="";return t.hasOwnProperty("id_type")&&(e=t.id_type),t.hasOwnProperty("embed_code")&&(i=t.embed_code),{id:i,idType:e}}function T(t){if(!t.hasOwnProperty("name")||!t.hasOwnProperty("active"))return y(S.PLUGIN_FIELDS_MISSING);for(var e in t)if("name"!==e&&"active"!==e&&"version"!==e){var i=y(S.PLUGIN_FIELD_INVALID);return i.message=i.message.replace("{{field}}",e),i}return null}function A(){function t(){return Math.floor(65536*(1+Math.random())).toString(16).substring(1)}return t()+t()+"-"+t()+"-"+t()+"-"+t()+"-"+t()+t()+t()}var I={LOW:0,MEDIUM:1,HIGH:2},g={PLAYER_LOAD:{name:"playerLoad",priority:I.HIGH},DISPLAY:{name:"display",priority:I.HIGH},PLAY_REQUESTED:{name:"playRequested",priority:I.HIGH},VIDEO_STARTED:{name:"videoStarted",priority:I.HIGH},PLAYTHROUGH_PERCENT:{name:"playthroughPercent",priority:I.HIGH},PERCENTAGE_WATCHED:{name:"percentageWatched",priority:I.MEDIUM},BUCKETS_WATCHED:{name:"bucketWatched",priority:I.MEDIUM},REPLAY:{name:"replay",priority:I.HIGH},SEEK:{name:"seek",priority:I.MEDIUM},PAUSE:{name:"pause",priority:I.MEDIUM},RESUME:{name:"resume",priority:I.MEDIUM},TIME_PLAYED:{name:"timePlayed",priority:I.LOW},PLAYHEAD_UPDATE:{name:"playheadUpdate",priority:I.LOW},CUSTOM:{name:"custom",priority:I.MEDIUM},OFFLINE_CONTENT_ACQUIRED:{name:"offlineContentAcquired",priority:I.HIGH},ASSET_IMPRESSION:{name:"assetImpression",priority:I.MEDIUM},ASSET_CLICK:{name:"assetClick",priority:I.HIGH}},S={INVALID_DOWNLOAD_TYPE:{name:"InvalidDownloadType",message:"Not a valid download type for offline content, Download type should be own/rental."},MISSING_DISCOVERY_CONTEXT:{name:"MissingDiscoveryContext",message:"Missing ooyalaDiscoveryContext or bucket_info for {{asset}}."},INVALID_BUCKET_INFO:{name:"InvalidBucketInfo",message:"Not a version 2 bucket_info: {{bucket_info}}."},PLUGIN_FIELDS_MISSING:{name:"PluginFieldsMissing",message:"Plugin missing required fields - name and active."},PLUGIN_FIELD_INVALID:{name:"PluginFieldInvalid",message:"Plugin contains invalid field {{field}}."},PLUGINS_NOT_AN_ARRAY:{name:"PluginsNotAnArray",message:"Plugins must be an array."},INVALID_CUSTOM_DIMENSION:{name:"InvalidCustomObject",message:"The custom dimensions can only contain string, numerals or boolean values. They cannot contain complex objects."},GEO_FIELD_INVALID:{name:"GeoFieldInvalid",message:"Geo contains invalid field {{field}}."}},v=function(t,e){t.sequenceNum=this._currentSequenceNumber,i.call(this,e),this._pendingEvents.push(t),this._currentSequenceNumber++};Ooyala.Util.createNamespace("Ooyala.Analytics",t),Ooyala.Analytics.Reporter=function(t,e){this._base={},this._base.asset={},e?this._base.sessionId=e:this._base.sessionId=A(),this._base.contentSessionId="",this._base.pcode=t,this._base.sessionStartTime=(new Date).toISOString(),this._base.analyticsSdkName="ooyala-iq-analytics-js-sdk",this._base.analyticsSdkVersion="1.0.20.0.0",this._base.player={playerInfo:{}},this._base.documentUrl=null,this._base.device={deviceInfo:{}},this._base.user={},this._lastFlush=0,this._liveContent=!1,this._contentDuration=0,this._date=new Date,this._pendingEvents=[],this._currentSequenceNumber=0,this._flushTime=Number.MAX_VALUE,this._priorityIntervals=[1e4,5e3,1e3],this._seek={start:0,end:0},this._hasContentStarted=!1,this._flushTimeout=null,this._lastClickedAsset={};var i="https:";this._iqEndpoint=i+"//l.ooyala.com/v3/analytics/events",f.call(this)},Ooyala.Analytics.Reporter.prototype={setIQBackendURL:function(t){this._iqEndpoint=t},setDocumentURL:function(t){this._base.documentUrl=t},setDeviceInfo:function(t,e,i){if(!t){var n=new Ooyala.Analytics._GuidManager;t=n.getOrGenerateGuid()}var a={};for(var s in e)a[s]=e[s];this._base.device={id:t,deviceInfo:a},this._base.userAgent=i},setUserInfo:function(t,e,i,n){var a={};for(var s in n){if("countryCode"!==s&&"region"!==s&&"state"!==s&&"city"!==s&&"latitude"!==s&&"longitude"!==s&&"geoVendor"!==s){var o=y(S.GEO_FIELD_INVALID);throw o.message=o.message.replace("{{field}}",s),o}a[s]=n[s]}this._base.user={emailHashMD5:t,userId:e,gender:i,geo:a}},setPlayerInfo:function(t,e,i){this._base.player={id:t,name:e,version:i}},setSessionId:function(t){this._base.sessionId=t},reportPlayerLoad:function(){d.call(this,g.PLAYER_LOAD)},initializeMedia:function(t,e,i){f.call(this),this._base.asset.id=t,this._base.asset.idType=e,i?this._base.contentSessionId=i:this._base.contentSessionId=A(),this._lastClickedAsset.hasOwnProperty("id")&&(t===this._lastClickedAsset.id&&e===this._lastClickedAsset.idType?this.updateTopLevelSource(this._lastClickedAsset.source):this._lastClickedAsset={})},setMediaDuration:function(t){this._contentDuration=t,t<=0?this._liveContent=!0:l.call(this,t),d.call(this,g.DISPLAY)},reportPlayRequested:function(t){var i=e(g.PLAY_REQUESTED);i.isAutoPlay=t||!1,v.call(this,i,g.PLAY_REQUESTED.priority)},setPlugins:function(t){if(t){if("[object Array]"!=Object.prototype.toString.call(t))throw y(S.PLUGINS_NOT_AN_ARRAY);for(var e in t){var i=T(t[e]);if(i)throw i}this._base.plugins=t}},reportOfflineContentAcquired:function(t){if(t!=Ooyala.Analytics.OfflineContentDownloadType.FOR_RENT&&t!=Ooyala.Analytics.OfflineContentDownloadType.TO_OWN)throw y(S.INVALID_DOWNLOAD_TYPE);var i=e(g.OFFLINE_CONTENT_ACQUIRED);i.downloadType=t,v.call(this,i,g.OFFLINE_CONTENT_ACQUIRED.priority)},reportReplay:function(){var t=e(g.REPLAY);t.isAutoPlay=!1,v.call(this,t,g.REPLAY.priority)},reportPlaybackStarted:function(){d.call(this,g.VIDEO_STARTED)},reportPlayHeadUpdate:function(t){if(this._timePlayed=this._timePlayed+(t-this._lastTimePlayed),this._lastTimePlayed=t,this._playheadPositionMillis=t,this._timePlayedMillis=Math.floor(this._timePlayed),i.call(this,g.PLAYHEAD_UPDATE.priority),i.call(this,g.TIME_PLAYED.priority),!this._liveContent){var e=c.call(this,t);u.call(this,e)}},reportPause:function(){d.call(this,g.PAUSE)},reportResume:function(){d.call(this,g.RESUME)},reportSeek:function(t,i){var n=e(g.SEEK);n.fromMillis=t,n.toMillis=i,v.call(this,n,g.SEEK.priority)},reportComplete:function(){o.call(this),this._flushTimeout&&clearTimeout(this._flushTimeout)},reportCustomEvent:function(t,i){var n=e(g.CUSTOM);n.customEventName=t;for(var a in i)n[a]=i[a];v.call(this,n,g.CUSTOM.priority)},updateTopLevelSource:function(t){this._base.source=t},reportAssetImpression:function(t,i,n,a,s,o){var r=e(g.ASSET_IMPRESSION);r.source=p(t,i,n,a,s,o),r.asset=E(t),v.call(this,r,g.ASSET_IMPRESSION.priority)},reportAssetClick:function(t,i,n,a,s,o){var r=e(g.ASSET_CLICK);this._lastClickedAsset.source=p(t,i,n,a,s,o),r.asset=E(t),this._lastClickedAsset.idType=r.asset.idType,this._lastClickedAsset.id=r.asset.id,r.source=this._lastClickedAsset.source;var l=!1;i&&i.hasOwnProperty("autoplay")&&(l=i.autoplay),r.isAutoPlay=l,v.call(this,r,g.ASSET_CLICK.priority)},setCustomDimensions:function(t){if(t)for(var e in t)if("object"==typeof t[e])throw y(S.INVALID_CUSTOM_DIMENSION);this._base.customDimensions=t}},Ooyala.Analytics.MediaContentType={OOYALA_CONTENT:"ooyala",EXTERNAL_CONTENT:"external"},Ooyala.Analytics.OfflineContentDownloadType={TO_OWN:"own",FOR_RENT:"rental"}}(this),function(t){Ooyala.HttpRequester=function(e,i){if(this._iqEndpoint=i,this.object=e,t.XMLHttpRequest){var n=new XMLHttpRequest;n.open("POST",this._iqEndpoint),n.setRequestHeader("Content-Type","application/json;charset=UTF-8"),n.send(JSON.stringify(this.object))}else if(t.XDomainRequest){var n=new t.XDomainRequest;n.onload=function(){onSuccess(n.responseText)},n.onerror=function(){console.log("Error: "+httpErrorCodeTranslation.ieError)};try{n.open(method,uri),n.timeout=timeout,n.send()}catch(a){console.log("Error: "+httpErrorCodeTranslation.ieError)}}}}(this);
+}(OO, OO.$, OO._));
   (function(OO, $, _) {
     OO.AnalyticsBase = function(messageBus, id) { };
 
@@ -28291,6 +35558,8 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
         _.bind(this._onReportDiscoveryClick, this));
       messageBus.subscribe(OO.EVENTS.PLAYER_CREATED, OOYALA_ANALYTICS,
         _.bind(this._onPlayerCreated, this));
+      messageBus.subscribe(OO.EVENTS.ASSET_CHANGED, OOYALA_ANALYTICS,
+        _.bind(this._onFirstAssetChanged, this));
     });
 
     _.extend(OoyalaAnalytics.prototype, {
@@ -28333,8 +35602,8 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
 
       _onGuidAndAccountIdSet: function() {
         if (!this.guidSet || !this.accountIdSet) { return; }
-        OO.d("Loading Analtics Module...");
-        this.loadExternalAnalyticsJs(OO.URLS.ANALYTICS({ server: OO.SERVER.ANALYTICS }));
+        OO.d("Loading Analytics Module...");
+        this._loadAnalytics();
       },
 
       _onErrorEvent: function(event, params) {
@@ -28352,7 +35621,7 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
         this.mb.unsubscribe(OO.EVENTS.ERROR, OOYALA_ANALYTICS);
         this.mb.unsubscribe(OO.EVENTS.AUTHORIZATION_FETCHED, OOYALA_ANALYTICS);
         OO.d("OO.OoyalaAnalytics: SAS authorization failed, loading external analytics module ...");
-        this.loadExternalAnalyticsJs(OO.URLS.ANALYTICS({ server: OO.SERVER.ANALYTICS }));
+        this._loadAnalytics();
       },
 
       _onReportDiscoveryImpression: function(event, params) {
@@ -28373,6 +35642,24 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
           OO.log("Failed to report a discovery click event with params " + JSON.stringify(params) +
             ": " + e);
         }
+      },
+
+      _loadAnalytics: function() {
+        // PLAYER-970: Bundling the payload of reporter.js into this file
+        // Because of this, we will be calling the _onLoaded callback immediately
+
+        // The below line is the old code to fetch analytics.js
+        // this.loadExternalAnalyticsJs(OO.URLS.ANALYTICS({ server: OO.SERVER.ANALYTICS }));
+        _.bind(this._onLoaded, this)();
+      },
+
+      _onFirstAssetChanged: function(event, asset) {
+        if (!asset.ooyalaAsset) { return; }
+        this.mb.unsubscribe(OO.EVENTS.ASSET_CHANGED, OOYALA_ANALYTICS, this._onFirstAssetChanged);
+        this.accountId = undefined;
+        this.accountIdSet = true;
+
+        this._onGuidAndAccountIdSet();
       },
 
       loadSucceed: function() {
@@ -28416,6 +35703,22 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
             // TODO: get the right duration for the video.
             this.reporter.initializeVideo(this.currentEmbedcode, arg1.duration);
             break;
+          case OO.EVENTS.ASSET_CHANGED :
+            if (!arg1) { break; }
+            if (arg1.id != this.currentEmbedcode) {
+              this.lastEmbedCode = this.currentEmbedcode;
+            } else {
+              this.lastEmbedCode = '';
+            }
+            if (!asset.ooyalaAsset) {
+              this.embedCode = '';
+              break;
+            }
+            this.mb.unsubscribe(OO.EVENTS.ERROR, OOYALA_ANALYTICS);
+            this.currentEmbedcode = arg1.id;
+            this.reporter.initializeVideo(this.currentEmbedcode, asset.content.duration);
+
+            break;
           case OO.EVENTS.WILL_PLAY_FROM_BEGINNING:
             if (this.lastEmbedCode === this.currentEmbedcode) {
               this.reporter.reportReplay();
@@ -28446,8 +35749,13 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
             if (this.playingInstreamAd) {
               this.reporter.reportAdPlaythrough(arg1, arg2);
             } else {
-              if (arg1 > 0) {
-                this.reporter.reportPlayheadUpdate(Math.floor(arg1 * 1000));
+              // [PBW-5863] currentTime for live videos is used only for display
+              // purposes, the actual playhead is the currentLiveTime parameter (arg6).
+              // When present, currentLiveTime should override currentTime for analytics purposes.
+              var currentTime = (typeof arguments[6] !== "undefined") ? arguments[6] : arg1;
+
+              if (_.isFinite(currentTime) && currentTime > 0) {
+                this.reporter.reportPlayheadUpdate(Math.floor(currentTime * 1000));
               }
             }
             break;
@@ -28473,8 +35781,8 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
 /*
  * Librato Plugin
  *
- * owner: PBS
- * version: 0.1
+ * owner: PLAYER
+ * version: 0.2
  *
  * The Librato plugin utilizes the librato.com API to handle instrumentation
  * of various events within the player. Note: The allowed use of this plugin is only
@@ -28482,10 +35790,13 @@ OO.plugin("AnalyticsFrameworkTranslator", function (OO, _, $, W)
  * each request.
  */
 OO.plugin("Librato", function(OO, _, $, W) {
+
   // Throttling for now...logic by @gregm ;)
   var THROTTLE = Math.floor(Math.random() * 10);
   // Return an empty function or die
-  if (THROTTLE > 0) { return (function(){}); }
+  if (!OO.runningUnitTests) {
+    if (THROTTLE > 0) { return (function(){}); }
+  }
 
   var RANGE_ABOVE_THRESHOLD_TEXT = "-above-range";
   var RANGE_BELOW_THRESHOLD_TEXT = "-below-range";
@@ -28503,20 +35814,40 @@ OO.plugin("Librato", function(OO, _, $, W) {
         "high": 2000
       },
       {
+        "name": "player.load.time",
+        "low": 500,
+        "high": 2000
+      },
+      {
         "name": "v4-playback-ready",
-        "low": 1000,
-        "high": 3000
+        "low": 500,
+        "high": 2000
+      },
+      {
+        "name": "player.playbackReady.time",
+        "low": 500,
+        "high": 2000
       },
       {
         "name": "v4-time-to-first-content-frame",
         "low": 1000,
-        "high": 5000
+        "high": 3000
+      },
+      {
+        "name": "player.firstFrame.time",
+        "low": 1000,
+        "high": 3000
       },
       {
         "name": "v4-time-to-first-ad-frame",
         "low": 1000,
-        "high": 5000
-      }
+        "high": 3000
+      },
+      {
+        "name": "player.adsFirstFrame.time",
+        "low": 1000,
+        "high": 3000
+      },
     ]
   };
 
@@ -28533,6 +35864,8 @@ OO.plugin("Librato", function(OO, _, $, W) {
     } else {
       this.basic_auth_token = window.base64.encode(this.basic_auth_token);
     }
+    // form TAG JSON object for granular Librato Measurement
+    this.tag = this._generateTagJSON();
     // figure out the source string
     this.source = this._generateSourceString();
   };
@@ -28551,6 +35884,34 @@ OO.plugin("Librato", function(OO, _, $, W) {
     },
 
     /**
+     * Creates a measurement value object that is properly formatted for Librato
+     * @method _addMeasurementValue
+     * @param {object} measurement The measurement value object
+     * @param {string} name The measurement name to track
+     * @param {number} value The measurement value (some sort of measurement)
+     * @return {object} The modified measurement object
+     */
+    _addMeasurementValue: function(measurement, name, value) {
+      // get hold of the current measurements to add, or init currentMeasurement with empty array if no data exists yet.
+      var currentMeasurement = [];
+      if (measurement && measurement.measurements && measurement.measurements.length > 0) {
+        currentMeasurement = measurement.measurements;
+      }
+
+      // Append new value object into measurement array
+      currentMeasurement.push({
+        "name": name,
+        "value": value
+      });
+
+      measurement = {
+        "tags": this.tag,
+        "measurements": currentMeasurement
+      };
+      return measurement;
+    },
+
+    /**
      * Creates a metric value object that is properly formatted for Librato
      * @method _addMetricValue
      * @param {object}  metrics The metrics value object
@@ -28564,6 +35925,18 @@ OO.plugin("Librato", function(OO, _, $, W) {
     },
 
     /**
+     * Creates and sends a single measurement value to Librato API
+     * @method _reportSingleMeasurement
+     * @param {string} name The measurement name
+     * @param {number} value The measurement value (some sorf of measurement)
+     */
+    _reportSingleMeasurement: function(name, value) {
+      var measurement = {};
+      measurement = this._addMeasurementValue(measurement, name, value);
+      this._sendMeasurement(measurement);
+    },
+
+    /**
      * Creates and sends a single metric value to Librato API
      * @method _reportSingleMetric
      * @param {string} name The metric name
@@ -28571,8 +35944,27 @@ OO.plugin("Librato", function(OO, _, $, W) {
      */
     _reportSingleMetric: function(name, value) {
       var metrics = {};
-      this._addMetricValue(metrics, name, value);
+      metrics = this._addMetricValue(metrics, name, value);
       this._sendReport(metrics);
+    },
+
+    /**
+     * AJAX request to send measurement call to Librato API
+     * https://www.librato.com/docs/api/#measurements
+     * @method _sendMeasurement
+     * @param {measurement} The measurement object
+     */
+    _sendMeasurement: function(measurement) {
+      // send the ping
+      $.ajax({
+        url: "https://metrics-api.librato.com/v1/measurements",
+        type: "post",
+        data: JSON.stringify(measurement),
+        contentType: "application/json",
+        headers: { "Authorization": "Basic " + this.basic_auth_token },
+        success: function (data) {
+        }
+      });
     },
 
     /**
@@ -28628,19 +36020,92 @@ OO.plugin("Librato", function(OO, _, $, W) {
     },
 
     /**
+     * Generates the Tag JSON object to use in each measurement call
+     * @method _generateTagJSON
+     * @return {Object} The properly formatted JSON object for measurement call
+     *
+     * platform: player product offering. Example: web, ios-sdk, android-sdk, etc.
+     * os: underlying OS
+     * browser: underlying browser, if applicable
+     * customer: critical customers only. Example: CustomerName_PCODE
+     * version: player version
+     * source: source of the player code, if applicable. Example: static (static JS files), api (backend SaaS API: Valhalla)
+     */
+    _generateTagJSON: function() {
+      var tag = {
+        "platform": "web",
+        "os": "generic",
+        "browser": "generic",
+        "customer": "undefined",
+        "version": "undefined",
+        "source": "api"
+      };
+
+      // version
+      if (OO.VERSION && OO.VERSION.core && OO.VERSION.core.releaseVersion &&
+          OO.VERSION.core.releaseVersion !== "<CORE_VERSION>") {
+        tag.version = OO.VERSION.core.releaseVersion;
+      }
+
+      // OS
+      if (OO.isIos) {
+        tag.os = "ios";
+      } else if (OO.isAndroid) {
+        tag.os = "android";
+      } else if (OO.isMacOs) {
+        tag.os = "macosx";
+      } else if (OO.isWinPhone) {
+        tag.os = "winphone";
+      } else if (OO.isWindows) {
+        tag.os = "windows";
+      } else {
+        tag.os = "generic";
+      }
+
+      // browser
+      if (OO.isChrome) {
+        tag.browser = "chrome";
+      } else if (OO.isFirefox) {
+        tag.browser = "firefox";
+      } else if (OO.isEdge) {
+        tag.browser = "edge";
+      } else if (OO.isIE11Plus) {
+        tag.browser = "ie11plus";
+      } else if (OO.isIE) {
+        tag.browser = "ieold";
+      } else if (OO.isSafari) {
+        tag.browser = "safari";
+      } else {
+        tag.browser = "generic";
+      }
+
+      // source
+      if (!!window.performance && !!window.performance.getEntriesByType) {
+        var regex = "player.*ooyala.*core.*js";
+        var v4_source = _.find(window.performance.getEntriesByType("resource"), function(e) { return e.name.match(regex); } );
+        // v4_source from static files are found, higher probability the origin source of player is from static files, rather than backend API.
+        if (!!v4_source) {
+          tag.source = "static";
+        }
+      }
+
+      return tag;
+    },
+
+    /**
      * Generates the source string to use in each metric call
      * @method _generateSourceString
      * @return {string} The properly formatted source string
      */
     _generateSourceString: function() {
       var source_data = {};
-      var source_template = _.template("<%= platform %>-<%= os %>-<%= browser %>");
+      var source_template = _.template("<%= version %>-<%= os %>-<%= browser %>");
 
-      // platform
-      if (OO.featureEnabled("flash-playback")) {
-        source_data.platform = "flash";
-      } else {
-        source_data.platform = "html5";
+      // version
+      source_data.version = "undefined";
+      if (OO.VERSION && OO.VERSION.core && OO.VERSION.core.releaseVersion &&
+          OO.VERSION.core.releaseVersion !== "<CORE_VERSION>") {
+        source_data.version = OO.VERSION.core.releaseVersion;
       }
 
       // OS
@@ -28672,6 +36137,7 @@ OO.plugin("Librato", function(OO, _, $, W) {
       } else {
         source_data.browser = "generic";
       }
+
       return source_template(source_data);
     },
 
@@ -28681,12 +36147,15 @@ OO.plugin("Librato", function(OO, _, $, W) {
      */
     start: function() {
       var metrics = {};
+      var measurements = {};
       this._addMetricValue(metrics, "v4-load", 1);
+      measurements = this._addMeasurementValue(measurements, "player.display", 1);
 
       // measure v4 load performance data
       if (!!window.performance && !!window.performance.getEntries) {
-        // Get data about core.js
-        var regex = ".*v4.*core";
+        // regex for core server and static/v4/<PATH>/core file
+        var regex = "player.*ooyala.*core";
+
         var v4_performance = _.find(window.performance.getEntriesByType("resource"), function(e) { return e.name.match(regex); } );
 
         // timing data found
@@ -28694,11 +36163,14 @@ OO.plugin("Librato", function(OO, _, $, W) {
           if (v4_performance.duration > 0) {
             // We have the load time, so let's log that
             this._addMetricValue(metrics, this._getThresholdText(v4_performance.duration, this._matchEvent("v4-load-time")), 1);
+            measurements = this._addMeasurementValue(measurements, this._getThresholdText(v4_performance.duration, this._matchEvent("player.load.time")), 1);
+            measurements = this._addMeasurementValue(measurements, "player.load.time", v4_performance.duration);
           }
         }
       }
 
       this._sendReport(metrics);
+      this._sendMeasurement(measurements);
     }
 
   });
@@ -28716,8 +36188,19 @@ OO.plugin("Librato", function(OO, _, $, W) {
     this.mb = messageBus;
     this.initializationTs = this._takeTimestamp();
 
+    // LibratoHelper holder for unit test accessibility. Do not remove
+    this.helper = libratoHelper;
+
+    // initialized timingMetric
+    this.setEmbedCodeTs = 0;
+    this.playbackReadyTs = 0;
+    this.lastStateChangeTs = 0;
+    this.firstFrameTs = 0;
+    this.errorTs = 0;
+
     // track important events
     this.mb.subscribe(OO.EVENTS.SET_EMBED_CODE, 'librato', _.bind(this._onSetEmbedCode, this));
+    this.mb.subscribe(OO.EVENTS.SET_EMBED_CODE_AFTER_OOYALA_AD, 'librato', _.bind(this._onSetEmbedCode, this));
     this.mb.subscribe(OO.EVENTS.PLAYBACK_READY, 'librato', _.bind(this._onPlaybackReady, this));
     this.mb.subscribe(OO.EVENTS.INITIAL_PLAY, 'librato', _.bind(this._onInitialPlay, this));
     this.mb.subscribe(OO.EVENTS.PLAY, 'librato', _.bind(this._onInitialPlay, this));
@@ -28749,6 +36232,11 @@ OO.plugin("Librato", function(OO, _, $, W) {
       this.wasTimeToFirstFrameReported = false;
       this.wasTimeToFirstAdFrameReported = false;
       this.adsPlaying = false;
+      this.wasErrorReported = false;
+      this.playbackReadyTs = 0;
+      this.lastStateChangeTs = 0;
+      this.firstFrameTs = 0;
+      this.errorTs = 0;
     },
 
     /**
@@ -28756,10 +36244,14 @@ OO.plugin("Librato", function(OO, _, $, W) {
      * @method _onPlaybackReady
      */
     _onPlaybackReady: function() {
+      var measurements = {};
       libratoHelper._reportSingleMetric("v4-playback-ready", 1);
       this.playbackReadyTs = this._takeTimestamp();
       var diff = libratoHelper._measureDurationMilli(this.setEmbedCodeTs, this.playbackReadyTs);
       libratoHelper._reportSingleMetric(libratoHelper._getThresholdText(diff, libratoHelper._matchEvent("v4-playback-ready")), 1);
+      measurements = libratoHelper._addMeasurementValue(measurements, libratoHelper._getThresholdText(diff, libratoHelper._matchEvent("player.playbackReady.time")), 1);
+      measurements = libratoHelper._addMeasurementValue(measurements, "player.playbackReady.time", diff)
+      libratoHelper._sendMeasurement(measurements);
     },
 
     /**
@@ -28772,6 +36264,7 @@ OO.plugin("Librato", function(OO, _, $, W) {
       this.lastStateChangeTs = this._takeTimestamp();
       this.wasPlayStartReported = true;
       libratoHelper._reportSingleMetric("v4-play", 1);
+      libratoHelper._reportSingleMeasurement("player.playRequested", 1);
     },
 
     /**
@@ -28782,6 +36275,7 @@ OO.plugin("Librato", function(OO, _, $, W) {
       this.lastStateChangeTs = this._takeTimestamp(); // reset the state timestamp
       this.adsPlaying = true;
       libratoHelper._reportSingleMetric("v4-play-ad", 1);
+      libratoHelper._reportSingleMeasurement("player.adsRequested", 1);
     },
 
     /**
@@ -28808,11 +36302,20 @@ OO.plugin("Librato", function(OO, _, $, W) {
       if (!this.wasTimeToFirstFrameReported && !this.adsPlaying) {
         libratoHelper._reportSingleMetric(libratoHelper._getThresholdText(diff, libratoHelper._matchEvent("v4-time-to-first-content-frame")), 1);
         this.wasTimeToFirstFrameReported = true;
+        var measurements = {};
+        measurements = libratoHelper._addMeasurementValue(measurements, libratoHelper._getThresholdText(diff, libratoHelper._matchEvent("player.firstFrame.time")), 1);
+        measurements = libratoHelper._addMeasurementValue(measurements, "player.firstFrame.time", diff)
+        measurements = libratoHelper._addMeasurementValue(measurements, "player.playStarted", 1)
+        libratoHelper._sendMeasurement(measurements);
       }
 
       if (this.adsPlaying && !this.wasTimeToFirstAdFrameReported) {
         libratoHelper._reportSingleMetric(libratoHelper._getThresholdText(diff, libratoHelper._matchEvent("v4-time-to-first-ad-frame")), 1);
         this.wasTimeToFirstAdFrameReported = true;
+        var measurements = {};
+        measurements = libratoHelper._addMeasurementValue(measurements, libratoHelper._getThresholdText(diff, libratoHelper._matchEvent("player.adsFirstFrame.time")), 1);
+        measurements = libratoHelper._addMeasurementValue(measurements, "player.adsFirstFrame.time", diff)
+        libratoHelper._sendMeasurement(measurements);
       }
     },
 
@@ -28822,6 +36325,7 @@ OO.plugin("Librato", function(OO, _, $, W) {
      */
     _onPlayerPlayFailure: function() {
       libratoHelper._reportSingleMetric("v4-play-fail", 1);
+      libratoHelper._reportSingleMeasurement("player.playFail", 1);
     },
 
     /**
@@ -28829,12 +36333,15 @@ OO.plugin("Librato", function(OO, _, $, W) {
      * @method _onPlayerError
      */
     _onPlayerError: function(type, error) {
+      if (this.wasErrorReported) { return; }
+
       this.errorTs = this._takeTimestamp();
       // We essentially want to handle errors on a case by case basis to determine
       // which errors have more weight
       libratoHelper._reportSingleMetric("v4-error", 1);
+      libratoHelper._reportSingleMeasurement("player.error", 1);
+      this.wasErrorReported = true;
     }
-
   });
 
   return Librato;
@@ -28877,7 +36384,11 @@ OO.plugin("Librato", function(OO, _, $, W) {
 			if(el.data("mresize")) return;
 			if(el.css("position")==="static") el.css("position","relative");
 			el
-				.append("<div class='resize' style='position:absolute; width:auto; height:auto; top:0; right:0; bottom:0; left:0; margin:0; padding:0; overflow:hidden; visibility:hidden; z-index:-1'><iframe style='width:100%; height:0; border:0; visibility:visible; margin:0' /><iframe style='width:0; height:100%; border:0; visibility:visible; margin:0' /></div>")
+				.append(
+					"<div class='resize' style='position:absolute; width:auto; height:auto; top:0; right:0; bottom:0; left:0; margin:0; padding:0; overflow:hidden; visibility:hidden; z-index:-1'>" +
+					"<iframe style='width:100%; height:0; border:0; visibility:visible; margin:0' tabindex='-1' />" +
+					"<iframe style='width:0; height:100%; border:0; visibility:visible; margin:0' tabindex='-1' /></div>"
+				)
 				.data("mresize",{"w":el.width(),"h":el.height(),t:null,throttle:100})
 				.find(".resize iframe").each(function(){
 					$(this.contentWindow || this).on("resize",function(){
@@ -28898,6 +36409,7 @@ OO.plugin("Librato", function(OO, _, $, W) {
 		}
 	};
 }(OO, OO.$, OO._));
+
   OO.exposeStaticApi('EVENTS', OO.EVENTS);
   OO.exposeStaticApi('CONSTANTS', OO.CONSTANTS);
   OO.publicApi.log = OO.log;

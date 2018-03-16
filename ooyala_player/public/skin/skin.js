@@ -1,11 +1,60 @@
 {
   "general": {
-    "watermark": {"imageResource": {"url": "//player.ooyala.com/static/v4/candidate/latest/skin-plugin/assets/images/ooyala-watermark.png","androidResource" : "logo","iosResource" : "logo"  } },
-    "loadingImage": {"imageResource": {"url": "//player.ooyala.com/static/v4/candidate/latest/skin-plugin/assets/images/loader_svg.svg" } }
+    "watermark": {"imageResource": {"url": "","androidResource" : "logo","iosResource" : "logo"  },
+                  "position": "bottomRight",
+                  "clickUrl": "",
+                  "target": "_blank",
+                  "transparency": 1,
+                  "scalingOption": "default",
+                  "scalingPercentage": 20
+    },
+    "bufferingSpinnerDelay": 750,
+    "loadingImage": {"imageResource": {"url": "//player.ooyala.com/static/v4/stable/4.20.8/skin-plugin/assets/images/loader_svg.svg" } },
+    "accentColor":"#448aff"
   },
   "localization": {
     "defaultLanguage": "en",
-    "availableLanguageFile": []
+    "availableLanguageFile": [
+      {
+        "language": "en",
+        "languageFile": "",
+        "androidResource": "skin-config/languageFiles/en.json",
+        "iosResource": "en"
+      },
+      {
+        "language": "es",
+        "languageFile": "",
+        "androidResource": "skin-config/languageFiles/es.json",
+        "iosResource": "es"
+      },
+      {
+        "language": "zh",
+        "languageFile": "",
+        "androidResource": "skin-config/languageFiles/zh.json",
+        "iosResource": "zh"
+      },
+      {
+        "language": "ja",
+        "languageFile": "",
+        "androidResource": "skin-config/languageFiles/ja.json",
+        "iosResource": "ja"
+      }
+    ]
+  },
+  "languageDirections": {
+    "ar": "rtl",
+    "dv": "rtl",
+    "he": "rtl",
+    "fa": "rtl",
+    "ks": "rtl",
+    "ku": "rtl",
+    "pa": "rtl",
+    "ps": "rtl",
+    "sd": "rtl",
+    "tk": "rtl",
+    "ug": "rtl",
+    "ur": "rtl",
+    "yi": "rtl"
   },
   "responsive": {
     "breakpoints": {
@@ -88,7 +137,7 @@
   },
   "shareScreen": {
     "embed": {
-      "source": "<iframe width='640' height='480' frameborder='0' allowfullscreen src='//player.ooyala.com/static/v4/candidate/latest/skin-plugin/iframe.html?ec=<ASSET_ID>&pbid=<PLAYER_ID>&pcode=<PUBLISHER_ID>'></iframe>"
+      "source": "<iframe width='640' height='480' frameborder='0' allowfullscreen src='//player.ooyala.com/static/v4/stable/4.20.8/skin-plugin/iframe.html?ec=<ASSET_ID>&pbid=<PLAYER_ID>&pcode=<PUBLISHER_ID>'></iframe>"
     }
   },
   "moreOptionsScreen": {
@@ -149,13 +198,18 @@
     },
     "adScrubberBar": {
       "backgroundColor": "rgba(175,175,175,1)",
-      "bufferedColor": "rgba(92, 92, 92, 1);",
-      "playedColor": "rgba(255,63,128,1)"
+      "bufferedColor": "rgba(127,127,127,1)",
+      "playedColor": "rgba(255,63,128,1)",
+      "scrubberHandleColor": "rgba(67,137,255,1)",
+      "scrubberHandleBorderColor": "rgba(255,255,255,1)"
     },
     "scrubberBar": {
       "backgroundColor": "rgba(0,0,0,1)",
       "bufferedColor": "rgba(0,0,0,0.7)",
       "playedColor": "rgba(74,74,74,1)",
+      "playHeadColor": "#e17331",
+      "scrubberHandleColor": "rgba(67,137,255,1)",
+      "scrubberHandleBorderColor": "rgba(255,255,255,1)",
       "thumbnailPreview": false
     }
   },
@@ -213,6 +267,7 @@
     "replay": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0063", "fontStyleClass": "oo-icon oo-icon-system-replay"},
     "share": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u006f", "fontStyleClass": "oo-icon oo-icon-share"},
     "cc": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u006B", "fontStyleClass": "oo-icon oo-icon-cc"},
+    "stereoscopic": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0057", "fontStyleClass": "oo-icon"},
     "discovery": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u006C", "fontStyleClass": "oo-icon oo-icon-discovery-binoculars"},
     "quality": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u006D", "fontStyleClass": "oo-icon oo-icon-bitrate"},
     "setting": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u006E", "fontStyleClass": "oo-icon oo-icon-system-settings"},
@@ -224,6 +279,13 @@
     "learn": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0074", "fontStyleClass": "oo-icon oo-icon-system-more-information"},
     "skip": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0075", "fontStyleClass": "oo-icon oo-icon-skip-slick"},
     "warning": {"fontFamilyName": "fontawesome", "fontString": "\uf06a", "fontStyleClass": ""},
-    "auto": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0064", "fontStyleClass": "oo-icon oo-icon-system-auto"}
+    "auto": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0064", "fontStyleClass": "oo-icon oo-icon-system-auto"},
+    "arrowsBlack": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0052", "fontStyleClass": "oo-icon"},
+    "arrowsWhite": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0052", "fontStyleClass": "oo-icon"},
+    "circleArrowsBlack": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u005D", "fontStyleClass": "oo-icon"},
+    "circleArrowsWhite": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u005D", "fontStyleClass": "oo-icon"},
+    "stereoOn": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0057", "fontStyleClass": "oo-icon oo-icon-system-auto"},
+    "stereoOff": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0057", "fontStyleClass": "oo-icon oo-icon-system-auto"},
+    "vrIcon": {"fontFamilyName": "ooyala-slick-type", "fontString": "\u0059", "fontStyleClass": "oo-icon"}
   }
 }
