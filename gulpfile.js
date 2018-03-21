@@ -15,6 +15,7 @@ gulp.task('clean_css', function() {
 gulp.task('compress_js', ['clean_js'], function() {
     gulp.src([
       'ooyala_player/public/js/vendor/ooyala/core.js',
+      'ooyala_player/public/js/vendor/ooyala/bit_wrapper.js',
       'ooyala_player/public/js/vendor/ooyala/main_html5.js',
       'ooyala_player/public/js/vendor/popcorn.js',
       'ooyala_player/public/skin/html5-skin.js'

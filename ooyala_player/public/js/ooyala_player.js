@@ -97,13 +97,6 @@ function OoyalaPlayerBlock(runtime, element) {
             playbackReady: function(ev, payload){
                 publishEvent({event_type: 'xblock.ooyala.player.loaded'});
 
-                // operations which needs <video> element are also placed here
-                this.applyOverlays();
-                if(isHtml5Video()){
-                    var videoElement = getVideoNode();
-                    videoElement.addEventListener("ratechange", this.eventHandlers.speedChanged.bind(this))
-                }
-
                 // Hide CC button
                 if(this.disableCC){
                     // This event will be captured by the hide-CC functionality
@@ -156,6 +149,12 @@ function OoyalaPlayerBlock(runtime, element) {
                 });
             },
             startedFromBeginning: function(ev, payload){
+                // operations which needs <video> element are placed here
+                this.applyOverlays();
+                if(isHtml5Video()){
+                    var videoElement = getVideoNode();
+                    videoElement.addEventListener("ratechange", this.eventHandlers.speedChanged.bind(this))
+                }
                  publishEvent({
                     event_type: 'xblock.ooyala.player.started-from-beginning',
                     is_autoplay: this.data.autoplay,
@@ -342,7 +341,7 @@ function OoyalaPlayerBlock(runtime, element) {
     }
 
     function isHtml5Video(){
-        return Boolean(getVideoNode);
+        return Boolean(getVideoNode());
     }
 
     function getPlaybackRate(){
