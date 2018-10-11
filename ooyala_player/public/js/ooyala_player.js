@@ -20,6 +20,7 @@ function OoyalaPlayerBlock(runtime, element) {
                 "playerBrandingId": this.data.playerId,
                 "embedToken": this.data.playerToken,
                 "autoplay": (this.data.autoplay === "True"),
+                "encodingPriority":["hls"],
                 "skin": {
                     "config": this.data.configUrl
                 }
