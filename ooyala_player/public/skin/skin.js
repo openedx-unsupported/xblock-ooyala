@@ -9,7 +9,7 @@
                   "scalingPercentage": 20
     },
     "bufferingSpinnerDelay": 750,
-    "loadingImage": {"imageResource": {"url": "//player.ooyala.com/static/v4/stable/4.20.8/skin-plugin/assets/images/loader_svg.svg" } },
+    "loadingImage": {"imageResource": {"url": "//player.ooyala.com/static/v4/stable/4.28.22/skin-plugin/assets/images/loader_svg.svg" } },
     "accentColor":"#448aff"
   },
   "localization": {
