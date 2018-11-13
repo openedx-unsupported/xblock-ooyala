@@ -226,24 +226,24 @@ msgstr ""
 
 #: ooyala_player/templates/html/ooyala_player_edit.html:107
 msgid "Save"
-msgstr "حفظ"
+msgstr ""
 
 #: ooyala_player/templates/html/ooyala_player_edit.html:111
 msgid "Cancel"
-msgstr "إلغاء"
+msgstr ""
 
 #: ooyala_player/templates/html/ooyala_transcript.html:6
 msgid "Hide Transcript"
-msgstr "إخفاء النص"
+msgstr ""
 
 #: ooyala_player/templates/html/ooyala_transcript.html:7
 msgid "Show Transcript"
-msgstr "إظهار النص"
+msgstr ""
 
 #: ooyala_player/templates/html/ooyala_transcript.html:24
 msgid "Print Transcript"
-msgstr "طباعة النص"
+msgstr ""
 
 #: ooyala_player/templates/html/ooyala_transcript.html:25
 msgid "Download Transcript"
-msgstr "تنزيل النص"
+msgstr ""

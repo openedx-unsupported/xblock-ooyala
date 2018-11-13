@@ -226,24 +226,24 @@ msgstr ""
 
 #: ooyala_player/templates/html/ooyala_player_edit.html:107
 msgid "Save"
-msgstr "حفظ"
+msgstr "保存する"
 
 #: ooyala_player/templates/html/ooyala_player_edit.html:111
 msgid "Cancel"
-msgstr "إلغاء"
+msgstr "キャンセル"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:6
 msgid "Hide Transcript"
-msgstr "إخفاء النص"
+msgstr "成績証明書を非表示にする"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:7
 msgid "Show Transcript"
-msgstr "إظهار النص"
+msgstr "成績証明書を表示する"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:24
 msgid "Print Transcript"
-msgstr "طباعة النص"
+msgstr "成績証明書を印刷する"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:25
 msgid "Download Transcript"
-msgstr "تنزيل النص"
+msgstr "成績証明書をダウンロードする"
