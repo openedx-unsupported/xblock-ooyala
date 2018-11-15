@@ -7,6 +7,7 @@ import logging
 import pkg_resources
 
 from django.template import Context, Template
+from django.core.urlresolvers import reverse
 
 
 # Globals ###########################################################
@@ -38,3 +39,13 @@ def render_template(template_path, context={}):
     template_str = load_resource(template_path)
     template = Template(template_str)
     return template.render(Context(context))
+
+
+def resource_url(block_type, uri):
+    """
+    Returns the xblock_resource_url with the specific block_type and uri
+    """
+    return reverse('xblock_resource_url', kwargs={
+        'block_type': block_type,
+        'uri': uri,
+    })
