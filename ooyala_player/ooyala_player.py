@@ -187,7 +187,6 @@ class OoyalaPlayerMixin(object):
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
-            self.local_resource_url(self, 'public/js/vendor/ooyala/bit_wrapper.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
