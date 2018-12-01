@@ -17,7 +17,7 @@
                     <li data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" data-lang-dir="{{link.dir}}" class="transcript-track p3sdk-interactive-transcript-track {% if link.selected %}selected{% endif %}" remote-src="{{link.url}}">{{link.localized_name}}</li>
                 {% endfor %}
                 {% for link in self.imported_translations %}
-                    <li data-3play-id="{{link.threeplay_id}}" data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" data-lang-dir="{{link.dir}}" class="transcript-track imported-transcript {% if link.selected %}selected{% endif %}">{{link.localized_name}}</li>
+                    <li data-3play-id="{{link.threeplay_id}}" data-transcript-id="{{link.transcript_id}}" data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" data-lang-dir="{{link.dir}}" class="transcript-track imported-transcript {% if link.selected %}selected{% endif %}">{{link.localized_name}}</li>
                 {% endfor %}
                 </ul>
                 <ul>
