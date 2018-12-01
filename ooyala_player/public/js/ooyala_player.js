@@ -286,11 +286,12 @@ function OoyalaPlayerBlock(runtime, element) {
                 if(langElement.hasClass('imported-transcript')){
                     // need to load transcript ourselves
                     var threeplayId = langElement.data('3play-id');
+                    var trascriptId = langElement.data('transcript-id');
                     var transcriptUrl = runtime.handlerUrl(element, 'load_transcript');
 
                     $.ajax({
                         type: "POST",
-                        data: JSON.stringify({'threeplay_id': threeplayId}),
+                        data: JSON.stringify({'threeplay_id': threeplayId, 'transcript_id': trascriptId}),
                         url: transcriptUrl,
                         context: this,
                         success: function (data) {

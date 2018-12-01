@@ -161,6 +161,7 @@ class Transcript(object):
                         if language and lang_code and threeplay_id:
                             self.imported_translations.append({
                                 'threeplay_id': threeplay_id,
+                                'transcript_id': self.transcript_id,
                                 'language': language,
                                 'lang_code': lang_code,
                                 'selected': True if selected_lang in [language, lang_code] else False,
@@ -169,10 +170,11 @@ class Transcript(object):
                             })
 
     @staticmethod
-    def get_transcript_by_threeplay_id(api_key, threeplay_id):
+    def get_transcript_by_threeplay_id(api_key, transcript_id, threeplay_id):
         transcript_content = ''
-        api_endpoint = "http://api.3playmedia.com/files/1340681/transcript.html?apikey={api_key}" \
-                       "&threeplay_transcript_id={threeplay_id}".format(api_key=api_key, threeplay_id=threeplay_id)
+        api_endpoint = "http://api.3playmedia.com/files/{file_id}/transcript.html?apikey={api_key}" \
+                       "&threeplay_transcript_id={threeplay_id}"\
+            .format(file_id=transcript_id, api_key=api_key, threeplay_id=threeplay_id)
 
         try:
             response = urlopen(api_endpoint)
