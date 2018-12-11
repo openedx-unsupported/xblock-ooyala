@@ -156,8 +156,8 @@ class OoyalaPlayerMixin(I18NService):
             bit_movin_player_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type,
                                                 BIT_MOVIN_PLAYER_PATH)
         else:
-            bit_movin_player_url = resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
             json_config_url = resource_url(self.scope_ids.block_type, SKIN_FILE_PATH)
+            bit_movin_player_url = resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
 
         dom_id = 'ooyala-' + self._get_unique_id()
 
@@ -183,11 +183,13 @@ class OoyalaPlayerMixin(I18NService):
             'autoplay': self.autoplay,
             'config_url': json_config_url,
             'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
+            'bit_movin_player': bit_movin_player_url,
         })
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
+            self.local_resource_url(self, 'public/js/vendor/ooyala/bit_wrapper.js'),
             self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
         CSS_URLS = [
