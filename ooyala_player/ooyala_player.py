@@ -31,19 +31,18 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .utils import render_template, _, resource_url
+from .utils import render_template, _, resource_url, I18NService
 
 # Globals ###########################################################
 
 log = logging.getLogger(__name__)
-BIT_MOVIN_PLAYER_PATH = 'public/js/vendor/ooyala/bitmovinplayer.swf'
 SKIN_FILE_PATH = 'public/skin/skin.js'
 COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
 
 # Classes ###########################################################
 
 
-class OoyalaPlayerMixin(object):
+class OoyalaPlayerMixin(I18NService):
     """
     Base functionality for the ooyala player.
     """
@@ -153,10 +152,8 @@ class OoyalaPlayerMixin(object):
         # Skin file path according to block type
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
-            bit_movin_player_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, BIT_MOVIN_PLAYER_PATH)
         else:
             json_config_url = resource_url(self.scope_ids.block_type, SKIN_FILE_PATH)
-            bit_movin_player_url = resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
 
         dom_id = 'ooyala-' + self._get_unique_id()
 
@@ -164,7 +161,7 @@ class OoyalaPlayerMixin(object):
         for overlay in self.overlays:
             overlay_fragments += overlay.render()
 
-        transcript = self.transcript.render()
+        transcript = self.transcript.render(i18n_service=self.i18n_service)
 
         context = self.player_token()
         context.update({
@@ -182,12 +179,10 @@ class OoyalaPlayerMixin(object):
             'autoplay': self.autoplay,
             'config_url': json_config_url,
             'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
-            'bit_movin_player': bit_movin_player_url,
         })
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
-            self.local_resource_url(self, 'public/js/vendor/ooyala/bit_wrapper.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
@@ -279,6 +274,7 @@ class OoyalaPlayerMixin(object):
         return {"result": "success"}
 
 
+@XBlock.needs("i18n")
 @XBlock.wants("settings")
 class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
     """
@@ -457,6 +453,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
                 api_key=self.get_attribute_or_default('api_key_3play'),
                 threeplay_id=threeplay_id,
                 transcript_id=transcript_id,
+
             )
 
         return {'content': content}

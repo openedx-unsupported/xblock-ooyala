@@ -2,8 +2,10 @@ from urllib2 import urlopen
 import json
 
 from django.utils.translation import get_language_info
+from xblockutils.resources import ResourceLoader
 
-from .utils import render_template
+
+loader = ResourceLoader(__name__)
 
 FILES_API_ENDPOINT = "http://api.3playmedia.com/files?apikey={api_key}&q=video_id={video_id}"
 TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/translations?apikey={api_key_3play}"
@@ -186,10 +188,10 @@ class Transcript(object):
 
         return transcript_content
 
-    def render(self):
+    def render(self, i18n_service=None):
         """
         Render in interactive transcript
         """
-        return render_template('templates/html/ooyala_transcript.html', {
+        return loader.render_django_template('templates/html/ooyala_transcript.html', {
             'self': self
-        })
+        }, i18n_service=i18n_service)

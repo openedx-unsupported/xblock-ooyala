@@ -234,16 +234,16 @@ msgstr ""
 
 #: ooyala_player/templates/html/ooyala_transcript.html:6
 msgid "Hide Transcript"
-msgstr ""
+msgstr "ocultar transcripción"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:7
 msgid "Show Transcript"
-msgstr ""
+msgstr "mostrar la transcripción"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:24
 msgid "Print Transcript"
-msgstr ""
+msgstr "transcripción impresa"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:25
 msgid "Download Transcript"
-msgstr ""
+msgstr "descargar transcripción"
