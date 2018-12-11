@@ -188,8 +188,8 @@ class OoyalaPlayerMixin(I18NService):
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
-            '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/js/vendor/ooyala/bit_wrapper.js'),
+            '//p3.3playmedia.com/p3sdk.current.js',
             self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
         CSS_URLS = [
@@ -459,7 +459,6 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
                 api_key=self.get_attribute_or_default('api_key_3play'),
                 threeplay_id=threeplay_id,
                 transcript_id=transcript_id,
-
             )
 
         return {'content': content}

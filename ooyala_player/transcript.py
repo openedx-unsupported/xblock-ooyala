@@ -192,6 +192,9 @@ class Transcript(object):
         """
         Render in interactive transcript
         """
-        return loader.render_django_template('templates/html/ooyala_transcript.html', {
-            'self': self
-        }, i18n_service=i18n_service)
+        return loader.render_django_template(
+            'templates/html/ooyala_transcript.html', {
+                'self': self
+            },
+            i18n_service=i18n_service
+        )
