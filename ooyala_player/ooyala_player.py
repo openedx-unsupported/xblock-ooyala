@@ -36,6 +36,7 @@ from .utils import render_template, _, resource_url, I18NService
 # Globals ###########################################################
 
 log = logging.getLogger(__name__)
+BIT_MOVIN_PLAYER_PATH = 'public/js/vendor/ooyala/bitmovinplayer.swf'
 SKIN_FILE_PATH = 'public/skin/skin.js'
 COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
 
@@ -152,7 +153,10 @@ class OoyalaPlayerMixin(I18NService):
         # Skin file path according to block type
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
+            bit_movin_player_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type,
+                                                BIT_MOVIN_PLAYER_PATH)
         else:
+            bit_movin_player_url = resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
             json_config_url = resource_url(self.scope_ids.block_type, SKIN_FILE_PATH)
 
         dom_id = 'ooyala-' + self._get_unique_id()
