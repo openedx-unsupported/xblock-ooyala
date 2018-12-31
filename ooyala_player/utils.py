@@ -75,4 +75,7 @@ class I18NService(object):
     @property
     def i18n_service(self):
         """ Obtains translation service """
-        return self.runtime.service(self, "i18n") or DummyTranslationService()
+        if getattr(self.runtime, 'service') and hasattr(self, 'service_declaration'):
+            return self.runtime.service(self, "i18n") or DummyTranslationService()
+
+        return DummyTranslationService()
