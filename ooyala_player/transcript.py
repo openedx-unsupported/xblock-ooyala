@@ -11,6 +11,7 @@ FILES_API_ENDPOINT = "http://api.3playmedia.com/files?apikey={api_key}&q=video_i
 TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/translations?apikey={api_key_3play}"
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
                    "/translations/{translation_id}/transcript.html"
+LANGUAGE_API_ENDPOINT = "http://api.3playmedia.com/caption_imports/available_languages?apikey={api_key_3play}"
 
 RTL_LANGUAGES = ['Arabic']
 
@@ -75,6 +76,7 @@ class Transcript(object):
                 transcript = files[0]
                 self.transcript_id = transcript.get('id')
                 self.project_id = transcript.get('project_id')
+                self.language_id = transcript.get('language_id')
 
     def _get_translations(self, selected_lang):
         """
@@ -92,28 +94,45 @@ class Transcript(object):
         except Exception as e:
             self.error = str(e.message)
         else:
-            for translation in translations_list:
-                if translation.get('state') == 'complete':
-                    lang_name = translation.get('target_language_name')
-                    lang_code = translation.get('target_language_iso_639_1_code')
+            if not translations_list:
+                language_api_endpoint = LANGUAGE_API_ENDPOINT.format(
+                    api_key_3play=self.api_key
+                )
+                try:
+                    response = urlopen(language_api_endpoint)
+                    data = json.loads(response.read())
+                    for language in data:
+                        if language.get('language_id') == self.language_id:
+                            self.translations[0]['language'] = language.get('name')
+                            self.translations[0]['lang_code'] = language.get('iso_639_1_code')
+                            self.translations[0]['localized_name'] = language.get('full_name')
+                            self.translations[0]['selected'] = True
+                            self.translations[0]['dir'] = 'rtl' if language.get('name') in RTL_LANGUAGES else 'ltr'
+                except Exception as e:
+                    self.error = str(e.message)
+            else:
+                for translation in translations_list:
+                    if translation.get('state') == 'complete':
+                        lang_name = translation.get('target_language_name')
+                        lang_code = translation.get('target_language_iso_639_1_code')
 
-                    try:
-                        lang_info = get_language_info(lang_code)
-                        localized_name = lang_info.get('name_local')
-                    except KeyError:
-                        localized_name = lang_name
+                        try:
+                            lang_info = get_language_info(lang_code)
+                            localized_name = lang_info.get('name_local')
+                        except KeyError:
+                            localized_name = lang_name
 
-                    self.translations.append({
-                        'language': lang_name,
-                        'lang_code': lang_code,
-                        'localized_name': localized_name,
-                        'selected': True if selected_lang in [lang_code, lang_name] else False,
-                        'url': TRANSLATION_DOWNLOAD_URL.format(
-                            project_id=self.project_id, transcript_file_id=self.transcript_id,
-                            translation_id=translation.get('id')
-                        ),
-                        'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
-                    })
+                        self.translations.append({
+                            'language': lang_name,
+                            'lang_code': lang_code,
+                            'localized_name': localized_name,
+                            'selected': True if selected_lang in [lang_code, lang_name] else False,
+                            'url': TRANSLATION_DOWNLOAD_URL.format(
+                                project_id=self.project_id, transcript_file_id=self.transcript_id,
+                                translation_id=translation.get('id')
+                            ),
+                            'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
+                        })
 
     def _get_imported_transcripts(self, selected_lang):
         """
@@ -198,3 +217,4 @@ class Transcript(object):
             },
             i18n_service=i18n_service
         )
+
