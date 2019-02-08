@@ -11,6 +11,7 @@ FILES_API_ENDPOINT = "http://api.3playmedia.com/files?apikey={api_key}&q=video_i
 TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/translations?apikey={api_key_3play}"
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
                    "/translations/{translation_id}/transcript.html"
+LANGUAGE_API_ENDPOINT = "http://api.3playmedia.com/caption_imports/available_languages?apikey={api_key_3play}"
 
 RTL_LANGUAGES = ['Arabic']
 
@@ -37,15 +38,19 @@ class Transcript(object):
 
         if self.transcript_id:
             # add source language in all cases
+            language_details = self.get_language_details(self.language_id)
+            lang_name = 'English' if language_details is None else language_details.get('name')
+            lang_code = 'en' if language_details is None else language_details.get('iso_639_1_code')
+            localized_name = self.get_localized_name(lang_name, lang_code)
             self.translations = [{
-                'language': 'English',
+                'language': lang_name,
+                'lang_code': lang_code,
+                'localized_name': localized_name,
                 'url': "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}/transcript.html".format(
                     project_id=self.project_id, transcript_file_id=self.transcript_id
                 ),
-                'selected': True if 'en' == user_lang else False,
-                'lang_code': 'en',
-                'localized_name': 'English',
-                'dir': 'ltr'
+                'selected': True if lang_code == user_lang else False,
+                'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
             }]
 
             if not cc_disabled:
@@ -75,6 +80,7 @@ class Transcript(object):
                 transcript = files[0]
                 self.transcript_id = transcript.get('id')
                 self.project_id = transcript.get('project_id')
+                self.language_id = transcript.get('language_id')
 
     def _get_translations(self, selected_lang):
         """
@@ -96,12 +102,7 @@ class Transcript(object):
                 if translation.get('state') == 'complete':
                     lang_name = translation.get('target_language_name')
                     lang_code = translation.get('target_language_iso_639_1_code')
-
-                    try:
-                        lang_info = get_language_info(lang_code)
-                        localized_name = lang_info.get('name_local')
-                    except KeyError:
-                        localized_name = lang_name
+                    localized_name = self.get_localized_name(lang_name, lang_code)
 
                     self.translations.append({
                         'language': lang_name,
@@ -114,6 +115,32 @@ class Transcript(object):
                         ),
                         'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
                     })
+
+    def get_localized_name(self, lang_name, lang_code):
+        try:
+            lang_info = get_language_info(lang_code)
+            localized_name = lang_info.get('name_local')
+        except KeyError:
+            localized_name = lang_name
+        return localized_name
+
+    def get_language_details(self, lang_id):
+        """
+        Fetch the language details against language id from available languages
+        """
+        language_api_endpoint = LANGUAGE_API_ENDPOINT.format(
+                api_key_3play=self.api_key
+            )
+        try:
+            response = urlopen(language_api_endpoint)
+            data = json.loads(response.read())
+            for language in data:
+                if language.get('language_id') == lang_id:
+                    return language
+            return None
+        except Exception as e:
+            self.error = str(e.message)
+            return None
 
     def _get_imported_transcripts(self, selected_lang):
         """
@@ -198,3 +225,4 @@ class Transcript(object):
             },
             i18n_service=i18n_service
         )
+
