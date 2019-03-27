@@ -212,7 +212,7 @@ class OoyalaPlayerMixin(I18NService):
             # In certain cases we want to know when a student has visited a video player
             # as an indication that they are progressing through a course
             # Progress *does not* mean progress over viewing a video (i.e. elapsed time)
-            self.runtime.publish(self, 'progress', {})
+            self.runtime.publish(self, 'completion', {"completion": 1.0})
 
         return fragment
 
