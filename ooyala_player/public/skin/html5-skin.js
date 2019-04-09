@@ -16368,9 +16368,10 @@ function controller(OO, _, $) {
       this.mb.subscribe(OO.EVENTS.AIRPLAY.CONNECTION_CHANGED, 'customerUi', this.onAirplayConnectionChanged.bind(this));
       this.mb.subscribe(OO.EVENTS.AIRPLAY.SESSION_RESUMED, 'customerUi', this.onAirplaySessionResumed.bind(this));
       this.state.isPlaybackReadySubscribed = true;
-      // Binding custom events. Will be triggered from client code
+      /*** MCKA:custom  Binding custom events. Will be triggered from client code ***/
       this.mb.subscribe('CcLanguageChanged', 'customerUi', _.bind(this.onClosedCaptionLanguageChange, this));
       this.mb.subscribe('CcHide', 'customerUi', _.bind(this.onHideCC, this));
+      /**** end MCKA:custom ***/  
     },
     subscribeBasicPlaybackEvents: function subscribeBasicPlaybackEvents() {
       if (!this.state.isSubscribed) {
@@ -18651,6 +18652,8 @@ function controller(OO, _, $) {
       this.renderSkin();
       this.mb.publish(OO.EVENTS.SAVE_PLAYER_SETTINGS, this.state.persistentSettings);
     },
+
+    /***  start MCKA:custom - custom event for CC change and removal  ***/
     onClosedCaptionLanguageChange: function(name, value){
       this.onClosedCaptionChange('language', value);
     },
@@ -18678,6 +18681,7 @@ function controller(OO, _, $) {
         this.renderSkin();
         this.mb.publish(OO.EVENTS.SAVE_PLAYER_SETTINGS, this.state.persistentSettings);
     },
+    /***  end MCKA:custom - custom event for CC change and removal  ***/
 
     /**
      * @description the function set direction for CC;
