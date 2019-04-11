@@ -522,7 +522,7 @@ if (!OOV4._) {
      *   <li>object containing:
      *     <ul>
      *       <li><code>languages</code>: (array) a list of available languages.</li>
-     *       <li><code>locale</code>: (object) contains language names by id. For example, <code>{en:"English", fr:"FranÃ§ais", sp:"EspaÃ±ol"}</code>.</li>
+     *       <li><code>locale</code>: (object) contains language names by id. For example, <code>{en:"English", fr:"Français", sp:"Español"}</code>.</li>
      *     </ul>
      *   </li>
      * </ul>
@@ -2002,20 +2002,20 @@ if (!OOV4._) {
       AUDIO: "audio",
 
       /**
-      * @description <code>OOV4.VIDEO.ENCODING.OGG ('ogg')</code>:
-      *   An encoding type for non-drm ogg audio streams.
-      * @constant OOV4.VIDEO.ENCODING.OGG
-      * @type {string}
-      */
-      OGG: "ogg",
-
-      /**
-       * @description <code>OOV4.VIDEO.ENCODING.M4A ('m4a')</code>:
-       *   An encoding type for non-drm m4a audio streams.
-       * @constant OOV4.VIDEO.ENCODING.M4A
+       * @description <code>OOV4.VIDEO.ENCODING.AUDIO_OGG ('audio_ogg')</code>:
+       *   An encoding type for non-drm ogg audio streams.
+       * @constant OOV4.VIDEO.ENCODING.AUDIO_OGG
        * @type {string}
        */
-      M4A: "m4a",
+      AUDIO_OGG: "audio_ogg",
+
+      /**
+       * @description <code>OOV4.VIDEO.ENCODING.AUDIO_M4A ('audio_m4a')</code>:
+       *   An encoding type for non-drm m4a audio streams.
+       * @constant OOV4.VIDEO.ENCODING.AUDIO_M4A
+       * @type {string}
+       */
+      AUDIO_M4A: "audio_m4a",
 
       /**
        * @description <code>OOV4.VIDEO.ENCODING.AUDIO_HLS ('audio_hls')</code>:
@@ -2306,7 +2306,7 @@ if (!OOV4._) {
     AD_PLAY_COUNT_DIVIDER: "|",
     MAX_AD_PLAY_COUNT_HISTORY_LENGTH: 20,
     CONTROLS_BOTTOM_PADDING: 10,
-    SEEK_TO_END_LIMIT: 4,
+    SEEK_TO_END_LIMIT: 3,
 
     /**
      * @description <code>OOV4.CONSTANTS.PLAYER_TYPE</code>:
@@ -3411,7 +3411,7 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
       case 1: return function(value) {
         return func.call(context, value);
       };
-      // The 2-argument case is omitted because weâ€™re not using it.
+      // The 2-argument case is omitted because we’re not using it.
       case 3: return function(value, index, collection) {
         return func.call(context, value, index, collection);
       };
@@ -3427,7 +3427,7 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
   var builtinIteratee;
 
   // An internal function to generate callbacks that can be applied to each
-  // element in a collection, returning the desired result â€” either `identity`,
+  // element in a collection, returning the desired result — either `identity`,
   // an arbitrary callback, a property matcher, or a property accessor.
   var cb = function(value, context, argCount) {
     if (_.iteratee !== builtinIteratee) return _.iteratee(value, context);
@@ -3446,9 +3446,9 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
 
   // Some functions take a variable number of arguments, or a few expected
   // arguments at the beginning and then a variable number of values to operate
-  // on. This helper accumulates all remaining arguments past the functionâ€™s
+  // on. This helper accumulates all remaining arguments past the function’s
   // argument length (or an explicit `startIndex`), into an array that becomes
-  // the last argument. Similar to ES6â€™s "rest parameter".
+  // the last argument. Similar to ES6’s "rest parameter".
   var restArguments = function(func, startIndex) {
     startIndex = startIndex == null ? func.length - 1 : +startIndex;
     return function() {
@@ -3731,7 +3731,7 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
   };
 
   // Sample **n** random values from a collection using the modern version of the
-  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisherâ€“Yates_shuffle).
+  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
   // If **n** is not specified, returns a single random element.
   // The internal `guard` argument allows it to work with `map`.
   _.sample = function(obj, n, guard) {
@@ -4752,7 +4752,7 @@ if(typeof window !== 'undefined' && typeof window._ !== 'undefined') {
 
   _.noop = function(){};
 
-  // Creates a function that, when passed an object, will traverse that objectâ€™s
+  // Creates a function that, when passed an object, will traverse that object’s
   // properties down the given `path`, specified as an array of keys or indexes.
   _.property = function(path) {
     if (!_.isArray(path)) {
@@ -5862,7 +5862,7 @@ var store = global[SHARED] || (global[SHARED] = {});
 })('versions', []).push({
   version: core.version,
   mode: require('./_library') ? 'pure' : 'global',
-  copyright: 'Â© 2018 Denis Pushkarev (zloirock.ru)'
+  copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
 });
 
 },{"./_core":17,"./_global":28,"./_library":41}],62:[function(require,module,exports){
@@ -6570,20 +6570,20 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Simple HTML5 video tag plugin for mp4 and hls
  * version: 0.1
  */
-require("../../../html5-common/js/utils/InitModules/InitOO.js");
+require('../../../html5-common/js/utils/InitModules/InitOO.js');
 
-require("../../../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+require('../../../html5-common/js/utils/InitModules/InitOOUnderscore.js');
 
-require("../../../html5-common/js/utils/InitModules/InitOOHazmat.js");
+require('../../../html5-common/js/utils/InitModules/InitOOHazmat.js');
 
-require("../../../html5-common/js/utils/constants.js");
+require('../../../html5-common/js/utils/constants.js');
 
-require("../../../html5-common/js/utils/utils.js");
+require('../../../html5-common/js/utils/utils.js');
 
-require("../../../html5-common/js/utils/environment.js");
+require('../../../html5-common/js/utils/environment.js');
 
 (function (_, $) {
-  var pluginName = "ooyalaHtml5VideoTech";
+  var pluginName = 'ooyalaHtml5VideoTech';
   var currentInstances = {};
   /**
    * @class OoyalaVideoFactory
@@ -6601,26 +6601,26 @@ require("../../../html5-common/js/utils/environment.js");
 
     var getSupportedEncodings = function getSupportedEncodings() {
       var list = [];
-      var videoElement = document.createElement("video");
+      var videoElement = document.createElement('video');
 
-      if (typeof videoElement.canPlayType === "function") {
-        if (!!videoElement.canPlayType("video/mp4")) {
+      if (typeof videoElement.canPlayType === 'function') {
+        if (videoElement.canPlayType('video/mp4')) {
           list.push(OOV4.VIDEO.ENCODING.MP4);
         }
 
-        if (!!videoElement.canPlayType("audio/ogg")) {
-          list.push(OOV4.VIDEO.ENCODING.OGG);
+        if (videoElement.canPlayType('audio/ogg')) {
+          list.push(OOV4.VIDEO.ENCODING.AUDIO_OGG);
         }
 
-        if (!!videoElement.canPlayType("audio/x-m4a")) {
-          list.push(OOV4.VIDEO.ENCODING.M4A);
+        if (videoElement.canPlayType('audio/x-m4a')) {
+          list.push(OOV4.VIDEO.ENCODING.AUDIO_M4A);
         }
 
-        if (!!videoElement.canPlayType("video/webm")) {
+        if (videoElement.canPlayType('video/webm')) {
           list.push(OOV4.VIDEO.ENCODING.WEBM);
         }
 
-        if ((!!videoElement.canPlayType("application/vnd.apple.mpegurl") || !!videoElement.canPlayType("application/x-mpegURL")) && !OOV4.isSmartTV && !OOV4.isRimDevice && (!OOV4.isMacOs || OOV4.isMacOsLionOrLater)) {
+        if ((!!videoElement.canPlayType('application/vnd.apple.mpegurl') || !!videoElement.canPlayType('application/x-mpegURL')) && !OOV4.isSmartTV && !OOV4.isRimDevice && (!OOV4.isMacOs || OOV4.isMacOsLionOrLater)) {
           // 2012 models of Samsung and LG smart TV's do not support HLS even if reported
           // Mac OS must be lion or later
           list.push(OOV4.VIDEO.ENCODING.HLS);
@@ -6655,23 +6655,26 @@ require("../../../html5-common/js/utils/environment.js");
      * @returns {object} A reference to the wrapper for the newly created element
      */
 
-    this.create = function (parentContainer, domId, controller, css, playerId, pluginParams) {
+    this.create = function (parentContainer, domId, controller, css) {
+      var playerId = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : getRandomString();
+      var pluginParams = arguments.length > 5 ? arguments[5] : undefined;
+
       // If the current player has reached max supported elements, do not create a new one
       if (this.maxSupportedElements > 0 && playerId && currentInstances[playerId] >= this.maxSupportedElements) {
         return;
       }
 
-      var video = $("<video>");
-      video.attr("class", "video");
-      video.attr("id", domId); // [PBW-5470] On Safari, when preload is set to 'none' and the user switches to a
+      var video = $('<video>');
+      video.attr('class', 'video');
+      video.attr('id', domId); // [PBW-5470] On Safari, when preload is set to 'none' and the user switches to a
       // different tab while the video is about to auto play, the browser stops playback but
       // doesn't fire a 'pause' event, which causes the player to get stuck in 'buffering' state.
       // Setting preload to 'metadata' (or 'auto') allows Safari to auto resume when the tab is refocused.
 
       if (OOV4.isSafari && !OOV4.isIos) {
-        video.attr("preload", "metadata");
+        video.attr('preload', 'metadata');
       } else {
-        video.attr("preload", "none");
+        video.attr('preload', 'none');
       }
 
       video.css(css);
@@ -6680,17 +6683,15 @@ require("../../../html5-common/js/utils/environment.js");
         // enable airplay for iOS
         // http://developer.apple.com/library/safari/#documentation/AudioVideo/Conceptual/AirPlayGuide/OptingInorOutofAirPlay/OptingInorOutofAirPlay.html
         //
-        video.attr("x-webkit-airplay", "allow"); //enable inline playback for mobile
+        video.attr('x-webkit-airplay', 'allow'); // enable inline playback for mobile
 
-        if (pluginParams["iosPlayMode"] === "inline") {
-          if (OOV4.iosMajorVersion >= 10) {
+        if (pluginParams['iosPlayMode'] === 'inline') {
+          var iosVersion = 10;
+
+          if (OOV4.iosMajorVersion >= iosVersion) {
             video.attr('playsinline', '');
           }
         }
-      }
-
-      if (!playerId) {
-        playerId = getRandomString();
       }
 
       var element = new OoyalaVideoWrapper(domId, video[0], playerId);
@@ -6730,7 +6731,8 @@ require("../../../html5-common/js/utils/environment.js");
 
     this.maxSupportedElements = function () {
       var iosRequireSingleElement = OOV4.isIos;
-      var androidRequireSingleElement = OOV4.isAndroid && (!OOV4.isAndroid4Plus || OOV4.chromeMajorVersion < 40);
+      var chromeVersion = 40;
+      var androidRequireSingleElement = OOV4.isAndroid && (!OOV4.isAndroid4Plus || OOV4.chromeMajorVersion < chromeVersion);
       return iosRequireSingleElement || androidRequireSingleElement ? 1 : -1;
     }();
   };
@@ -6739,6 +6741,7 @@ require("../../../html5-common/js/utils/environment.js");
    * @classdesc Player object that wraps HTML5 video tags
    * @param {string} domId The dom id of the video player element
    * @param {object} video The core video object to wrap
+   * @param {string} playerId playerId
    * @property {object} controller A reference to the Ooyala Video Tech Controller
    * @property {boolean} disableNativeSeek When true, the plugin should supress or undo seeks that come from
    *                                       native video controls
@@ -6775,7 +6778,8 @@ require("../../../html5-common/js/utils/environment.js");
     var currentTimeShift = 0;
     var currentVolumeSet = 0;
     var isM3u8 = false;
-    var firstPlay = true;
+    var firstPlay = true; // eslint-disable-next-line
+
     var videoDimension = {
       height: 0,
       width: 0
@@ -6788,7 +6792,7 @@ require("../../../html5-common/js/utils/environment.js");
     var isPriming = false;
     var isLive = false;
     var lastCueText = null;
-    var originalPreloadValue = $(_video).attr("preload") || "none";
+    var originalPreloadValue = $(_video).attr('preload') || 'none';
     var currentPlaybackSpeed = 1.0;
     var currentCCKey = '';
     var setClosedCaptionsQueue = [];
@@ -6801,14 +6805,16 @@ require("../../../html5-common/js/utils/environment.js");
     var watcherTime = -1; // [PBW-4000] On Android, if the chrome browser loses focus, then the stream cannot be seeked before it
     // is played again.  Detect visibility changes and delay seeks when focus is lost.
 
+    var watchHidden;
+
     if (OOV4.isAndroid && OOV4.isChrome) {
-      var watchHidden = _.bind(function (evt) {
+      var _watchHidden = _.bind(function (evt) {
         if (document.hidden) {
           canSeek = false;
         }
       }, this);
 
-      document.addEventListener("visibilitychange", watchHidden);
+      document.addEventListener('visibilitychange', _watchHidden);
     }
     /************************************************************************************/
     // External Methods that Video Controller or Factory call
@@ -6824,7 +6830,7 @@ require("../../../html5-common/js/utils/environment.js");
 
     this.sharedElementGive = function () {
       unsubscribeAllEvents();
-      _currentUrl = "";
+      _currentUrl = '';
     };
     /**
      * Takes control of the video element from another plugin by subscribing to all events.
@@ -6846,31 +6852,31 @@ require("../../../html5-common/js/utils/environment.js");
 
     this.subscribeAllEvents = function () {
       listeners = {
-        "loadstart": onLoadStart,
-        "loadedmetadata": onLoadedMetadata,
-        "progress": raiseProgress,
-        "error": raiseErrorEvent,
-        "stalled": raiseStalledEvent,
-        "canplay": raiseCanPlay,
-        "canplaythrough": raiseCanPlayThrough,
-        "playing": raisePlayingEvent,
-        "waiting": raiseWaitingEvent,
-        "seeking": raiseSeekingEvent,
-        "seeked": raiseSeekedEvent,
-        "ended": raiseEndedEvent,
-        "durationchange": raiseDurationChange,
-        "timeupdate": raiseTimeUpdate,
-        "play": raisePlayEvent,
-        "pause": raisePauseEvent,
-        "ratechange": raiseRatechangeEvent,
+        'loadstart': onLoadStart,
+        'loadedmetadata': onLoadedMetadata,
+        'progress': raiseProgress,
+        'error': raiseErrorEvent,
+        'stalled': raiseStalledEvent,
+        'canplay': raiseCanPlay,
+        'canplaythrough': raiseCanPlayThrough,
+        'playing': raisePlayingEvent,
+        'waiting': raiseWaitingEvent,
+        'seeking': raiseSeekingEvent,
+        'seeked': raiseSeekedEvent,
+        'ended': raiseEndedEvent,
+        'durationchange': raiseDurationChange,
+        'timeupdate': raiseTimeUpdate,
+        'play': raisePlayEvent,
+        'pause': raisePauseEvent,
+        'ratechange': raiseRatechangeEvent,
         // ios webkit browser fullscreen events
-        "webkitbeginfullscreen": raiseFullScreenBegin,
-        "webkitendfullscreen": raiseFullScreenEnd
+        'webkitbeginfullscreen': raiseFullScreenBegin,
+        'webkitendfullscreen': raiseFullScreenEnd
       }; // events not used:
       // suspend, abort, emptied, loadeddata, resize, change, addtrack, removetrack
 
-      _.each(listeners, function (v, i) {
-        $(_video).on(i, v);
+      _.each(listeners, function (listener, index) {
+        $(_video).on(index, listener);
       }, this); // The volumechange event does not seem to fire for mute state changes when using jQuery
       // to add the event listener. It does work using the below line. We need this event to fire properly
       // or else other SDKs (such as the Freewheel ad SDK) that make use of this video element may have
@@ -6888,8 +6894,8 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     var unsubscribeAllEvents = function unsubscribeAllEvents() {
-      _.each(listeners, function (v, i) {
-        $(_video).off(i, v);
+      _.each(listeners, function (listener, index) {
+        $(_video).off(index, listener);
       }, this);
 
       _video.removeEventListener('volumechange', raiseVolumeEvent);
@@ -6911,16 +6917,16 @@ require("../../../html5-common/js/utils/environment.js");
       // compare URLs but make sure to strip out the trailing cache buster
       var urlChanged = false;
 
-      if (_currentUrl.replace(/[\?&]_=[^&]+$/, '') != url) {
-        _currentUrl = url || "";
-        isM3u8 = encoding == OOV4.VIDEO.ENCODING.HLS || encoding == OOV4.VIDEO.ENCODING.AKAMAI_HD2_VOD_HLS || encoding == OOV4.VIDEO.ENCODING.AKAMAI_HD2_HLS || encoding == OOV4.VIDEO.ENCODING.AUDIO_HLS;
+      if (_currentUrl.replace(/[?&]_=[^&]+$/, '') !== url) {
+        _currentUrl = url || '';
+        isM3u8 = encoding === OOV4.VIDEO.ENCODING.HLS || encoding === OOV4.VIDEO.ENCODING.AKAMAI_HD2_VOD_HLS || encoding === OOV4.VIDEO.ENCODING.AKAMAI_HD2_HLS || encoding === OOV4.VIDEO.ENCODING.AUDIO_HLS;
         isLive = live;
         urlChanged = true;
         resetStreamData();
 
-        if (_currentUrl === "") {
-          //Workaround of an issue where iOS attempts to set the src to <RELATIVE_PATH>/null
-          //when setting source to null
+        if (_currentUrl === '') {
+          // Workaround of an issue where iOS attempts to set the src to <RELATIVE_PATH>/null
+          // when setting source to null
           if (OOV4.isIos) {
             delete _video.src;
           } else {
@@ -6929,7 +6935,7 @@ require("../../../html5-common/js/utils/environment.js");
         } else {
           _video.src = _currentUrl;
         }
-      } //setup the playback speed for the next video.
+      } // setup the playback speed for the next video.
 
 
       this.setPlaybackSpeed(currentPlaybackSpeed);
@@ -6973,7 +6979,7 @@ require("../../../html5-common/js/utils/environment.js");
       textTrackMap.clear(); // Restore the preload attribute to the value it had when the video
       // element was created
 
-      $(_video).attr("preload", originalPreloadValue);
+      $(_video).attr('preload', originalPreloadValue);
       ignoreFirstPlayingEvent = false;
     }, this);
     /**
@@ -6995,7 +7001,7 @@ require("../../../html5-common/js/utils/environment.js");
     this.load = function (rewind) {
       if (loaded && !rewind) return;
 
-      if (!!rewind) {
+      if (rewind) {
         if (OOV4.isEdge) {
           // PBW-4555: Edge browser will always go back to time 0 on load.  Setting time to 0 here would
           // cause the raw video element to enter seeking state.  Additionally, if we call load while seeking
@@ -7004,9 +7010,11 @@ require("../../../html5-common/js/utils/environment.js");
           currentTime = 0;
         } else {
           try {
-            if (OOV4.isIos && OOV4.iosMajorVersion == 8) {
+            var iosVersion = 8;
+
+            if (OOV4.isIos && OOV4.iosMajorVersion === iosVersion) {
               // On iOS, wait for durationChange before setting currenttime
-              $(_video).on("durationchange", _.bind(function () {
+              $(_video).on('durationchange', _.bind(function () {
                 _video.currentTime = 0;
                 currentTime = 0;
               }, this));
@@ -7028,7 +7036,7 @@ require("../../../html5-common/js/utils/environment.js");
       // before loading in case that this.load() was called by VC_PRELOAD. If load() is called prior to
       // starting playback this will be redundant, but it shouldn't cause any issues
 
-      $(_video).attr("preload", "auto");
+      $(_video).attr('preload', 'auto');
 
       _video.load();
 
@@ -7044,9 +7052,9 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     this.setInitialTime = function (time) {
-      //Ignore any initial times set to 0 if the content has not started playing. The content will start at time 0
-      //by default
-      if (typeof time !== "number" || !hasStartedPlaying && time === 0) {
+      // Ignore any initial times set to 0 if the content has not started playing. The content will start at time 0
+      // by default
+      if (typeof time !== 'number' || !hasStartedPlaying && time === 0) {
         return;
       } // [PBW-5539] On Safari (iOS and Desktop), when triggering replay after the current browser tab looses focus, the
       // current time seems to fall a few milliseconds behind the video duration, which
@@ -7094,12 +7102,12 @@ require("../../../html5-common/js/utils/environment.js");
       var userInteractionRequired = false;
 
       if (error) {
-        var chromeError = error.name === "NotAllowedError"; //Safari throws the error "AbortError" for all play promise failures
-        //so we'll have to treat all of them the same
+        var chromeError = error.name === 'NotAllowedError'; // Safari throws the error "AbortError" for all play promise failures
+        // so we'll have to treat all of them the same
 
         if (!OOV4.isChrome || chromeError) {
-          //There is no requirement for muted autoplay on Firefox,
-          //so we'll ignore any Firefox play promise errors
+          // There is no requirement for muted autoplay on Firefox,
+          // so we'll ignore any Firefox play promise errors
           userInteractionRequired = !OOV4.isFirefox;
         }
       }
@@ -7123,26 +7131,26 @@ require("../../../html5-common/js/utils/environment.js");
         var originalUrl = _video.src;
 
         if (playPromise) {
-          ignoreFirstPlayingEvent = true; //TODO: Handle MUTED/UNMUTED_PLAYBACK_SUCCEEDED/FAILED in environments that do not support play promises.
-          //Right now this is not needed because environments that do not support play promises do not have
-          //autoplay restrictions.
+          ignoreFirstPlayingEvent = true; // TODO: Handle MUTED/UNMUTED_PLAYBACK_SUCCEEDED/FAILED in environments that do not support play promises.
+          // Right now this is not needed because environments that do not support play promises do not have
+          // autoplay restrictions.
 
           if (typeof playPromise.catch === 'function') {
             playPromise.catch(_.bind(function (error) {
               ignoreFirstPlayingEvent = false;
 
               if (error) {
-                OOV4.log("Play Promise Failure", error, error.name); //PLAYER-3601: Workaround of an issue where play promises sometimes fail on iOS with Freewheel ads.
-                //We can ignore these as the Freewheel ad plugin will take care of these if they are indeed errors
+                OOV4.log('Play Promise Failure', error, error.name); // PLAYER-3601: Workaround of an issue where play promises sometimes fail on iOS with Freewheel ads.
+                // We can ignore these as the Freewheel ad plugin will take care of these if they are indeed errors
 
                 if (OOV4.isIos && _video._fw_videoAdPlaying) {
                   return;
-                } //Changing the source while attempting to play will cause a play promise error to be thrown.
-                //We don't want to publish an UNMUTED/MUTED playback failed notification in these situations.
+                } // Changing the source while attempting to play will cause a play promise error to be thrown.
+                // We don't want to publish an UNMUTED/MUTED playback failed notification in these situations.
 
 
                 if (_video.src !== originalUrl) {
-                  OOV4.log("Url has changed, ignoring play promise failure");
+                  OOV4.log('Url has changed, ignoring play promise failure');
                   return;
                 }
 
@@ -7169,7 +7177,7 @@ require("../../../html5-common/js/utils/environment.js");
               if (handleFailover) {
                 this.seek(failoverPlayheadTime);
                 handleFailover = false;
-              } //playback succeeded
+              } // playback succeeded
 
 
               if (!_video.muted) {
@@ -7207,7 +7215,7 @@ require("../../../html5-common/js/utils/environment.js");
      * @public
      * @method OoyalaVideoWrapper#seek
      * @param {number} time The time to seek the video to (in seconds)
-     * @return {boolean} True if the seek was performed, false otherwise
+     * @returns {boolean} True if the seek was performed, false otherwise
      */
 
 
@@ -7219,10 +7227,10 @@ require("../../../html5-common/js/utils/environment.js");
       var safeSeekTime = null;
 
       if (isLive) {
-        //Live videos without DVR can't be seeked
+        // Live videos without DVR can't be seeked
         if (!isDvrAvailable()) {
-          //Re-queue the initial time seek if initial time has not been reached yet. This usually means
-          //the seek ranges are not available yet.
+          // Re-queue the initial time seek if initial time has not been reached yet. This usually means
+          // the seek ranges are not available yet.
           if (!initialTime.reached && time === initialTime.value) {
             queueSeek(time);
           }
@@ -7267,10 +7275,10 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     this.unmute = function () {
-      _video.muted = false; //workaround of an issue where some external SDKs (such those used in ad/video plugins)
-      //are setting the volume to 0 when muting
-      //Set the volume to our last known setVolume setting.
-      //Since we're unmuting, we don't want to set volume to 0
+      _video.muted = false; // workaround of an issue where some external SDKs (such those used in ad/video plugins)
+      // are setting the volume to 0 when muting
+      // Set the volume to our last known setVolume setting.
+      // Since we're unmuting, we don't want to set volume to 0
 
       if (currentVolumeSet > 0) {
         this.setVolume(currentVolumeSet);
@@ -7308,7 +7316,7 @@ require("../../../html5-common/js/utils/environment.js");
 
       _video.volume = resolvedVolume; // If no video is assigned yet, the volumeChange event is not raised although it takes effect
 
-      if (_video.currentSrc === "" || _video.currentSrc === null) {
+      if (_video.currentSrc === '' || _video.currentSrc === null) {
         raiseVolumeEvent({
           target: {
             volume: resolvedVolume
@@ -7382,8 +7390,8 @@ require("../../../html5-common/js/utils/environment.js");
     this.destroy = function () {
       _video.pause();
 
-      stopUnderflowWatcher(); //On IE and Edge, setting the video source to an empty string has the unwanted effect
-      //of a network request to the base url
+      stopUnderflowWatcher(); // On IE and Edge, setting the video source to an empty string has the unwanted effect
+      // of a network request to the base url
 
       if (!OOV4.isIE && !OOV4.isEdge) {
         _video.src = '';
@@ -7397,7 +7405,7 @@ require("../../../html5-common/js/utils/environment.js");
       }
 
       if (watchHidden) {
-        document.removeEventListener("visibilitychange", watchHidden);
+        document.removeEventListener('visibilitychange', watchHidden);
       }
     };
     /**
@@ -7420,7 +7428,7 @@ require("../../../html5-common/js/utils/environment.js");
     this.setClosedCaptions = _.bind(function (language) {
       var closedCaptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      OOV4.log("MainHtml5: setClosedCaptions called", language, closedCaptions, params);
+      OOV4.log('MainHtml5: setClosedCaptions called', language, closedCaptions, params);
       var vttClosedCaptions = closedCaptions.closed_captions_vtt || {};
       var externalCaptionsProvided = !!Object.keys(vttClosedCaptions).length; // Most browsers will require crossorigin=anonymous in order to be able to
       // load VTT files from a different domain. This needs to happen before any
@@ -7522,13 +7530,14 @@ require("../../../html5-common/js/utils/environment.js");
         // At the time of writing iOS Safari doesn't seem to enforce same origin policy
         // for either HLS manifests/segments or VTT files. We avoid setting crossorigin
         // as a workaround for iOS 11 since it currently appears to not be needed.
-        var isIos11 = OOV4.isIos && OOV4.iosMajorVersion === 11;
+        var iosVersion = 11;
+        var isIos11 = OOV4.isIos && OOV4.iosMajorVersion === iosVersion;
 
         if (!isIos11) {
-          $(_video).attr("crossorigin", crossorigin);
+          $(_video).attr('crossorigin', crossorigin);
         }
       } else {
-        $(_video).removeAttr("crossorigin");
+        $(_video).removeAttr('crossorigin');
       }
     };
     /**
@@ -7616,8 +7625,8 @@ require("../../../html5-common/js/utils/environment.js");
     this.setPlaybackSpeed = function (speed) {
       if (typeof speed !== 'number' || isNaN(speed)) {
         return;
-      } //if we are playing a live asset, set the playback speed back to 1. This is
-      //just in case we have somehow missed reseting the speed somewhere else.
+      } // if we are playing a live asset, set the playback speed back to 1. This is
+      // just in case we have somehow missed reseting the speed somewhere else.
 
 
       if (isLive) {
@@ -7634,7 +7643,7 @@ require("../../../html5-common/js/utils/environment.js");
      * Get the current speed multiplier for video elements.
      * @public
      * @method OoyalaVideoWrapper#getPlaybackSpeed
-     * @return {number} Current playback speed multiplier
+     * @returns {number} Current playback speed multiplier
      */
 
 
@@ -7816,12 +7825,12 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     var onClosedCaptionCueChange = _.bind(function (event) {
-      var cueText = "";
+      var cueText = '';
 
       if (event && event.currentTarget && event.currentTarget.activeCues) {
-        for (var i = 0; i < event.currentTarget.activeCues.length; i++) {
-          if (event.currentTarget.activeCues[i].text) {
-            cueText += event.currentTarget.activeCues[i].text + "\n";
+        for (var index = 0; index < event.currentTarget.activeCues.length; index++) {
+          if (event.currentTarget.activeCues[index].text) {
+            cueText += event.currentTarget.activeCues[index].text + '\n';
           }
         }
       }
@@ -7837,11 +7846,11 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     var raiseClosedCaptionCueChanged = _.bind(function (cueText) {
-      cueText = cueText.trim();
+      var _cueText = cueText.trim();
 
-      if (cueText != lastCueText) {
-        lastCueText = cueText;
-        this.controller.notify(this.controller.EVENTS.CLOSED_CAPTION_CUE_CHANGED, cueText);
+      if (_cueText !== lastCueText) {
+        lastCueText = _cueText;
+        this.controller.notify(this.controller.EVENTS.CLOSED_CAPTION_CUE_CHANGED, _cueText);
       }
     }, this);
     /**
@@ -7857,7 +7866,7 @@ require("../../../html5-common/js/utils/environment.js");
 
       if (event.target.buffered && event.target.buffered.length > 0) {
         buffer = event.target.buffered.end(0); // in sec;
-      } //Progress updates mean seekable ranges could be available so let's attempt to dequeue the seek
+      } // Progress updates mean seekable ranges could be available so let's attempt to dequeue the seek
 
 
       if (isLive) {
@@ -7866,10 +7875,10 @@ require("../../../html5-common/js/utils/environment.js");
 
       if (!handleFailover) {
         this.controller.notify(this.controller.EVENTS.PROGRESS, {
-          "currentTime": event.target.currentTime,
-          "duration": resolveDuration(event.target.duration),
-          "buffer": buffer,
-          "seekRange": getSafeSeekRange(event.target.seekable)
+          'currentTime': event.target.currentTime,
+          'duration': resolveDuration(event.target.duration),
+          'buffer': buffer,
+          'seekRange': getSafeSeekRange(event.target.seekable)
         });
       }
     }, this);
@@ -7885,7 +7894,9 @@ require("../../../html5-common/js/utils/environment.js");
       stopUnderflowWatcher();
       var code = event.target.error ? event.target.error.code : -1; // Suppress error code 4 when raised by a video element with a null or empty src
 
-      if (!(code === 4 && ($(event.target).attr("src") === "null" || $(event.target).attr("src") === ""))) {
+      var errorCode = 4;
+
+      if (!(code === errorCode && ($(event.target).attr('src') === 'null' || $(event.target).attr('src') === ''))) {
         this.controller.notify(this.controller.EVENTS.ERROR, {
           errorcode: code
         });
@@ -7906,7 +7917,7 @@ require("../../../html5-common/js/utils/environment.js");
       }
 
       this.controller.notify(this.controller.EVENTS.STALLED, {
-        "url": _video.currentSrc
+        'url': _video.currentSrc
       });
     }, this);
     /**
@@ -7923,7 +7934,7 @@ require("../../../html5-common/js/utils/environment.js");
         raiseCanPlayThrough();
       }
 
-      canPlay = true; //Notify controller of video width and height.
+      canPlay = true; // Notify controller of video width and height.
 
       if (firstPlay) {
         // Dequeue any calls to setClosedCaptions() that occurred before
@@ -7951,7 +7962,7 @@ require("../../../html5-common/js/utils/environment.js");
     var raiseCanPlayThrough = _.bind(function () {
       waitingEventRaised = false;
       this.controller.notify(this.controller.EVENTS.BUFFERED, {
-        "url": _video.currentSrc
+        'url': _video.currentSrc
       });
     }, this);
     /**
@@ -7982,9 +7993,9 @@ require("../../../html5-common/js/utils/environment.js");
         currentTimeShift = getTimeShift(_video.currentTime);
       }
 
-      hasStartedPlaying = true; //We want the initial PLAYING event to be from the play promise if play promises
-      //are supported. This is to help with the muted autoplay workflow.
-      //We want to ignore any playing events thrown by plays started with play promises
+      hasStartedPlaying = true; // We want the initial PLAYING event to be from the play promise if play promises
+      // are supported. This is to help with the muted autoplay workflow.
+      // We want to ignore any playing events thrown by plays started with play promises
 
       if (!ignoreFirstPlayingEvent) {
         this.controller.notify(this.controller.EVENTS.PLAYING);
@@ -8012,7 +8023,7 @@ require("../../../html5-common/js/utils/environment.js");
 
       waitingEventRaised = true;
       this.controller.notify(this.controller.EVENTS.WAITING, {
-        "url": _video.currentSrc
+        'url': _video.currentSrc
       });
     }, this);
     /**
@@ -8084,7 +8095,8 @@ require("../../../html5-common/js/utils/environment.js");
     var raiseEndedEvent = _.bind(function (event) {
       stopUnderflowWatcher();
 
-      if (!_video.ended && OOV4.isSafari) {
+      if (!_currentUrl || // iOS Safari will trigger an ended event when the source is cleared with an empty string
+      !_video.ended && OOV4.isSafari) {
         // iOS raises ended events sometimes when a new stream is played in the same video element
         // Prevent this faulty event from making it to the player message bus
         return;
@@ -8253,8 +8265,8 @@ require("../../../html5-common/js/utils/environment.js");
 
     var raiseFullScreenEnd = _.bind(function (event) {
       this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED, {
-        "isFullScreen": false,
-        "paused": event.target.paused
+        'isFullScreen': false,
+        'paused': event.target.paused
       });
       removeControlsAttr();
     }, this);
@@ -8272,7 +8284,7 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     var dequeueSetClosedCaptions = _.bind(function () {
-      var queuedArguments;
+      var queuedArguments; // eslint-disable-next-line
 
       while (queuedArguments = setClosedCaptionsQueue.shift()) {
         executeSetClosedCaptions.apply(this, queuedArguments);
@@ -8282,7 +8294,7 @@ require("../../../html5-common/js/utils/environment.js");
      * Sets the mode of all text tracks to 'disabled' except for targetTrack.
      * @private
      * @method OoyalaVideoWrapper#disableTextTracksExcept
-     * @param {TextTrack} The text track which we want to exclude from the disable operation.
+     * @param {String} targetTrack The text track which we want to exclude from the disable operation.
      */
 
 
@@ -8308,7 +8320,7 @@ require("../../../html5-common/js/utils/environment.js");
      * @param {String} targetLanguage The language or key of the track that should be set to targetMode
      * (usually the language that should be active).
      * @param {String} targetMode The mode that should be set on the track that matches targetLanguage.
-     * @return {Boolean} True if a track that matches targetLanguage was added as a result of this call, false otherwise.
+     * @returns {Boolean} True if a track that matches targetLanguage was added as a result of this call, false otherwise.
      */
 
 
@@ -8410,7 +8422,7 @@ require("../../../html5-common/js/utils/environment.js");
         });
 
         if (trackMetadata) {
-          OOV4.log("MainHtml5: Registering newly added text track:", trackMetadata.id); // Store a reference to the track on our track map in order to link
+          OOV4.log('MainHtml5: Registering newly added text track:', trackMetadata.id); // Store a reference to the track on our track map in order to link
           // related metadata
 
           textTrackMap.tryUpdateEntry({
@@ -8455,7 +8467,7 @@ require("../../../html5-common/js/utils/environment.js");
       // the in-manifest/in-stream track's mode
 
       if (!isKnownTrack && isTextTrack) {
-        OOV4.log("MainHtml5: Registering internal text track:", textTrack);
+        OOV4.log('MainHtml5: Registering internal text track:', textTrack);
         textTrackMap.addEntry({
           label: textTrack.label,
           language: textTrack.language,
@@ -8628,16 +8640,16 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     var getSafeSeekRange = function getSafeSeekRange(seekRange) {
-      if (!seekRange || !seekRange.length || !(typeof seekRange.start == "function") || !(typeof seekRange.end == "function")) {
+      if (!seekRange || !seekRange.length || !(typeof seekRange.start === 'function') || !(typeof seekRange.end === 'function')) {
         return {
-          "start": 0,
-          "end": 0
+          'start': 0,
+          'end': 0
         };
       }
 
       return {
-        "start": seekRange.length > 0 ? seekRange.start(0) : 0,
-        "end": seekRange.length > 0 ? seekRange.end(0) : 0
+        'start': seekRange.length > 0 ? seekRange.start(0) : 0,
+        'end': seekRange.length > 0 ? seekRange.end(0) : 0
       };
     };
     /**
@@ -8671,13 +8683,18 @@ require("../../../html5-common/js/utils/environment.js");
     var convertToSafeSeekTime = function convertToSafeSeekTime(time, duration) {
       // If seeking within some threshold of the end of the stream, seek to end of stream directly
       if (duration - time < OOV4.CONSTANTS.SEEK_TO_END_LIMIT) {
+        // eslint-disable-next-line
         time = duration;
       }
 
       var safeTime = time >= duration ? duration - 0.01 : time < 0 ? 0 : time; // iPad with 6.1 has an interesting bug that causes the video to break if seeking exactly to zero
 
-      if (OOV4.isIpad && safeTime < 0.1) {
-        safeTime = 0.1;
+      if (OOV4.isIpad) {
+        var minimumSafeTime = 0.1;
+
+        if (safeTime < minimumSafeTime) {
+          safeTime = minimumSafeTime;
+        }
       }
 
       return safeTime;
@@ -8693,7 +8710,7 @@ require("../../../html5-common/js/utils/environment.js");
 
 
     var getSafeSeekTimeIfPossible = function getSafeSeekTimeIfPossible(_video, time) {
-      if (typeof time !== "number" || !canSeek) {
+      if (typeof time !== 'number' || !canSeek) {
         return null;
       }
 
@@ -8719,7 +8736,7 @@ require("../../../html5-common/js/utils/environment.js");
      * @method OoyalaVideoWrapper#getSafeDvrSeekTime
      * @param {HTMLVideoElement} video The video element on which the DVR-enabled stream is loaded.
      * @param {Number} seekTime The time from 0 to DVR Window Length to which we want to shift.
-     * @return {Number} The playhead time that corresponds to the given DVR window position (seekTime).
+     * @returns {Number} The playhead time that corresponds to the given DVR window position (seekTime).
      * The return value will be constrained to valid values within the DVR window. The current playhead
      * will be returned when seekTime is not a valid, finite or positive number.
      */
@@ -8727,15 +8744,16 @@ require("../../../html5-common/js/utils/environment.js");
 
     var getSafeDvrSeekTime = function getSafeDvrSeekTime(video, seekTime) {
       // Note that we set seekTime to an invalid negative value if not a number
-      seekTime = ensureNumber(seekTime, -1); // When seekTime is negative or not a valid number, return the current time
+      var _seekTime = ensureNumber(seekTime, -1); // When seekTime is negative or not a valid number, return the current time
       // in order to avoid seeking
 
-      if (seekTime < 0) {
+
+      if (_seekTime < 0) {
         return (video || {}).currentTime || 0;
       }
 
       var seekRange = getSafeSeekRange(getSafeSeekableObject());
-      var safeSeekTime = seekRange.start + seekTime; // Make sure seek time isn't larger than maximum seekable value, if it is,
+      var safeSeekTime = seekRange.start + _seekTime; // Make sure seek time isn't larger than maximum seekable value, if it is,
       // seek to maximum value instead
 
       safeSeekTime = Math.min(safeSeekTime, seekRange.end);
@@ -8772,7 +8790,7 @@ require("../../../html5-common/js/utils/environment.js");
      * Determines whether or not the current stream has DVR currently enabled.
      * @private
      * @method OoyalaVideoWrapper#isDvrAvailable
-     * @return {Boolean} True if DVR is available, false otherwise.
+     * @returns {Boolean} True if DVR is available, false otherwise.
      */
 
 
@@ -8785,7 +8803,8 @@ require("../../../html5-common/js/utils/environment.js");
      * Returns the current time shift offset to the live edge in seconds for DVR-enabled streams.
      * @private
      * @method OoyalaVideoWrapper#getTimeShift
-     * @return {Number} The negative value of the current time shift offset, in seconds. Returns 0
+     * @param {number} currentTime currentTime
+     * @returns {Number} The negative value of the current time shift offset, in seconds. Returns 0
      * if currently at the live edge.
      */
 
@@ -8798,8 +8817,9 @@ require("../../../html5-common/js/utils/environment.js");
       var timeShift = 0;
       var seekRange = getSafeSeekRange(getSafeSeekableObject()); // If not a valid number set to seekRange.end so that timeShift equals zero
 
-      currentTime = ensureNumber(currentTime, seekRange.end);
-      timeShift = currentTime - seekRange.end; // Discard positive time shifts
+      var _currentTime = ensureNumber(currentTime, seekRange.end);
+
+      timeShift = _currentTime - seekRange.end; // Discard positive time shifts
 
       timeShift = Math.min(timeShift, 0); // Shouldn't be greater than max time shift
 
@@ -8811,12 +8831,12 @@ require("../../../html5-common/js/utils/environment.js");
      * live streams. The value of maxTimeShift is represented as a negative number.
      * @private
      * @method OoyalaVideoWrapper#getMaxTimeShift
-     * @return {Number} The maximum amount of seconds that the current video can be seeked back
+     * @returns {Number} The maximum amount of seconds that the current video can be seeked back
      * represented as a negative number, or zero, if DVR is not available.
      */
 
 
-    var getMaxTimeShift = function getMaxTimeShift(event) {
+    var getMaxTimeShift = function getMaxTimeShift() {
       if (!isLive) {
         return 0;
       }
@@ -8885,7 +8905,7 @@ require("../../../html5-common/js/utils/environment.js");
      * @method OoyalaVideoWrapper#ensureNumber
      * @param {*} value The value to convert.
      * @param {*} defaultValue A default value to return when the input is not a valid number.
-     * @return {Number} The Number equivalent of value if it can be converted and is finite.
+     * @returns {Number} The Number equivalent of value if it can be converted and is finite.
      * When value doesn't meet the criteria the function will return either defaultValue (if provided) or null.
      */
 
@@ -8894,6 +8914,7 @@ require("../../../html5-common/js/utils/environment.js");
       var number;
 
       if (value === null || _.isArray(value)) {
+        // eslint-disable-next-line
         value = NaN;
       }
 
@@ -8937,7 +8958,7 @@ require("../../../html5-common/js/utils/environment.js");
     var forceEndOnPausedIfRequired = _.bind(function () {
       if (OOV4.isSafari && !OOV4.isIos) {
         if (_video.ended) {
-          console.log("VTC_OO: Force through the end of stream for Safari", _video.currentSrc, _video.duration, _video.currentTime);
+          console.log('VTC_OO: Force through the end of stream for Safari', _video.currentSrc, _video.duration, _video.currentTime);
           raiseEndedEvent();
         }
       }
@@ -8956,8 +8977,8 @@ require("../../../html5-common/js/utils/environment.js");
         var durationResolved = resolveDuration(event.target.duration);
         var durationInt = Math.floor(durationResolved);
 
-        if (_video.currentTime == durationResolved && durationResolved > durationInt) {
-          console.log("VTC_OO: manually triggering end of stream for m3u8", _currentUrl, durationResolved, _video.currentTime);
+        if (_video.currentTime === durationResolved && durationResolved > durationInt) {
+          console.log('VTC_OO: manually triggering end of stream for m3u8', _currentUrl, durationResolved, _video.currentTime);
 
           _.defer(raiseEndedEvent);
         } else if (OOV4.isSafari && !OOV4.isIos && isSeeking === true && !_video.ended && Math.round(_video.currentTime) === Math.round(_video.duration)) {
@@ -9001,7 +9022,7 @@ require("../../../html5-common/js/utils/environment.js");
         return stopUnderflowWatcher();
       }
 
-      if (!_video.paused && _video.currentTime == watcherTime) {
+      if (!_video.paused && _video.currentTime === watcherTime) {
         if (!waitingEventRaised) {
           raiseWaitingEvent();
         }
@@ -9037,7 +9058,9 @@ require("../../../html5-common/js/utils/environment.js");
 
 
   var getRandomString = function getRandomString() {
-    return Math.random().toString(36).substring(7);
+    var radix = 36;
+    var substringIndex = 7;
+    return Math.random().toString(radix).substring(substringIndex);
   };
 
   OOV4.Video.plugin(new OoyalaVideoFactory());
@@ -9145,7 +9168,7 @@ function () {
      * Allows executing Array.prototype.filter on the video's TextTrackList.
      * @public
      * @param {Function} callback A predicate function to test each element of the array.
-     * @return {Array} An array with all the TextTrack objects that match the filter criteria.
+     * @returns {Array} An array with all the TextTrack objects that match the filter criteria.
      */
 
   }, {
@@ -9161,7 +9184,7 @@ function () {
      * Allows executing Array.prototype.find on the video's TextTrackList.
      * @public
      * @param {Function} callback A function to execute on each value in the array.
-     * @return {TextTrack} The first TextTrack object that matches the search criteria or undefined if there are no matches.
+     * @returns {TextTrack} The first TextTrack object that matches the search criteria or undefined if there are no matches.
      */
 
   }, {
@@ -9187,7 +9210,7 @@ function () {
      * @param {String} languageOrId The language or track id of the track we want to find. Note that
      * language matches only internal tracks and track id only external tracks.
      * @param {TextTrackMap} textTrackMap A TextTrackMap that contains metadata for all of the video's TextTrack objects.
-     * @return {TextTrack} The first TextTrack object that matches the given key or undefined if there are no matches.
+     * @returns {TextTrack} The first TextTrack object that matches the given key or undefined if there are no matches.
      */
 
   }, {
@@ -9213,7 +9236,7 @@ function () {
      * from the value stored in the given TextTrackMap.
      * @public
      * @param {TextTrackMap} textTrackMap A TextTrackMap that contains metadata for all of the video's TextTrack objects.
-     * @return {Array} An array with all of the TextTrack objects that match the search
+     * @returns {Array} An array with all of the TextTrack objects that match the search
      * criteria or an empty array if there are no matches.
      */
 
@@ -9323,7 +9346,7 @@ function () {
    * @public
    * @param {Object} metadata An object with metadata related to a TextTrack
    * @param {Boolean} isExternal Determines whether or not the TextTrack was added by the plugin (i.e. is external)
-   * @return {String} The auto-generated id assigned to the newly registered track
+   * @returns {String} The auto-generated id assigned to the newly registered track
    */
 
 
@@ -9357,7 +9380,7 @@ function () {
      * @param {Object} searchOptions An object whose key value pairs will be matched against
      * the existing entries. All existing properties in searchOptions need to match in order
      * for a given entry to be matched.
-     * @return {Object} The metadata object that matches the given search options or undefined if there are no matches.
+     * @returns {Object} The metadata object that matches the given search options or undefined if there are no matches.
      */
 
   }, {
@@ -9387,7 +9410,7 @@ function () {
      * @param {Object} searchOptions An object whose key value pairs will be matched against
      * the existing entries. All existing properties in searchOptions need to match in order
      * for a given entry to be matched.
-     * @return {Boolean} True if the entry exists, false otherwise
+     * @returns {Boolean} True if the entry exists, false otherwise
      */
     value: function existsEntry(searchOptions) {
       var exists = !!this.findEntry(searchOptions);
@@ -9401,7 +9424,7 @@ function () {
      * the existing entries. All existing properties in searchOptions need to match in order
      * for a given entry to be matched.
      * @param {Object} metadata An object containing the properties to be merged with the existing object
-     * @return {Object} The updated metadata entry or undefined if there were no matches
+     * @returns {Object} The updated metadata entry or undefined if there were no matches
      */
 
   }, {
@@ -9419,7 +9442,7 @@ function () {
     /**
      * Gets all of the entries associated with internal in-manifest/in-stream text tracks.
      * @public
-     * @return {Array} An array with all the internal TextTrack objects.
+     * @returns {Array} An array with all the internal TextTrack objects.
      */
 
   }, {
@@ -9433,7 +9456,7 @@ function () {
     /**
      * Gets all of the entries associated with external, manually added text tracks.
      * @public
-     * @return {Array} An array with all the external TextTrack objects.
+     * @returns {Array} An array with all the external TextTrack objects.
      */
 
   }, {
@@ -9447,7 +9470,7 @@ function () {
     /**
      * Determines whether or not all of the track entries are currently in 'disabled' mode.
      * @public
-     * @return {Boolean} True if all tracks have 'disabled' mode, false otherwise
+     * @returns {Boolean} True if all tracks have 'disabled' mode, false otherwise
      */
 
   }, {
