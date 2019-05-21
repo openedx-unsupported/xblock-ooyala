@@ -1,6 +1,7 @@
 xblock_image_explorer.egg-info
 *.pyc
 *.swp
+.DS_Store
 *~
 /dist
 /xblock_ooyala_player.egg-info

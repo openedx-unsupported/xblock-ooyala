@@ -5,13 +5,13 @@ try {
   var OO = {};
 
   OO.VERSION = {
-    "core" : {"releaseVersion": "4.32.8", "rev": "<CORE_REV>"}
+    "core" : {"releaseVersion": "4.33.25", "rev": "<CORE_REV>"}
   };
 
   OO.playerParams = {
     "core_version" : 4,
     "vast_proxy_url" : "http://player.ooyala.com/adinsertion/vast_proxy",
-    "namespace": "OOV4"
+    "namespace": "OOV4"  
   };
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 if (!OO) {
@@ -29,7 +29,7 @@ if (!OO._) {
   OO._ = window._.noConflict();
 }
 
-},{"./InitOO.js":1,"underscore":23}],3:[function(require,module,exports){
+},{"./InitOO.js":1,"underscore":36}],3:[function(require,module,exports){
 (function (OO, _, $) {
   OO.getRandomString = function () {
     return Math.random().toString(36).substring(7);
@@ -681,7 +681,7 @@ if (!OO.Analytics.EVENTS) {
     /**
      * @public
      * @event OO.Analytics.EVENTS#WILL_PLAY_FROM_BEGINNING
-     * @description This message is sent whenever player plays the video from the video start.
+     * @description This message is sent whenever player plays the video from the video start. 
      * Different from initial play as it can be a replay
      */
     WILL_PLAY_FROM_BEGINNING: "willPlayFromBeginning",
@@ -808,7 +808,7 @@ if (!OO.Analytics.EVENTS) {
     /**
      * @public
      * @event OO.Analytics.EVENTS#AD_SDK_IMPRESSION
-     * @description This message is sent when an impression is recorded
+     * @description This message is sent when an impression is recorded 
      * by the ad plugin SDK.
      */
     AD_SDK_IMPRESSION: 'adSdkImpression',
@@ -963,7 +963,7 @@ if (!OO.Analytics.EVENTS) {
      * @event OO.Analytics.EVENTS#SSAI_AD_TIMELINE_RECEIVED
      * @description This message is sent when a timeline of SSAI ads for vod is received.
      * @param {Array} paramArray Array of length 1, contains an instance of
-     * OO.Analytics.EVENT_DATA.SsaiAdTimelineReceived
+     * OO.Analytics.EVENT_DATA.SsaiAdTimelineReceived 
      */
     SSAI_AD_TIMELINE_RECEIVED: 'ssai_ad_timeline_received',
 
@@ -1523,7 +1523,7 @@ if (!OO.Analytics.EVENT_DATA) {
    * @property {number} timeSinceInitialPlay The time since the initial play request was made
    * @property {boolean} autoplayed Boolean for if the video was autoplayed or not
    * @property {boolean} hadPreroll Boolean for if the video had an ad play before it started
-   * @property {number} position The initial position of the playhead upon playback start. This includes
+   * @property {number} position The initial position of the playhead upon playback start. This includes 
    *   midrolls that play before content due to an initial playhead time > 0
    * @property {string} plugin The video plugin used for playback
    * @property {string} technology The browser technology used - HTML5, Flash, Mixed, or Other
@@ -1693,7 +1693,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdRequestData
-   * @classdesc Contains information about the ad request event.
+   * @classdesc Contains information about the ad request event. 
    * @property {string} adPluginName The name of the ad plugin used
    * @property {number} adPosition The position, in seconds, the ad is scheduled to play
    */
@@ -1708,7 +1708,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdRequestSuccssData
-   * @classdesc Contains information about the ad request success event.
+   * @classdesc Contains information about the ad request success event. 
    * @property {string} adPluginName The name of the ad plugin used
    * @property {number} adPosition The position, in seconds, the ad is scheduled to play
    * @property {number} responseTime The time in milliseconds that it took to get a response for the ad request
@@ -1727,7 +1727,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdRequestEmptyData
-   * @classdesc Contains information about the ad request empty event.
+   * @classdesc Contains information about the ad request empty event. 
    * @property {string} adPluginName The name of the ad plugin that sent this event
    * @property {number} adPosition The position, in seconds, the ad is scheduled to play
    * @property {string} adTagUrl The ad tag url post macro substitution
@@ -1748,7 +1748,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdRequestErrorData
-   * @classdesc Contains information about the ad request error event.
+   * @classdesc Contains information about the ad request error event. 
    * @property {string} adPluginName The name of the ad plugin that sent this event
    * @property {number} adPosition The position, in seconds, the ad is scheduled to play
    * @property {string} adTagUrl The ad tag url post macro substitution
@@ -1771,7 +1771,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdPlaybackErrorData
-   * @classdesc Contains information about the ad playback error event.
+   * @classdesc Contains information about the ad playback error event. 
    * @property {string} adPluginName The name of the ad plugin that sent this event
    * @property {number} adPosition The position, in seconds, the ad is scheduled to play
    * @property {string} adTagUrl The ad tag url post macro substitution
@@ -1796,7 +1796,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdSdkImpressionData
-   * @classdesc Contains information about the ad sdk impression event.
+   * @classdesc Contains information about the ad sdk impression event. 
    * @property {string} adPluginName The name of the ad plugin that sent this event
    * @property {number} adPosition The position, in seconds, the ad is scheduled to play
    * @property {number} adLoadTime The time in milliseconds between the ad request success and started
@@ -1817,9 +1817,9 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdCompletedData
-   * @classdesc Contains information about the ad completed event.
+   * @classdesc Contains information about the ad completed event. 
    * @property {string} adPluginName The name of the ad plugin used
-   * @property {number} timeSinceImpression The time passed since the ad impression
+   * @property {number} timeSinceImpression The time passed since the ad impression 
    *                                          was recorded in milliseconds
    * @property {boolean} skipped True if ad was skipped by user.
    * @property {string} adTagUrl The ad tag url post macro substitution
@@ -1837,7 +1837,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdSdkLoadedData
-   * @classdesc Contains information about the ad SDK loaded event.
+   * @classdesc Contains information about the ad SDK loaded event. 
    * @property {string} adPluginName The name of the ad plugin that sent this event
    * @property {string} playerCoreVersion The player core version
    */
@@ -1852,7 +1852,7 @@ if (!OO.Analytics.EVENT_DATA) {
   /**
    * @public
    * @class Analytics.EVENT_DATA#AdSdkLoadFailureData
-   * @classdesc Contains information about the ad SDK load failure event.
+   * @classdesc Contains information about the ad SDK load failure event. 
    * @property {string} adPluginName The name of the ad plugin that sent this event
    * @property {string} playerCoreVersion The player core version
    * @property {string} errorMessage The error message associated with the ad sdk load failure
@@ -3074,7 +3074,7 @@ var IqPlugin = function (framework) {
         iqEnabled = metadata.metadata.enabled == true || metadata.metadata.enabled === "true";
       } // Are we possibly sending thrift events as well? If so we do not want to send
       // any duplicate events with analytics.js here, only new events not reported by
-      // thrift in core with ooyala_analytics.js
+      // thrift in core with ooyala_analytics.js 
 
 
       if (metadata.metadata.allowThrift != null) {
@@ -3224,7 +3224,7 @@ var IqPlugin = function (framework) {
 
     switch (eventName) {
       // First check the events that do not actually report to analytics
-      // Need to always check this event to see if we can enable analytics.js reporting.
+      // Need to always check this event to see if we can enable analytics.js reporting. 
       //OO.EVENTS.METADATA_FETCHED -> OO.Analytics.EVENTS.VIDEO_STREAM_METADATA_UPDATED.
       case OO.Analytics.EVENTS.VIDEO_STREAM_METADATA_UPDATED:
         if (params && params[0]) {
@@ -3671,6 +3671,919 @@ OO.Analytics.RegisterPluginFactory(IqPlugin);
 module.exports = IqPlugin;
 
 },{"../../html5-common/js/utils/utils.js":3,"../framework/InitAnalyticsNamespace.js":6}],8:[function(require,module,exports){
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+module.exports = _arrayWithHoles;
+},{}],9:[function(require,module,exports){
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+  try {
+    var info = gen[key](arg);
+    var value = info.value;
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  if (info.done) {
+    resolve(value);
+  } else {
+    Promise.resolve(value).then(_next, _throw);
+  }
+}
+
+function _asyncToGenerator(fn) {
+  return function () {
+    var self = this,
+        args = arguments;
+    return new Promise(function (resolve, reject) {
+      var gen = fn.apply(self, args);
+
+      function _next(value) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+      }
+
+      function _throw(err) {
+        asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+      }
+
+      _next(undefined);
+    });
+  };
+}
+
+module.exports = _asyncToGenerator;
+},{}],10:[function(require,module,exports){
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+module.exports = _classCallCheck;
+},{}],11:[function(require,module,exports){
+function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if ("value" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
+
+module.exports = _createClass;
+},{}],12:[function(require,module,exports){
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+module.exports = _defineProperty;
+},{}],13:[function(require,module,exports){
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : {
+    "default": obj
+  };
+}
+
+module.exports = _interopRequireDefault;
+},{}],14:[function(require,module,exports){
+function _iterableToArrayLimit(arr, i) {
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+  var _e = undefined;
+
+  try {
+    for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
+module.exports = _iterableToArrayLimit;
+},{}],15:[function(require,module,exports){
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance");
+}
+
+module.exports = _nonIterableRest;
+},{}],16:[function(require,module,exports){
+var defineProperty = require("./defineProperty");
+
+function _objectSpread(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    var ownKeys = Object.keys(source);
+
+    if (typeof Object.getOwnPropertySymbols === 'function') {
+      ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+      }));
+    }
+
+    ownKeys.forEach(function (key) {
+      defineProperty(target, key, source[key]);
+    });
+  }
+
+  return target;
+}
+
+module.exports = _objectSpread;
+},{"./defineProperty":12}],17:[function(require,module,exports){
+var arrayWithHoles = require("./arrayWithHoles");
+
+var iterableToArrayLimit = require("./iterableToArrayLimit");
+
+var nonIterableRest = require("./nonIterableRest");
+
+function _slicedToArray(arr, i) {
+  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || nonIterableRest();
+}
+
+module.exports = _slicedToArray;
+},{"./arrayWithHoles":8,"./iterableToArrayLimit":14,"./nonIterableRest":15}],18:[function(require,module,exports){
+function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
+
+function _typeof(obj) {
+  if (typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol") {
+    module.exports = _typeof = function _typeof(obj) {
+      return _typeof2(obj);
+    };
+  } else {
+    module.exports = _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof2(obj);
+    };
+  }
+
+  return _typeof(obj);
+}
+
+module.exports = _typeof;
+},{}],19:[function(require,module,exports){
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var runtime = (function (exports) {
+  "use strict";
+
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined; // More compressible than void 0.
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []);
+
+    // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+    return generator;
+  }
+  exports.wrap = wrap;
+
+  // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+  function tryCatch(fn, obj, arg) {
+    try {
+      return { type: "normal", arg: fn.call(obj, arg) };
+    } catch (err) {
+      return { type: "throw", arg: err };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed";
+
+  // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+  var ContinueSentinel = {};
+
+  // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+  function Generator() {}
+  function GeneratorFunction() {}
+  function GeneratorFunctionPrototype() {}
+
+  // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+  var IteratorPrototype = {};
+  IteratorPrototype[iteratorSymbol] = function () {
+    return this;
+  };
+
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+  if (NativeIteratorPrototype &&
+      NativeIteratorPrototype !== Op &&
+      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype =
+    Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
+  GeneratorFunctionPrototype.constructor = GeneratorFunction;
+  GeneratorFunctionPrototype[toStringTagSymbol] =
+    GeneratorFunction.displayName = "GeneratorFunction";
+
+  // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function(method) {
+      prototype[method] = function(arg) {
+        return this._invoke(method, arg);
+      };
+    });
+  }
+
+  exports.isGeneratorFunction = function(genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor
+      ? ctor === GeneratorFunction ||
+        // For the native GeneratorFunction constructor, the best we can
+        // do is to check its .name property.
+        (ctor.displayName || ctor.name) === "GeneratorFunction"
+      : false;
+  };
+
+  exports.mark = function(genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      if (!(toStringTagSymbol in genFun)) {
+        genFun[toStringTagSymbol] = "GeneratorFunction";
+      }
+    }
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  };
+
+  // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+  exports.awrap = function(arg) {
+    return { __await: arg };
+  };
+
+  function AsyncIterator(generator) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+        if (value &&
+            typeof value === "object" &&
+            hasOwn.call(value, "__await")) {
+          return Promise.resolve(value.__await).then(function(value) {
+            invoke("next", value, resolve, reject);
+          }, function(err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return Promise.resolve(value).then(function(unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration.
+          result.value = unwrapped;
+          resolve(result);
+        }, function(error) {
+          // If a rejected Promise was yielded, throw the rejection back
+          // into the async generator function so it can be handled there.
+          return invoke("throw", error, resolve, reject);
+        });
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new Promise(function(resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise =
+        // If enqueue has been called before, then we want to wait until
+        // all previous Promises have been resolved before calling invoke,
+        // so that results are always delivered in the correct order. If
+        // enqueue has not been called before, then it is important to
+        // call invoke immediately, without waiting on a callback to fire,
+        // so that the async generator function has the opportunity to do
+        // any necessary setup in a predictable way. This predictability
+        // is why the Promise constructor synchronously invokes its
+        // executor callback, and why async functions synchronously
+        // execute code before the first await. Since we implement simple
+        // async functions in terms of async generators, it is especially
+        // important to get this right, even though it requires care.
+        previousPromise ? previousPromise.then(
+          callInvokeWithMethodAndArg,
+          // Avoid propagating failures to Promises returned by later
+          // invocations of the iterator.
+          callInvokeWithMethodAndArg
+        ) : callInvokeWithMethodAndArg();
+    }
+
+    // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+  AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+    return this;
+  };
+  exports.AsyncIterator = AsyncIterator;
+
+  // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+  exports.async = function(innerFn, outerFn, self, tryLocsList) {
+    var iter = new AsyncIterator(
+      wrap(innerFn, outerFn, self, tryLocsList)
+    );
+
+    return exports.isGeneratorFunction(outerFn)
+      ? iter // If outerFn is a generator, return the full iterator.
+      : iter.next().then(function(result) {
+          return result.done ? result.value : iter.next();
+        });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        }
+
+        // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+
+        var record = tryCatch(innerFn, self, context);
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done
+            ? GenStateCompleted
+            : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+
+        } else if (record.type === "throw") {
+          state = GenStateCompleted;
+          // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  }
+
+  // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+    if (method === undefined) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError(
+          "The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (! info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value;
+
+      // Resume execution at the desired location (see delegateYield).
+      context.next = delegate.nextLoc;
+
+      // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined;
+      }
+
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    }
+
+    // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+    context.delegate = null;
+    return ContinueSentinel;
+  }
+
+  // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+  defineIteratorMethods(Gp);
+
+  Gp[toStringTagSymbol] = "Generator";
+
+  // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+  Gp[iteratorSymbol] = function() {
+    return this;
+  };
+
+  Gp.toString = function() {
+    return "[object Generator]";
+  };
+
+  function pushTryEntry(locs) {
+    var entry = { tryLoc: locs[0] };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{ tryLoc: "root" }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  exports.keys = function(object) {
+    var keys = [];
+    for (var key in object) {
+      keys.push(key);
+    }
+    keys.reverse();
+
+    // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      }
+
+      // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1, next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined;
+          next.done = true;
+
+          return next;
+        };
+
+        return next.next = next;
+      }
+    }
+
+    // Return an iterator with no values.
+    return { next: doneResult };
+  }
+  exports.values = values;
+
+  function doneResult() {
+    return { value: undefined, done: true };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+
+    reset: function(skipTempReset) {
+      this.prev = 0;
+      this.next = 0;
+      // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+      this.sent = this._sent = undefined;
+      this.done = false;
+      this.delegate = null;
+
+      this.method = "next";
+      this.arg = undefined;
+
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" &&
+              hasOwn.call(this, name) &&
+              !isNaN(+name.slice(1))) {
+            this[name] = undefined;
+          }
+        }
+      }
+    },
+
+    stop: function() {
+      this.done = true;
+
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+
+    dispatchException: function(exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined;
+        }
+
+        return !! caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+
+    abrupt: function(type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc <= this.prev &&
+            hasOwn.call(entry, "finallyLoc") &&
+            this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry &&
+          (type === "break" ||
+           type === "continue") &&
+          finallyEntry.tryLoc <= arg &&
+          arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+
+    complete: function(record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" ||
+          record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+
+    finish: function(finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+
+    "catch": function(tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+          return thrown;
+        }
+      }
+
+      // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+      throw new Error("illegal catch attempt");
+    },
+
+    delegateYield: function(iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined;
+      }
+
+      return ContinueSentinel;
+    }
+  };
+
+  // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+  return exports;
+
+}(
+  // If this script is executing as a CommonJS module, use module.exports
+  // as the regeneratorRuntime namespace. Otherwise create a new empty
+  // object. Either way, the resulting object will be used to initialize
+  // the regeneratorRuntime variable at the top of this file.
+  typeof module === "object" ? module.exports : {}
+));
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  Function("r", "regeneratorRuntime = r")(runtime);
+}
+
+},{}],20:[function(require,module,exports){
+module.exports = require("regenerator-runtime");
+
+},{"regenerator-runtime":19}],21:[function(require,module,exports){
 "use strict";
 
 var utils = require("./utils");
@@ -3810,7 +4723,7 @@ function Batch() {
     };
 }
 
-},{"./utils":9}],9:[function(require,module,exports){
+},{"./utils":22}],22:[function(require,module,exports){
 "use strict";
 
 var utils = module.exports = {};
@@ -3827,7 +4740,7 @@ function getOption(options, name, defaultValue) {
     return value;
 }
 
-},{}],10:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 var detector = module.exports = {};
@@ -3868,7 +4781,7 @@ detector.isLegacyOpera = function() {
     return !!window.opera;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 var utils = module.exports = {};
@@ -3889,7 +4802,7 @@ utils.forEach = function(collection, callback) {
     }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * Resize detection strategy that injects objects to elements in order to detect resize events.
  * Heavily inspired by: http://www.backalleycoder.com/2013/03/18/cross-browser-event-based-element-resize-detection/
@@ -4105,7 +5018,7 @@ module.exports = function(options) {
     };
 };
 
-},{"../browser-detector":10}],13:[function(require,module,exports){
+},{"../browser-detector":23}],26:[function(require,module,exports){
 /**
  * Resize detection strategy that injects divs to elements in order to detect resize events on scroll events.
  * Heavily inspired by: https://github.com/marcj/css-element-queries/blob/master/src/ResizeSensor.js
@@ -4754,7 +5667,7 @@ module.exports = function(options) {
     };
 };
 
-},{"../collection-utils":11}],14:[function(require,module,exports){
+},{"../collection-utils":24}],27:[function(require,module,exports){
 "use strict";
 
 var forEach                 = require("./collection-utils").forEach;
@@ -5077,7 +5990,7 @@ function getOption(options, name, defaultValue) {
     return value;
 }
 
-},{"./browser-detector":10,"./collection-utils":11,"./detection-strategy/object.js":12,"./detection-strategy/scroll.js":13,"./element-utils":15,"./id-generator":16,"./id-handler":17,"./listener-handler":18,"./reporter":19,"./state-handler":20,"batch-processor":8}],15:[function(require,module,exports){
+},{"./browser-detector":23,"./collection-utils":24,"./detection-strategy/object.js":25,"./detection-strategy/scroll.js":26,"./element-utils":28,"./id-generator":29,"./id-handler":30,"./listener-handler":31,"./reporter":32,"./state-handler":33,"batch-processor":21}],28:[function(require,module,exports){
 "use strict";
 
 module.exports = function(options) {
@@ -5131,7 +6044,7 @@ module.exports = function(options) {
     };
 };
 
-},{}],16:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 
 module.exports = function() {
@@ -5151,7 +6064,7 @@ module.exports = function() {
     };
 };
 
-},{}],17:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 
 module.exports = function(options) {
@@ -5200,7 +6113,7 @@ module.exports = function(options) {
     };
 };
 
-},{}],18:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 module.exports = function(idHandler) {
@@ -5262,7 +6175,7 @@ module.exports = function(idHandler) {
     };
 };
 
-},{}],19:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 "use strict";
 
 /* global console: false */
@@ -5306,7 +6219,7 @@ module.exports = function(quiet) {
 
     return reporter;
 };
-},{}],20:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 
 var prop = "_erd";
@@ -5330,7 +6243,7 @@ module.exports = {
     cleanState: cleanState
 };
 
-},{}],21:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v3.3.1
  * https://jquery.com/
@@ -15696,7 +16609,7 @@ if ( !noGlobal ) {
 return jQuery;
 } );
 
-},{}],22:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -15882,7 +16795,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],23:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (global){
 //     Underscore.js 1.9.1
 //     http://underscorejs.org
@@ -17578,7 +18491,7 @@ process.umask = function() { return 0; };
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],24:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 
 /* base64 encode/decode compatible with window.btoa/atob
@@ -17749,7 +18662,7 @@ process.umask = function() { return 0; };
   window.base64 = base64;
 })();
 
-},{}],25:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 "use strict";
 
 /* eslint-disable */
@@ -17935,7 +18848,7 @@ if (typeof window !== 'undefined' && typeof _ !== 'undefined') {
   _.extend(exports, hazmat);
 }
 
-},{"underscore":23}],26:[function(require,module,exports){
+},{"underscore":36}],39:[function(require,module,exports){
 "use strict";
 
 /* eslint-disable */
@@ -18042,7 +18955,7 @@ if (typeof window !== 'undefined' && typeof _ !== 'undefined') {
   };
 })(OO, OO.$, OO._);
 
-},{}],27:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 "use strict";
 
 /* A JavaScript implementation of the SHA family of hashes, as defined in FIPS
@@ -18395,7 +19308,7 @@ if (typeof window !== 'undefined' && typeof _ !== 'undefined') {
   window.jsSHA = jsSHA;
 })();
 
-},{}],28:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 "use strict";
 
 /* eslint-disable */
@@ -18460,11 +19373,13 @@ window.LZW = {
   }
 };
 
-},{}],29:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function (process,global){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 /* eslint-disable */
 (function (OO, $, _) {
@@ -18481,7 +19396,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
         if (s[o]) {
           var l = n.slice(0, r).join(".");
-          if ("object" != _typeof(s[o])) throw new Error("Namespace error: the name '" + l + "' already exists and is not a namespace.");
+          if ("object" != (0, _typeof2.default)(s[o])) throw new Error("Namespace error: the name '" + l + "' already exists and is not a namespace.");
         } else s[o] = {};
 
         s = s[o];
@@ -19078,7 +19993,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       },
       setCustomDimensions: function setCustomDimensions(e) {
         if (e) for (var t in e) {
-          if ("object" == _typeof(e[t])) throw f(S.INVALID_CUSTOM_DIMENSION);
+          if ("object" == (0, _typeof2.default)(e[t])) throw f(S.INVALID_CUSTOM_DIMENSION);
         }
         this._base.customDimensions = e;
       }
@@ -19113,7 +20028,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 })(OO, OO.$, OO._);
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":22}],30:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/typeof":18,"_process":35}],43:[function(require,module,exports){
 "use strict";
 
 (function (OO, $, _) {
@@ -19172,7 +20087,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   });
 })(OO, OO.$, OO._);
 
-},{}],31:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 "use strict";
 
 /* global Ooyala */
@@ -19758,7 +20673,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   });
 })(OO, OO.$, OO._);
 
-},{}],32:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 "use strict";
 
 (function (OO) {
@@ -19771,12 +20686,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   };
 })(OO);
 
-},{}],33:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict";
 
-OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
+OO.VERSION.core.rev = '7ad40ebfdfd0bdd9540fb991d429e36d962a2be7';
 
-},{}],34:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 "use strict";
 
 (function (OO) {
@@ -19786,7 +20701,7 @@ OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
   };
 })(OO);
 
-},{}],35:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 "use strict";
 
 (function (OO) {
@@ -19821,7 +20736,7 @@ OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
   }
 })(OO);
 
-},{"../3rdparty/base64.js":24,"../3rdparty/hazmat-0.1.4.js":25,"../3rdparty/jquery_plugins.js":26,"../3rdparty/jsSHA-1.31.js":27,"../3rdparty/lzw.js":28}],36:[function(require,module,exports){
+},{"../3rdparty/base64.js":37,"../3rdparty/hazmat-0.1.4.js":38,"../3rdparty/jquery_plugins.js":39,"../3rdparty/jsSHA-1.31.js":40,"../3rdparty/lzw.js":41}],49:[function(require,module,exports){
 "use strict";
 
 (function (OO, _) {
@@ -19863,7 +20778,7 @@ OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
   });
 })(OO, OO._);
 
-},{}],37:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 "use strict";
 
 (function (OO, _, HM) {
@@ -19946,6 +20861,10 @@ OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
     return !!OO.platform.match(/Win/);
   }();
 
+  OO.isWindows7 = function () {
+    return OO.isWindows && window.navigator.userAgent.match(/Windows NT [\d.]*/)[0].trim() === 'Windows NT 6.1';
+  }();
+
   OO.isIos = function () {
     return !!OO.platform.match(/iPhone|iPad|iPod/);
   }();
@@ -20026,7 +20945,9 @@ OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
   }();
 
   OO.isSafari = function () {
-    return !!window.navigator.userAgent.match(/AppleWebKit/) && !window.navigator.userAgent.match(/Chrome/) && !window.navigator.userAgent.match(/like iPhone/);
+    return !!window.navigator.userAgent.match(/AppleWebKit/) && !window.navigator.userAgent.match(/Chrome/) && !window.navigator.userAgent.match(/CriOS/) && // check Chrome/Chromium on iPhone
+    // more info is here https://chromium.googlesource.com/chromium/src/+/master/docs/ios/user_agent.md
+    !window.navigator.userAgent.match(/like iPhone/);
   }();
 
   OO.chromeMajorVersion = function () {
@@ -20304,10 +21225,12 @@ OO.VERSION.core.rev = 'f26348e285986967468d00626cf4ae88d666ccb8';
   };
 })(OO, OO._, OO.HM);
 
-},{}],38:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 (function (OO, _) {
   /**
@@ -20533,7 +21456,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             var argIndex2 = 2;
             var playerParams = args[argIndex2];
 
-            if (!(OO.isPlaylistsPluginIncluded() && playerParams && playerParams !== null && _typeof(playerParams) === 'object' && typeof playerParams[OO.PLUGINS.PLAYLISTS_PLUGIN] !== 'undefined' && playerParams[OO.PAGE_LEVEL_PARAMS.USE_FIRST_VIDEO_FROM_PLAYLIST])) {
+            if (!(OO.isPlaylistsPluginIncluded() && playerParams && playerParams !== null && (0, _typeof2.default)(playerParams) === 'object' && typeof playerParams[OO.PLUGINS.PLAYLISTS_PLUGIN] !== 'undefined' && playerParams[OO.PAGE_LEVEL_PARAMS.USE_FIRST_VIDEO_FROM_PLAYLIST])) {
               console.error('MB: no embed code and/or playlist plugin');
               return;
             }
@@ -20737,15 +21660,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   });
 })(OO, OO._);
 
-},{}],39:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/typeof":18}],52:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 (function (OO, _, $) {
   OO.players = {};
   /**
-   * @class Player
+   * @class OO.Player
    * @classdesc Creates and destroys an instance of the Ooyala V4 Player.
    * @public
    * @param {string} _elementId The DOM id of the element that wraps the player
@@ -20822,7 +21747,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     PARTITION THE FLOW TO CMS-LESS PLAYER. Prevent any setEmbedCode action to execute
     */
 
-    if (_typeof(_asset) === 'object') {
+    if ((0, _typeof2.default)(_asset) === 'object') {
       _asset = OO.HM.safeObject('assetObject', _asset); // eslint-disable-line no-param-reassign
 
       playerApi.setAsset(_asset, parameters);
@@ -21137,12 +22062,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   });
 })(OO, OO._, OO.$);
 
-},{}],40:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/typeof":18}],53:[function(require,module,exports){
 "use strict";
 
 (function (OO, _, $) {
   /**
-   * @class PlayerApi
+   * @class OO.PlayerApi
    * @classdesc API layer for the Ooyala Player.  This class takes no direct action on the player.  It stores
    *   player properties and provides an API layer for the player that interacts with the message bus.
    * @public
@@ -22130,7 +23055,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   };
 })(OO, OO._, OO.$);
 
-},{}],41:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 "use strict";
 
 (function (OO, _, $) {
@@ -22201,10 +23126,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   };
 })(OO, OO._, OO.$);
 
-},{}],42:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 /* eslint no-magic-numbers: "off" */
 (function (OO, _) {
@@ -22365,7 +23292,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       };
 
       for (eventIndex = 0; eventIndex < events.length; eventIndex++) {
-        if (_typeof(events[eventIndex]) === 'object') {
+        if ((0, _typeof2.default)(events[eventIndex]) === 'object') {
           add(events[eventIndex]);
         }
       }
@@ -22508,18 +23435,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   };
 })(OO, OO._);
 
-},{}],43:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/typeof":18}],56:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
-
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+var _slicedToArray2 = _interopRequireDefault(require("@babel/runtime/helpers/slicedToArray"));
 
 (function (OO, _, $) {
   /** ************************** BEGIN can-autoplay.js ****************************************/
@@ -23054,7 +23977,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
     var difference = Math.round(ratio * max) * (darker ? -1 : 1);
 
     var _OO$hexToRgb = OO.hexToRgb(color),
-        _OO$hexToRgb2 = _slicedToArray(_OO$hexToRgb, 3),
+        _OO$hexToRgb2 = (0, _slicedToArray2.default)(_OO$hexToRgb, 3),
         red = _OO$hexToRgb2[0],
         green = _OO$hexToRgb2[1],
         blue = _OO$hexToRgb2[2];
@@ -23124,7 +24047,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
   };
 
   OO.regexEscape = function (value) {
-    var specials = /[<>()\[\]{}]/g; // eslint-disable-line
+    var specials = /[<>()\[\]{}]/g; // eslint-disable-line 
 
     return value.replace(specials, '\\$&');
   };
@@ -23646,7 +24569,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       for (var index = OO.modules.length - 1; index >= 0; index--) {
         var plugin = OO.modules[index];
 
-        if (plugin !== null && _typeof(plugin) === 'object' && plugin.name === OO.PLUGINS.PLAYLISTS_PLUGIN) {
+        if (plugin !== null && (0, _typeof2.default)(plugin) === 'object' && plugin.name === OO.PLUGINS.PLAYLISTS_PLUGIN) {
           return true;
         }
       }
@@ -23656,7 +24579,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
   };
 })(OO, OO._, OO.$);
 
-},{}],44:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/slicedToArray":17,"@babel/runtime/helpers/typeof":18}],57:[function(require,module,exports){
 "use strict";
 
 /**
@@ -25172,14 +26095,6 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
     VC_RELOAD: 'videoReload',
 
     /**
-     * Commands the video controller to prepare all video elements for playback.  This event should be
-     * called on a click event and used to enable api-control on html5-based video elements.
-     * @event OO.EVENTS#VC_PRIME_VIDEOS
-     * @public
-     */
-    VC_PRIME_VIDEOS: 'videoPrimeVideos',
-
-    /**
      * Notifies the player of tags (such as ID3) encountered during video playback.
      * The handler is called with the following arguments:
      * <ul>
@@ -25705,6 +26620,18 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
      * @public
      */
     CHROMECAST_END_CAST: 'chromecastEndCast',
+
+    /**
+     * This event contains informaton about possible markers on the asset. The handler will be called with:
+     *   <ul>
+     *     <li>A JSON object that represents a series or markers</li>
+     *   </ul>
+     *
+     *
+     * @event OO.EVENTS#MARKER_DATA_AVAILABLE
+     * @public
+     */
+    MARKER_DATA_AVAILABLE: 'markerDataAvailable',
 
     /**
      * Airplay related events
@@ -26657,7 +27584,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
   };
 })(OO, OO._);
 
-},{}],45:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 "use strict";
 
 var $ = require('jquery');
@@ -26880,7 +27807,7 @@ OO.publicApi.plugin = function (moduleName, moduleClassFactory) {
   }
 };
 
-},{"jquery":21,"underscore":23}],46:[function(require,module,exports){
+},{"jquery":34,"underscore":36}],59:[function(require,module,exports){
 "use strict";
 
 (function (OO) {
@@ -30429,7 +31356,7 @@ OO.publicApi.plugin = function (moduleName, moduleClassFactory) {
   }];
 })(OO);
 
-},{}],47:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 "use strict";
 
 (function (OO) {
@@ -30553,7 +31480,7 @@ OO.publicApi.plugin = function (moduleName, moduleClassFactory) {
   };
 })(OO);
 
-},{}],48:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 "use strict";
 
 (function (OO) {
@@ -30566,7 +31493,7 @@ OO.publicApi.plugin = function (moduleName, moduleClassFactory) {
   };
 })(OO);
 
-},{}],49:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 "use strict";
 
 require('./include/init.js');
@@ -30649,15 +31576,15 @@ require('./modules/chromecastSender.js');
 
 require('./modules/airplay.js');
 
-},{"../html5-analytics-plugins/js/framework/AnalyticsFramework.js":5,"../html5-analytics-plugins/js/plugins/iq.js":7,"./analytics/analytics.js":29,"./analytics/analytics_base.js":30,"./analytics/ooyala_analytics.js":31,"./assets/asset_utils.js":32,"./autogen/oo_rev.js":33,"./autogen/stylus_css.js":34,"./core/3rd_party_initializer.js":35,"./core/emitter.js":36,"./core/environment.js":37,"./core/message_bus.js":38,"./core/player.js":39,"./core/playerExternalApi.js":40,"./core/registration.js":41,"./core/state_machine.js":42,"./core/utils.js":43,"./include/constants.js":44,"./include/init.js":45,"./include/languages.js":46,"./include/messages.js":47,"./include/resource.js":48,"./modules/ads/ad_manager_controller.js":50,"./modules/ads/ad_manager_ooyala.js":51,"./modules/airplay.js":52,"./modules/analytics/analytics_framework_translator.js":53,"./modules/api.js":54,"./modules/asset/asset_controller.js":55,"./modules/auth_heartbeat.js":56,"./modules/channels.js":57,"./modules/chromecastSender.js":58,"./modules/chromeless_ui.js":59,"./modules/device_id.js":60,"./modules/external_id.js":61,"./modules/ha_failover.js":62,"./modules/ooyala_storage.js":63,"./modules/playback/playback_controller.js":64,"./modules/playback/video_controller.js":65,"./modules/plugins/librato.js":66,"./modules/valhalla_cache.js":67}],50:[function(require,module,exports){
+},{"../html5-analytics-plugins/js/framework/AnalyticsFramework.js":5,"../html5-analytics-plugins/js/plugins/iq.js":7,"./analytics/analytics.js":42,"./analytics/analytics_base.js":43,"./analytics/ooyala_analytics.js":44,"./assets/asset_utils.js":45,"./autogen/oo_rev.js":46,"./autogen/stylus_css.js":47,"./core/3rd_party_initializer.js":48,"./core/emitter.js":49,"./core/environment.js":50,"./core/message_bus.js":51,"./core/player.js":52,"./core/playerExternalApi.js":53,"./core/registration.js":54,"./core/state_machine.js":55,"./core/utils.js":56,"./include/constants.js":57,"./include/init.js":58,"./include/languages.js":59,"./include/messages.js":60,"./include/resource.js":61,"./modules/ads/ad_manager_controller.js":63,"./modules/ads/ad_manager_ooyala.js":64,"./modules/airplay.js":65,"./modules/analytics/analytics_framework_translator.js":66,"./modules/api.js":67,"./modules/asset/asset_controller.js":68,"./modules/auth_heartbeat.js":69,"./modules/channels.js":70,"./modules/chromecastSender.js":71,"./modules/chromeless_ui.js":72,"./modules/device_id.js":73,"./modules/external_id.js":74,"./modules/ha_failover.js":75,"./modules/ooyala_storage.js":76,"./modules/playback/playback_controller.js":77,"./modules/playback/video_controller.js":78,"./modules/plugins/librato.js":79,"./modules/valhalla_cache.js":80}],63:[function(require,module,exports){
 (function (global){
 "use strict";
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+var _objectSpread2 = _interopRequireDefault(require("@babel/runtime/helpers/objectSpread"));
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 /*
  * Ad Manager Controller
@@ -30846,7 +31773,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var unregisteredAdManagerFactories = [];
   /**
-   * @class Ads
+   * @class OO.Ads
    * @classdesc Enables you to register, verify, and unregister ad managers within the Ooyala player.
    * The related ad manager events are not processed on the standard message bus.
    * @public
@@ -30937,7 +31864,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           return false;
         }
 
-        if (_typeof(adManager[propertyName]) !== propertyType) {
+        if ((0, _typeof2.default)(adManager[propertyName]) !== propertyType) {
           // eslint-disable-line valid-typeof
           raiseValidationError('The ad manager "' + managerName + '" property "' + propertyName + '" should be type "' + propertyType + '"');
           return false;
@@ -31001,7 +31928,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   };
   OO.exposeStaticApi('Ads', OO.Ads);
   /**
-   * @class AdManagerInterface
+   * @class OO.AdManagerInterface
    * @classdesc
    * Exposes certain parts of the Ad Manager Controller (AMC) to ad managers.  This acts as a layer through
    * which the ad manager can interact with the ad manager controller.
@@ -31032,7 +31959,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }
   };
   /**
-   * @class AdManagerControllerPlatform
+   * @class OO.AdManagerControllerPlatform
    * @classdesc Exposes information about the device platform as defined by the Ooyala player.
    * @public
    * @property {string} platform The device platform.
@@ -31075,7 +32002,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }
   };
   /**
-   * @class AdManagerControllerUi
+   * @class OO.AdManagerControllerUi
    * @classdesc
    * Handles the display of video ads, ad marquee, and controls.
    * Exposes information about the UI as defined by the Ooyala player.
@@ -31455,7 +32382,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     _init();
   };
   /**
-   * @class AdManagerController
+   * @class OO.AdManagerController
    * @classdesc The ad manager controller main class.  This class is registered as a module with the player.
    * @public
    * @property {object} adManagerSettings Ad settings used by the ad manager controller.
@@ -31700,7 +32627,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
     this.FORCED_AD_POSITION = -1;
     /**
-     * @class Ad
+     * @class OO.Ad
      * @classdesc Represents an ad or a set of podded ads. This object contains a reference to the actual ad object provided by
      * the ad manager.
      * <b>Constructor</b>: Represents an ad or a set of podded ads. This object contains a reference to the actual ad object provided by
@@ -32232,7 +33159,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       if (content && content.duration) {
         this.movieDuration = content.duration / 1000;
 
-        _triggerAdManagerCallback(this.EVENTS.CONTENT_TREE_FETCHED, _objectSpread({}, content, {
+        _triggerAdManagerCallback(this.EVENTS.CONTENT_TREE_FETCHED, (0, _objectSpread2.default)({}, content, {
           // it's ugly, but backend sends 6610 for 6 min video
           // no idea what is it
           // ad manager needs to be initialized with non null video duration
@@ -35391,7 +36318,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 })(OO, OO._, OO.$);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],51:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/objectSpread":16,"@babel/runtime/helpers/typeof":18}],64:[function(require,module,exports){
 "use strict";
 
 /**
@@ -35399,7 +36326,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
  */
 OO.Ads.manager(function (_, $) {
   /**
-   * @class OoyalaAdManager
+   * @class OO.OoyalaAdManager
    * @classDesc The Ooyala Ads Manager class, registered as an ads manager with the ad manager controller.
    * Controls how Ooyala ads are loaded and played as ads while communicating with the ad manager framework.
    * @public
@@ -35815,16 +36742,16 @@ OO.Ads.manager(function (_, $) {
   return new OoyalaAdManager();
 });
 
-},{}],52:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 
-if (window.WebKitPlaybackTargetAvailabilityEvent) {
+if (window.WebKitPlaybackTargetAvailabilityEvent && OO.isSafari) {
   var pluginName = 'Airplay';
   var connectedMarker = 'OO_AIRPLAY_CONNECTED';
   OO.plugin(pluginName, function (OO) {
@@ -35841,11 +36768,13 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
       function Airplay(messageBus) {
         var _this = this;
 
-        _classCallCheck(this, Airplay);
-
+        (0, _classCallCheck2.default)(this, Airplay);
         this.mb = messageBus;
         this.airplayEnabledInPlayerParams = true;
-        this.firstConnectedEventIgnored = false;
+        this.vcVideoElementParams = null;
+        this.safariPriorTo12m1 = Airplay.checkIfSafariVersionIsPriorTo12minor1();
+        this.ignoreFirstConnectedEvent = this.safariPriorTo12m1;
+        this.ignoreSecondConnectedEvent = false;
         this.availability = null;
         this.isSessionResumed = Airplay.checkIfPageWasReloadedWhileCasting();
         this.isAirplayConnected = this.isSessionResumed;
@@ -35857,6 +36786,36 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
         });
         this.mb.subscribe(OO.EVENTS.ADS_PLAYED, pluginName, function () {
           _this.adsPlaying = false;
+        });
+        this.mb.subscribe(OO.EVENTS.SET_EMBED_CODE, pluginName, function () {
+          // ignore second Airplay#playbackTargetChanged event fired by Safari < 12.1
+          // if src of a video was previously set to null or removed via removeAttibute('src')
+          // see video_controller.js#embedCodeChanged or main-html5.js#setVideoUrl methods for more info
+          if (_this.safariPriorTo12m1 && _this.isAirplayConnected && !_this.isSessionResumed) {
+            _this.ignoreSecondConnectedEvent = true;
+          }
+        });
+        this.mb.subscribe(OO.EVENTS.CAN_PLAY, pluginName, function () {
+          // since main-html5.js video plugin sends CAN_PLAY event before VC_ELEMENT_CREATED
+          // airplay initialization for main-html5.js will be done in onVcVideoElementCreated()
+          if (!_this.vcVideoElementParams) {
+            return;
+          } // if webkit event listeners've already been initialized in VC_ELEMENT_CREATED.
+          // safety check in case main-html5.js' behaviour will be changed one day
+
+
+          if (_this.webkitListenersInitialized) {
+            return;
+          } // since Bitmovin adds <video> element to the DOM only on player.load() call
+
+
+          _this.video = _this.vcVideoElementParams.parent[0].querySelector('video');
+
+          if (_this.video && _this.airplayEnabledInPlayerParams) {
+            _this.initWebkitListeners();
+
+            _this.webkitListenersInitialized = true;
+          }
         });
       }
       /**
@@ -35870,7 +36829,7 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
        */
 
 
-      _createClass(Airplay, [{
+      (0, _createClass2.default)(Airplay, [{
         key: "onPlayerCreated",
         value: function onPlayerCreated(event, elementId, params) {
           // disable airplay only if "airplay":false is set directly
@@ -35890,12 +36849,15 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
       }, {
         key: "onVcVideoElementCreated",
         value: function onVcVideoElementCreated(event, params) {
-          this.firstConnectedEventIgnored = false;
+          if (this.safariPriorTo12m1) {
+            this.ignoreFirstConnectedEvent = true;
+          }
 
           if (this.webkitListenersInitialized) {
             return;
           }
 
+          this.vcVideoElementParams = params;
           this.video = params.parent[0].querySelector('video');
 
           if (!this.video || !this.airplayEnabledInPlayerParams) {
@@ -35948,11 +36910,16 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
         value: function onConnectedChanged() {
           if (this.adsPlaying) {
             return;
-          } // ignore first call bug during initialization
+          } // ignore first call bug during initialization for Safari < 12.1
 
 
-          if (!this.firstConnectedEventIgnored) {
-            this.firstConnectedEventIgnored = true;
+          if (this.safariPriorTo12m1 && this.ignoreFirstConnectedEvent) {
+            this.ignoreFirstConnectedEvent = false;
+            return;
+          }
+
+          if (this.safariPriorTo12m1 && this.ignoreSecondConnectedEvent) {
+            this.ignoreSecondConnectedEvent = false;
             return;
           }
 
@@ -35996,6 +36963,20 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
           return Boolean(window.sessionStorage.getItem(connectedMarker));
         }
         /**
+         * Checks Safari version
+         * @static
+         * @method AirPlay#checkIfSafariVersionIsPriorTo12minor1
+         * @returns {boolean} true if Safari version is prior to 12.1
+         */
+
+      }, {
+        key: "checkIfSafariVersionIsPriorTo12minor1",
+        value: function checkIfSafariVersionIsPriorTo12minor1() {
+          var safariVersionWithConnectionEventFixed = 12.1;
+          var currentSafariVersion = parseFloat(window.navigator.userAgent.match(/Version\/([\d.]+)/)[1]);
+          return currentSafariVersion < safariVersionWithConnectionEventFixed;
+        }
+        /**
          * Set/Remove airplay-connected marker in Session Storage
          * @static
          * @method Airplay#toggleSessionStorageMarker
@@ -36011,7 +36992,6 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
           }
         }
       }]);
-
       return Airplay;
     }();
 
@@ -36019,7 +36999,7 @@ if (window.WebKitPlaybackTargetAvailabilityEvent) {
   });
 }
 
-},{}],53:[function(require,module,exports){
+},{"@babel/runtime/helpers/classCallCheck":10,"@babel/runtime/helpers/createClass":11,"@babel/runtime/helpers/interopRequireDefault":13}],66:[function(require,module,exports){
 "use strict";
 
 OO.exposeStaticApi('Analytics', OO.Analytics);
@@ -37043,7 +38023,6 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
 
   var onWillPlayAds = privateMember(function (eventName) {
     adMode = true;
-    console.log('>>>> 1', eventName);
     af.publishEvent(OO.Analytics.EVENTS.AD_BREAK_STARTED);
   });
   /**
@@ -37678,7 +38657,7 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
   return AnalyticsFrameworkTranslator;
 });
 
-},{}],54:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 "use strict";
 
 (function (OO, _, $) {
@@ -37957,7 +38936,7 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
         var playerPcode = this.params.pcode;
 
         if (playerPcode !== assetPcode) {
-          console.warn("Asset provider code \"".concat(assetPcode, "\" ") + "and player provider code \"".concat(playerPcode, "\" doesn't match"));
+          console.warn("Warning: The PCODE (Ooyala Partner Code) \"".concat(assetPcode, "\" ") + "is not associated to the same account as the content being played \"".concat(playerPcode, "\". ") + "This may cause data to not report into Ooyala IQ and be lost.");
         }
       } else {
         this.mb.publish(OO.EVENTS.ERROR, {
@@ -38335,7 +39314,7 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
   });
 })(OO, OO._, OO.$);
 
-},{}],55:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 "use strict";
 
 /*
@@ -38496,7 +39475,7 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
   });
 })(OO, OO._, OO.$);
 
-},{}],56:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 "use strict";
 
 (function (OO, _, $) {
@@ -38520,6 +39499,8 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
     this.mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'auth_heartbeat', _.bind(this._onEmbedCodeChanged, this));
     this.mb.subscribe(OO.EVENTS.AUTHORIZATION_FETCHED, 'auth_heartbeat', _.bind(this._onAuthorizationFetched, this));
     this.mb.subscribe(OO.EVENTS.INITIAL_PLAY_STARTING, 'auth_heartbeat', _.bind(this._startTimer, this));
+    this.mb.subscribe(OO.EVENTS.CHROMECAST_START_CAST, 'auth_heartbeat', _.bind(this._clearTimer, this));
+    this.mb.subscribe(OO.EVENTS.CHROMECAST_END_CAST, 'auth_heartbeat', _.bind(this._startTimer, this));
   };
 
   _.extend(AuthHeartbeat.prototype, {
@@ -38546,6 +39527,9 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
         this._onTimerTick(); // Fire first heartbeat NOW.
 
       }
+    },
+    _clearTimer: function _clearTimer() {
+      clearInterval(this.timer);
     },
     _onAuthorizationFetched: function _onAuthorizationFetched(event, authResponse) {
       if (authResponse.heartbeat_data && authResponse.heartbeat_data.heartbeat_interval) {
@@ -38623,7 +39607,7 @@ OO.plugin(OO.MODULE_NAMES.ANALYTICS_FRAMEWORK_TRANSLATOR, function (OO, _, $) {
   });
 })(OO, OO._, OO.$);
 
-},{}],57:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 "use strict";
 
 OO.plugin('Channels', function (OO, _, $, Window) {
@@ -38720,7 +39704,7 @@ OO.plugin('Channels', function (OO, _, $, Window) {
   return Channels;
 });
 
-},{}],58:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 "use strict";
 
 /* globals cast, chrome */
@@ -39246,6 +40230,7 @@ if (OO.isChrome && !OO.isIos) {
 
     var loadEmbedCodeOntoChromecast = function loadEmbedCodeOntoChromecast(embedCode, params, initialTime) {
       var mediaInfo = new chrome.cast.media.MediaInfo(embedCode, 'video/mp4');
+      var authToken = OO.localStorage.getItem('oo_auth_token');
       mediaInfo.customData = {
         ec: localPlayer.embedCode,
         params: JSON.parse(JSON.stringify(params))
@@ -39253,6 +40238,11 @@ if (OO.isChrome && !OO.isIos) {
 
       if (initialTime && initialTime !== 0) {
         mediaInfo.customData.params.initialTime = initialTime;
+      } // attach the authToken, if available
+
+
+      if (authToken) {
+        mediaInfo.customData.params.authToken = authToken;
       }
 
       var castSession = cast.framework.CastContext.getInstance().getCurrentSession();
@@ -39298,6 +40288,7 @@ if (OO.isChrome && !OO.isIos) {
         return;
       }
 
+      castSession.setVolume(localPlayer.volume).then(onCastVolumeChanged, onCastVolumeChangeError);
       receiverData = castSession.getCastDevice(); // if the player is playing then we should pause the content so it doesn't
       // play while we are casting.
 
@@ -39383,8 +40374,11 @@ if (OO.isChrome && !OO.isIos) {
 
     var onCastingEnded = function onCastingEnded() {
       isCasting = false;
-      mb.publish(OO.EVENTS.CHROMECAST_END_CAST);
-      syncLocalPlayerToCastPlayer();
+
+      if (localPlayer.state === PLAYER_STATE.PLAYING) {
+        mb.publish(OO.EVENTS.CHROMECAST_END_CAST);
+        syncLocalPlayerToCastPlayer();
+      }
     };
     /**
      * Callback when the player receives an event or message from the chromecast
@@ -39543,6 +40537,7 @@ if (OO.isChrome && !OO.isIos) {
           playhead: localPlayer.playhead,
           duration: localPlayer.duration
         };
+        mb.publish(OO.EVENTS.SEEKED);
         notifyLocalPlayerPlayheadTimeChanged(playheadData);
       }
     };
@@ -39792,7 +40787,7 @@ if (OO.isChrome && !OO.isIos) {
   });
 }
 
-},{}],59:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 "use strict";
 
 /* eslint no-magic-numbers: "off" */
@@ -40058,7 +41053,7 @@ if (OO.isChrome && !OO.isIos) {
   });
 })(OO, OO.$, OO._);
 
-},{"element-resize-detector":14}],60:[function(require,module,exports){
+},{"element-resize-detector":27}],73:[function(require,module,exports){
 "use strict";
 
 /* eslint no-magic-numbers: "off" */
@@ -40177,7 +41172,7 @@ if (OO.isChrome && !OO.isIos) {
   init();
 })(OO, OO._, OO.$);
 
-},{}],61:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 "use strict";
 
 OO.plugin('ExternalId', function (OO, _, $, Window) {
@@ -40264,7 +41259,7 @@ OO.plugin('ExternalId', function (OO, _, $, Window) {
   return ExternalId;
 });
 
-},{}],62:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 "use strict";
 
 /* eslint no-magic-numbers: "off" */
@@ -41164,7 +42159,7 @@ OO.plugin('HAFailoverMechanism', function (OO, _, $) {
   return HAFailoverMechanism;
 });
 
-},{}],63:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 "use strict";
 
 /* eslint no-magic-numbers: "off" */
@@ -41323,10 +42318,12 @@ OO.plugin('HAFailoverMechanism', function (OO, _, $) {
   }
 })(OO, OO._, OO.$);
 
-},{}],64:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 /*
  * Playback Controller
@@ -41943,7 +42940,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       var shouldUpdateInitialTime = !this.hasContentSet || this.contentChangeRequestedExternally; // Parse and save initial time
 
       if (shouldUpdateInitialTime && typeof this.playerParams.initialTime !== 'undefined') {
-        var time = parseInt(this.playerParams.initialTime, 10);
+        var time = parseFloat(this.playerParams.initialTime);
 
         if (!isNaN(time) && time > 0) {
           this.initialTime = time;
@@ -42042,6 +43039,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     },
 
     /**
+     * Check if the 'markers' player param it's a boolean and false, otherwise
+     * it will return true and let the player to try get the marker information
+     * @method PlaybackController#shouldDisplayMarkers
+     * @private
+     * @returns {Boolean} true if markers are allowed to be rendered, otherwise false
+     */
+    shouldDisplayMarkers: function shouldDisplayMarkers() {
+      return typeof this.playerParams.markers === 'undefined' || typeof this.playerParams.markers !== 'boolean' || this.playerParams.markers.valueOf() !== false;
+    },
+
+    /**
      * Called when playback is created.
      * @method PlaybackController#playbackReady
      * @protected
@@ -42049,9 +43057,133 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     playbackReady: function playbackReady() {
       if (!this.shouldAutoplay() && !this.isAudioOnlyAsset) {
         this.fetchThumbnails();
+
+        if (this.shouldDisplayMarkers()) {
+          this.loadMarkers();
+        }
       }
 
       this.triggerAutoplay();
+    },
+
+    /**
+     * Will try to fetch the markers information from contentTree or inline params
+     * @method PlaybackController#loadMarkers
+     * @private
+     */
+    loadMarkers: function loadMarkers() {
+      var markersURL = this.getMarkersURL();
+
+      if (markersURL !== '') {
+        $.ajax({
+          url: markersURL,
+          type: 'GET',
+          dataType: 'json',
+          cache: true,
+          success: _.bind(this.publishMarkerData, this),
+          error: _.bind(this.onMarkersFailed, this)
+        });
+      } else {
+        this.publishMarkerData();
+      }
+    },
+
+    /**
+     * Will publish any available marker information into the message bus.
+     * Before publish the data it will be merged with any inline information.
+     * Fires the OO.EVENTS.MARKER_DATA_AVAILABLE event
+     * @method PlaybackController#publishMarkerData
+     * @private
+     * @param {Object} data the data from Ajax request of marker
+     */
+    publishMarkerData: function publishMarkerData(data) {
+      var markers = {
+        list: []
+      };
+      var inlineMarkers = this.getInlineMarkers();
+      var globalType = data && data.type && data.type !== '' ? data.type : null;
+
+      if (data && Array.isArray(data.markerList) && data.markerList.length > 0) {
+        inlineMarkers.forEach(function (inlineMarker) {
+          var markerIndex = data.markerList.findIndex(function (marker) {
+            return marker.start === inlineMarker.start;
+          });
+
+          if (markerIndex >= 0) {
+            data.markerList[markerIndex] = Object.assign({}, data.markerList[markerIndex], inlineMarker);
+          } else {
+            data.markerList.push(inlineMarker);
+          }
+        });
+        markers.list = data.markerList;
+      } else if (inlineMarkers.length > 0) {
+        markers.list = inlineMarkers;
+      } // Let's set the globalType for those markers that does not have a type defined.
+      // Also add the globalType as part of the final result
+
+
+      if (globalType) {
+        markers.type = globalType;
+        markers.list = markers.list.map(function (marker) {
+          if (marker.type === undefined || marker.type === '') {
+            marker.type = globalType;
+          }
+
+          return marker;
+        });
+      }
+
+      if (markers.list.length > 0) {
+        markers.list = markers.list.sort(function (firstMarker, secondMarker) {
+          return firstMarker.start > secondMarker.start ? 1 : -1;
+        });
+        this.mb.publish(OO.EVENTS.MARKER_DATA_AVAILABLE, markers);
+      }
+    },
+
+    /**
+     * looks in the player params for any marker information
+     * @method PlaybackController#getInlineMarkers
+     * @protected
+     * @returns {Array} list of markers at player params
+     */
+    getInlineMarkers: function getInlineMarkers() {
+      if (this.playerParams.markers && Array.isArray(this.playerParams.markers.inline) && this.playerParams.markers.inline.length > 0) {
+        return this.playerParams.markers.inline;
+      }
+
+      return [];
+    },
+
+    /**
+     * Error callback for markers request.
+     * @method PlaybackController#onMarkersFailed
+     * @param {Object} request The request object
+     * @param {String} status The text status
+     * @param {String} error The error thrown
+     * @private
+     */
+    onMarkersFailed: function onMarkersFailed(request, status, error) {
+      OO.log('Error: Failed to fetch markers data');
+    },
+
+    /**
+     * Get the URL of markers to be fetched. This value can be obtained from content tree
+     * or page level param
+     * @method PlaybackController#getMarkersURL
+     * @private
+     * @returns {String} Url of markers file
+     */
+    getMarkersURL: function getMarkersURL() {
+      if (this.playerParams && this.playerParams.markers && this.playerParams.markers.config) {
+        return this.playerParams.markers.config;
+      }
+
+      if (this.contentTree && this.contentTree.markers_url) {
+        return this.contentTree.markers_url;
+      }
+
+      return '';
     },
 
     /**
@@ -42182,6 +43314,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           this.mb.publish(OO.EVENTS.SET_TARGET_BITRATE, this.chosenBitrateIndex, {
             setTimer: true
           }, OO.VIDEO.MAIN);
+          this.mb.publish(OO.EVENTS.SEND_QUALITY_CHANGE, this.chosenBitrateIndex, {
+            setTimer: true
+          }, OO.VIDEO.MAIN);
           this.isBitrateOverrideReady.isBitrateOverridden = true;
         }
       }
@@ -42233,7 +43368,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this.bitrateTimerPassed = 0;
       }
 
-      if (this.bitrateTimerPassed < this.BITRATE_TIMERS.FIVE_SEC && !this.fiveSecBitrateSent) {
+      if (this.bitrateTimerPassed < this.BITRATE_TIMERS.FIVE_SEC && !this.fiveSecBitrateTimer) {
         this.fiveSecBitrateTimer = setTimeout(function () {
           _this2.fiveSecBitrateSent = true;
 
@@ -42241,11 +43376,36 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         }, this.BITRATE_TIMERS.FIVE_SEC - this.bitrateTimerPassed);
       }
 
-      if (this.bitrateTimerPassed < this.BITRATE_TIMERS.STABLE) {
+      this.startBitrateStableTimer();
+    },
+
+    /**
+     * Called to initiate timer to report bitrate stable.
+     * @method PlaybackController#startBitrateStableTimer
+     * @private
+     */
+    startBitrateStableTimer: function startBitrateStableTimer() {
+      var _this3 = this;
+
+      if (!this.thirtySecBitrateTimer) {
         this.thirtySecBitrateTimer = setTimeout(function () {
-          return _this2.mb.publish(OO.EVENTS.BITRATE_STABLE, _this2.currentBitrate);
-        }, this.BITRATE_TIMERS.STABLE - this.bitrateTimerPassed);
+          _this3.publishBitrateInfo();
+        }, this.BITRATE_TIMERS.STABLE);
       }
+    },
+
+    /**
+     * Called to set timers for the bitrate stable event.
+     * @method PlaybackController#publishBitrateInfo
+     * @private
+     */
+    publishBitrateInfo: function publishBitrateInfo() {
+      var _this4 = this;
+
+      this.mb.publish(OO.EVENTS.BITRATE_STABLE, this.currentBitrate);
+      this.thirtySecBitrateTimer = setTimeout(function () {
+        _this4.publishBitrateInfo();
+      }, this.BITRATE_TIMERS.STABLE);
     },
 
     /**
@@ -42264,6 +43424,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this.bitrateTimerPassed = 0;
         this.startBitrateTimers();
       }
+
+      this.startBitrateStableTimer();
     },
 
     /**
@@ -42486,25 +43648,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      * @fires OO.EVENTS.WILL_PLAY_FROM_BEGINNING
      */
     initialPlay: function initialPlay(eventName, unixTimeMs, wasAutoplayed) {
-      var firstPlay = !this.initialPlayHasOccurred;
       this.initialPlayHasOccurred = true;
 
       if (this.willPlayFromBeginning) {
         this.mb.publish(OO.EVENTS.WILL_PLAY_FROM_BEGINNING);
       }
 
-      this.willPlayFromBeginning = false; // For mobile, start the main video on this click and then pause. If not,
-      // the video may not auto resume play when returning from prerolls.
-      // PLAYER-2853: Some video plugins, like Bitmovin, have trouble with quick play, pause, play transitions.
-      // Issues seems more likely to happen when the video element has had a source loaded when priming.
-      // We'll only prime on the first playback since that is where the user click is most likely to be
-      // and we are still likely to need the user click. This is a temporary band-aid for this issue
-      // In the future, we should prime only if the video element has not been primed yet.
-      // We should also clear out the video source when priming whenever possible
-
-      if (!wasAutoplayed && firstPlay && (OO.isIos || OO.isAndroid)) {
-        this.mb.publish(OO.EVENTS.VC_PRIME_VIDEOS);
-      }
+      this.willPlayFromBeginning = false;
     },
 
     /**
@@ -42661,13 +43811,19 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      * @param {object} params The page-level params passed to either SET_EMBED_CODE or SET_ASSET events
      */
     prepareForContentChange: function prepareForContentChange(params) {
-      this.playerParams = _typeof(params) === 'object' ? params : {};
+      this.playerParams = (0, _typeof2.default)(params) === 'object' ? params : {};
       this.clearBitrateTimers();
       this.resetStreamData();
       this.applyPlayerParams();
       this.setAutoPlayParam();
       this.willPlayFromBeginning = true;
       this.hasContentSet = true;
+
+      if (this.initialPlayHasOccurred) {
+        this.mb.publish(OO.EVENTS.MARKER_DATA_AVAILABLE, {
+          list: []
+        });
+      }
     },
 
     /**
@@ -42857,7 +44013,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           this.mb.publish(OO.EVENTS.REPLAY);
         }
 
-        this.endScreenShown = false;
+        this.endScreenShown = false; // We resume publishing bitrate info
+
+        this.startBitrateStableTimer();
       }
     },
 
@@ -42928,6 +44086,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       if (videoId === OO.VIDEO.MAIN) {
         if (this.autoplayed && !this.contentStarted && !this.isAudioOnlyAsset) {
           this.fetchThumbnails();
+
+          if (this.shouldDisplayMarkers()) {
+            this.loadMarkers();
+          }
         }
 
         this.contentStarted = true;
@@ -43111,10 +44273,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   });
 })(OO, OO._, OO.$);
 
-},{}],65:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/typeof":18}],78:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
+
+var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 /*
  * Video Controller
@@ -43167,7 +44335,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return encodings;
   }, this);
   /**
-   * @class Video
+   * @class OO.Video
    * @classdesc Provides the ability to register, verify, and unregister video plugins within the Ooyala player.
    * @public
    */
@@ -43289,7 +44457,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           return false;
         }
 
-        if (_typeof(videoPlugin[propertyName]) !== propertyType) {
+        if ((0, _typeof2.default)(videoPlugin[propertyName]) !== propertyType) {
           // eslint-disable-line valid-typeof
           raiseValidationError("The video plugin '" + managerName + "' property '" + propertyName + "' should be type '" + propertyType + "'");
           return false;
@@ -43352,7 +44520,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   };
   OO.exposeStaticApi('Video', OO.Video);
   /**
-   * @class VideoControllerInterface
+   * @class OO.VideoControllerInterface
    * @classdesc The interface to the controller provided to a plugin.
    * @public
    * @param {Object} vtc The video tech controller instance
@@ -44062,7 +45230,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       mb.subscribe(OO.EVENTS.VC_RELOAD, 'vtc', vcReload);
       mb.subscribe(OO.EVENTS.VC_SET_INITIAL_TIME, 'vtc', vcSetInitialTime);
       mb.subscribe(OO.EVENTS.VC_SET_VIDEO_STREAMS, 'vtc', vcSetVideoStreams);
-      mb.subscribe(OO.EVENTS.VC_PRIME_VIDEOS, 'vtc', vcPrimeVideos);
       mb.subscribe(OO.EVENTS.PLAY, 'vtc', play);
       mb.subscribe(OO.EVENTS.VC_PLAY, 'vtc', vcPlay);
       mb.subscribe(OO.EVENTS.PLAY_VIDEO_ELEMENT, 'vtc', playVideoElement);
@@ -44270,7 +45437,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     var embedCodeChanged = _.bind(function (eventName, embedCode, params) {
       // Unload current video elements
       var url = '';
-      var encoding = OO.VIDEO.ENCODING.MP4;
+      var encoding = OO.VIDEO.ENCODING.MP4; // airplay workaround added because of this reset logic
+      // see ignoreSecondConnectedEvent property in Airplay plugin
 
       for (var index = 0; index < activeElements.length; index++) {
         _safeFunctionCall(activeElements[index], 'setVideoUrl', [url, encoding, false]);
@@ -44433,18 +45601,42 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      */
 
 
-    var initialPlay = _.bind(function (eventName, unixTimeMs, wasAutoplayed) {
-      isPlaybackReady = true;
-      this.initialPlayTime = unixTimeMs;
-      autoplayed = wasAutoplayed; // Load the video here on initial play if not autoplayed and we require muted autoplay.
-      // Since this video was not autoplayed, we are on the user click thread and loading
-      // the video is enough to ensure that a future play request will work without being muted
+    var initialPlay = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee(eventName, unixTimeMs, wasAutoplayed) {
+        return _regenerator.default.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                isPlaybackReady = true;
+                this.initialPlayTime = unixTimeMs;
+                autoplayed = wasAutoplayed; // Load the video here on initial play if not autoplayed and we require muted autoplay.
+                // Since this video was not autoplayed, we are on the user click thread and loading
+                // the video is enough to ensure that a future play request will work without being muted
 
-      if (!wasAutoplayed) {
-        loadVideoForUnmutedAutoplay(OO.VIDEO.MAIN);
-        loadVideoForUnmutedAutoplay(OO.VIDEO.ADS);
-      }
-    }, this);
+                if (wasAutoplayed) {
+                  _context.next = 6;
+                  break;
+                }
+
+                _context.next = 6;
+                return Promise.all([loadVideoForUnmutedAutoplay(OO.VIDEO.MAIN), loadVideoForUnmutedAutoplay(OO.VIDEO.ADS)]);
+
+              case 6:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      return function (_x, _x2, _x3) {
+        return _ref.apply(this, arguments);
+      };
+    }(), this);
     /**
      * Callback for when the autoplay check has finished.
      * @method VideoController#autoplayCheckComplete
@@ -44469,18 +45661,45 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      * @private
      * @method VideoController#loadVideoForUnmutedAutoplay
      * @param {string} videoId The id of the video to load
+     * @returns {promise} A promise that indicate if the video was created
      */
 
 
-    var loadVideoForUnmutedAutoplay = _.bind(function (videoId) {
-      if (this.activeInstances[videoId] && _isInControl(videoId) && !this.activeInstances[videoId].element.primedForUnmutedAutoPlayback) {
-        _setVideoStream(videoId, this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream, this.activeInstances[videoId].isLive);
+    var loadVideoForUnmutedAutoplay = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref2 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee2(videoId) {
+        return _regenerator.default.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (!(this.activeInstances[videoId] && _isInControl(videoId) && !this.activeInstances[videoId].element.primedForUnmutedAutoPlayback)) {
+                  _context2.next = 5;
+                  break;
+                }
 
-        _safeFunctionCall(this.activeInstances[videoId].element, 'load', [true]);
+                _safeFunctionCall(this.activeInstances[videoId].element, 'load', [true]);
 
-        this.activeInstances[videoId].element.primedForUnmutedAutoPlayback = true;
-      }
-    }, this);
+                _context2.next = 4;
+                return _setVideoStream(videoId, this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream, this.activeInstances[videoId].isLive);
+
+              case 4:
+                this.activeInstances[videoId].element.primedForUnmutedAutoPlayback = true;
+
+              case 5:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      return function (_x4) {
+        return _ref2.apply(this, arguments);
+      };
+    }(), this);
 
     var onLiveClicked = _.bind(function () {
       _callIfInControl(this.focusVideoId, 'onLiveClick');
@@ -44512,140 +45731,180 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      */
 
 
-    var vcCreateVideoElement = _.bind(function (eventName, videoId, streams, parentContainer, params) {
-      // Get the list of possible plugins
-      var validPlugins;
-      var currentController;
-
-      if (params && (params.technology || params.features)) {
-        // Filter the list of usable plugins based on technology and feature restrictions
-        var pluginsForTechnology = _filterPluginsByTechnology(params.technology);
-
-        var pluginsForFeatures = _filterPluginsByFeatures(params.features);
-
-        validPlugins = _.pick(registeredPlugins, _.intersection(pluginsForTechnology, pluginsForFeatures));
-      } else {
-        // For performance, avoid the logic of filtering if no filtering parameters are specified
-        validPlugins = registeredPlugins;
-      } // Select an encoding.  If none are selected, raise an error
-
-
-      var chosenEncoding = _selectEncoding(streams, _getFilteredSupportedEncodings(validPlugins), _getEncodingPriorities());
-
-      if (!chosenEncoding) {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {
-          ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING,
-          playhead: this.currentPlayhead
-        });
-        return;
-      }
-
-      if (_isSSAIEnabled(streams.isLive)) {
-        streams[chosenEncoding].url = _appendPlayerParams(streams[chosenEncoding].url);
-      }
-
-      log("For video '" + videoId + "', selected encoding '" + chosenEncoding + "', with stream url " + streams[chosenEncoding].url); // Check if the element already exists and if the element supports the chosen encoding
-
-      var wasInFocus = !!(this.focusVideoId && this.focusVideoId === videoId);
-      var checkVrOnSafari = OO.isSafari && this.isVr;
-
-      if (this.activeInstances[videoId] && this.activeInstances[videoId].element) {
-        if (!checkVrOnSafari && validPlugins[this.activeInstances[videoId].plugin] && _.contains(this.activeInstances[videoId].element.supportedEncodings, chosenEncoding) && !this.isVideoTypeChanged) {
-          // There is another element with the same videoId that supports the chosen stream and is in the
-          // filtered list of plugins
-          log('Element already existed and supports chosen encoding.  Setting new video url.');
-          this.activeInstances[videoId].disableNativeSeek = false; // set params, closedCaptions, crossorigin
-
-          _setVideoParams(videoId, params); // (PLAYER-3416) set video stream needs to be after set params due to potential dependencies on new params
+    var vcCreateVideoElement = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref3 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee3(eventName, videoId, streams, parentContainer, params) {
+        var validPlugins, currentController, pluginsForTechnology, pluginsForFeatures, chosenEncoding, wasInFocus, checkVrOnSafari, existInstance, possiblePlugins, electedPlugin;
+        return _regenerator.default.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                // Get the list of possible plugins
+                if (params && (params.technology || params.features)) {
+                  // Filter the list of usable plugins based on technology and feature restrictions
+                  pluginsForTechnology = _filterPluginsByTechnology(params.technology);
+                  pluginsForFeatures = _filterPluginsByFeatures(params.features);
+                  validPlugins = _.pick(registeredPlugins, _.intersection(pluginsForTechnology, pluginsForFeatures));
+                } else {
+                  // For performance, avoid the logic of filtering if no filtering parameters are specified
+                  validPlugins = registeredPlugins;
+                } // Select an encoding.  If none are selected, raise an error
 
 
-          _setVideoStream(videoId, chosenEncoding, streams[chosenEncoding], streams.isLive); // Secure content
+                chosenEncoding = _selectEncoding(streams, _getFilteredSupportedEncodings(validPlugins), _getEncodingPriorities());
+
+                if (chosenEncoding) {
+                  _context3.next = 5;
+                  break;
+                }
+
+                mb.publish(OO.EVENTS.VC_ERROR, videoId, {
+                  ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING,
+                  playhead: this.currentPlayhead
+                });
+                return _context3.abrupt("return");
+
+              case 5:
+                if (_isSSAIEnabled(streams.isLive)) {
+                  streams[chosenEncoding].url = _appendPlayerParams(streams[chosenEncoding].url);
+                }
+
+                log("For video '" + videoId + "', selected encoding '" + chosenEncoding + "', with stream url " + streams[chosenEncoding].url); // Check if the element already exists and if the element supports the chosen
+                // encoding
+
+                wasInFocus = !!(this.focusVideoId && this.focusVideoId === videoId);
+                checkVrOnSafari = OO.isSafari && this.isVr;
+                existInstance = !!this.activeInstances[videoId] && !!this.activeInstances[videoId].element;
+
+                if (!existInstance) {
+                  _context3.next = 26;
+                  break;
+                }
+
+                if (!(!checkVrOnSafari && validPlugins[this.activeInstances[videoId].plugin] && _.contains(this.activeInstances[videoId].element.supportedEncodings, chosenEncoding) && !this.isVideoTypeChanged)) {
+                  _context3.next = 23;
+                  break;
+                }
+
+                // There is another element with the same videoId that supports the chosen
+                // stream and is in the filtered list of plugins
+                log('Element already existed and supports chosen encoding.  Setting new video url.');
+                this.activeInstances[videoId].disableNativeSeek = false; // set params, closedCaptions, crossorigin
+
+                _setVideoParams(videoId, params); // (PLAYER-3416) set video stream needs to be after set params due to potential
+                // dependencies on new params
 
 
-          _setSecureContent(videoId, streams[chosenEncoding].contentMetadata); // Workaround for PBW-5179 to save the current playhead of the main video
+                _context3.next = 17;
+                return _setVideoStream(videoId, chosenEncoding, streams[chosenEncoding], streams.isLive);
+
+              case 17:
+                // Secure content
+                _setSecureContent(videoId, streams[chosenEncoding].contentMetadata); // Workaround for PBW-5179 to save the current playhead of the main video
 
 
-          if (OO.isIos) {
-            currentController = this.activeInstances[videoId].element.sharedObjectToInstance;
+                if (OO.isIos) {
+                  currentController = this.activeInstances[videoId].element.sharedObjectToInstance;
 
-            if (currentController === 'main' && this.activeInstances[currentController].element) {
-              this.currentPlayhead = _safeFunctionCall(this.activeInstances[currentController].element, 'getCurrentTime');
+                  if (currentController === 'main' && this.activeInstances[currentController].element) {
+                    this.currentPlayhead = _safeFunctionCall(this.activeInstances[currentController].element, 'getCurrentTime');
+                  }
+                }
+
+                _notifyElementCreated(videoId);
+
+                return _context3.abrupt("return");
+
+              case 23:
+                // if we are in a playlist and video type changed
+                if (this.isVideoTypeChanged) {
+                  // save settings for new video in a playlist set params, closedCaptions,
+                  // crossorigin
+                  _setVideoParams(videoId, params);
+                } // If we are on Safari and the video is Vr, or a plugin is invalid, or we have unsupported encoding,
+                // or video type was changed dispose video element
+
+
+                log('Destroying existing element because some of major factors were changed.');
+                vcDisposeVideoElement(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, videoId);
+
+              case 26:
+                // Select a plugin
+                possiblePlugins = _.intersection(encodingToPlugins[chosenEncoding] || [], _.keys(validPlugins));
+                electedPlugin = null; // If we only have an unknown stream possible, try to use the first registered
+                // plugin.
+
+                if ((possiblePlugins == null || possiblePlugins.length < 1) && chosenEncoding === OO.VIDEO.ENCODING.UNKNOWN && _.size(validPlugins) > 0) {
+                  electedPlugin = validPlugins[_.keys(validPlugins)[0]];
+                } else if (possiblePlugins && possiblePlugins.length > 0 && _.size(validPlugins) > 0) {
+                  electedPlugin = validPlugins[possiblePlugins[0]];
+                }
+
+                electedPlugin = _correctElectedPlugin(electedPlugin, {
+                  videoId: videoId,
+                  validPlugins: validPlugins,
+                  encoding: chosenEncoding
+                });
+
+                if (electedPlugin) {
+                  _context3.next = 33;
+                  break;
+                }
+
+                mb.publish(OO.EVENTS.VC_ERROR, videoId, {
+                  ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING,
+                  playhead: this.currentPlayhead
+                });
+                return _context3.abrupt("return");
+
+              case 33:
+                log("For video '" + videoId + "', elected plugin '" + electedPlugin.name + "'"); // If the max number of elements reached on elected plugin, create a virtual
+                // element
+
+                _context3.next = 36;
+                return _createInstance(electedPlugin, videoId, parentContainer, chosenEncoding, streams[chosenEncoding], streams.isLive, params);
+
+              case 36:
+                // TODO: Should we place the element in the parent ourselves?       Would
+                // require a direct handle to the element Notify results
+                if (this.activeInstances[videoId]) {
+                  _notifyElementCreated(videoId);
+
+                  if (wasInFocus) {
+                    mb.publish(OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT, videoId);
+                  } // update config streams required
+
+
+                  if (videoId === OO.VIDEO.MAIN || videoId === OO.VIDEO.RELOAD) {
+                    mb.publish(OO.EVENTS.HA_CONFIG_UPDATE, {
+                      focusVideoId: videoId,
+                      streams: streams,
+                      chosenEncoding: chosenEncoding,
+                      plugin: electedPlugin.name
+                    });
+                  }
+                } else {
+                  mb.publish(OO.EVENTS.VC_ERROR, videoId, {
+                    ooyalaErrorCode: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT,
+                    playhead: this.currentPlayhead
+                  });
+                }
+
+              case 37:
+              case "end":
+                return _context3.stop();
             }
           }
+        }, _callee3, this);
+      }));
 
-          _notifyElementCreated(videoId);
-
-          return;
-        } else {
-          // if we are in a playlist and video type changed
-          if (this.isVideoTypeChanged) {
-            // save settings for new video in a playlist
-            // set params, closedCaptions, crossorigin
-            _setVideoParams(videoId, params);
-          } // There is another element with the same videoId but which doesn't have support for the current stream
-          // Destroy the current element at videoId
-
-
-          log('Element already existed but does not support chosen encoding.  Destroying exising element.');
-          vcDisposeVideoElement(OO.EVENTS.VC_CREATE_VIDEO_ELEMENT, videoId);
-        }
-      } // Select a plugin
-
-
-      var possiblePlugins = _.intersection(encodingToPlugins[chosenEncoding] || [], _.keys(validPlugins));
-
-      var electedPlugin = null; // If we only have an unknown stream possible, try to use the first registered plugin.
-
-      if ((possiblePlugins == null || possiblePlugins.length < 1) && chosenEncoding === OO.VIDEO.ENCODING.UNKNOWN && _.size(validPlugins) > 0) {
-        electedPlugin = validPlugins[_.keys(validPlugins)[0]];
-      } else if (possiblePlugins && possiblePlugins.length > 0 && _.size(validPlugins) > 0) {
-        electedPlugin = validPlugins[possiblePlugins[0]];
-      }
-
-      electedPlugin = _correctElectedPlugin(electedPlugin, {
-        videoId: videoId,
-        validPlugins: validPlugins,
-        encoding: chosenEncoding
-      });
-
-      if (!electedPlugin) {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {
-          ooyalaErrorCode: OO.ERROR.VC.UNSUPPORTED_ENCODING,
-          playhead: this.currentPlayhead
-        });
-        return;
-      }
-
-      log("For video '" + videoId + "', elected plugin '" + electedPlugin.name + "'"); // If the max number of elements reached on elected plugin, create a virtual element
-
-      _createInstance(electedPlugin, videoId, parentContainer, chosenEncoding, streams[chosenEncoding], streams.isLive, params); // TODO: Should we place the element in the parent ourselves?
-      //       Would require a direct handle to the element
-      // Notify results
-
-
-      if (this.activeInstances[videoId]) {
-        _notifyElementCreated(videoId);
-
-        if (wasInFocus) {
-          mb.publish(OO.EVENTS.VC_FOCUS_VIDEO_ELEMENT, videoId);
-        } // update config streams required
-
-
-        if (videoId === OO.VIDEO.MAIN || videoId === OO.VIDEO.RELOAD) {
-          mb.publish(OO.EVENTS.HA_CONFIG_UPDATE, {
-            focusVideoId: videoId,
-            streams: streams,
-            chosenEncoding: chosenEncoding,
-            plugin: electedPlugin.name
-          });
-        }
-      } else {
-        mb.publish(OO.EVENTS.VC_ERROR, videoId, {
-          ooyalaErrorCode: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT,
-          playhead: this.currentPlayhead
-        });
-      }
-    }, this);
+      return function (_x5, _x6, _x7, _x8, _x9) {
+        return _ref3.apply(this, arguments);
+      };
+    }(), this);
     /**
      * Refines the selected plugin.
      * Fixed cases that lead to incorrect selection of plugins and playback errors.
@@ -44946,11 +46205,15 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      * @param {object} params Parameters that apply to the video element.  These include "crossorigin" and
      *                        closedCaptions settings.
      * @fires OO.EVENTS.VC_ERROR
+     * @returns {Promise} promise that indicates whether or not the instance was created.
      */
 
 
     var _createInstance = _.bind(function (electedPlugin, videoId, parentContainer, encoding, stream, isLive, params) {
-      if (!electedPlugin || !videoId) return; // PLAYER-2148 workaround for HAFailoverMechanism
+      if (!electedPlugin || !videoId) {
+        return Promise.resolve(); // it seems that the test don't look at an error perse, just look up for event errors
+      } // PLAYER-2148 workaround for HAFailoverMechanism
+
 
       if (electedPlugin.name === OO.VIDEO_PLAYERS.BIT_WRAPPER && isHAFailoverMechanismEnabled) {
         var _self = this;
@@ -45005,15 +46268,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           // desired plugin for the new element.  Do inter-plugin sharing rather than creating a new element.
           if (_checkIfInterpluginSharingSupported(instanceToShare, electedPlugin)) {
             if (this.activeInstances[instanceToShare]) {
-              _createSharedElementBetweenPlugins(electedPlugin, videoId, encoding, stream, isLive, parentContainer, params, instanceToShare);
-            } else {
-              mb.publish(OO.EVENTS.VC_ERROR, videoId, {
-                ooyalaErrorCode: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT,
-                playhead: this.currentPlayhead
-              });
+              return _createSharedElementBetweenPlugins(electedPlugin, videoId, encoding, stream, isLive, parentContainer, params, instanceToShare);
             }
 
-            return;
+            mb.publish(OO.EVENTS.VC_ERROR, videoId, {
+              ooyalaErrorCode: OO.ERROR.VC.UNABLE_TO_CREATE_VIDEO_ELEMENT,
+              playhead: this.currentPlayhead
+            });
+            return Promise.resolve();
           } else {// Video element sharing is required but not supported by the plugins in use.
             // Delete an element with the same technology to make space for a new element.
             // [update] After testing, we found that new elements require playback to be triggered by a user
@@ -45024,9 +46286,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           // An element must be shared, and the existing element was created by the same plugin as the
           // desired plugin for the new element.  Do intra-plugin sharing of the element rather than creating
           // a new element.
-          _createSharedElement(electedPlugin, videoId, encoding, stream, isLive, params);
-
-          return;
+          return _createSharedElement(electedPlugin, videoId, encoding, stream, isLive, params);
         } else {// This is hit if an element allows sharing but is of technology MIXED (which can never be shared)
           // [update] After testing, we found that new elements require playback to be triggered by a user
           // click event.  To prevent users from needing to click, do not dispose the old video element.
@@ -45036,10 +46296,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       if (electedPlugin.maxSupportedElements > -1 && _countElements(electedPlugin.name) >= electedPlugin.maxSupportedElements) {
         // If limited number of elements and if we exceeded the limit, create shared element
-        _createSharedElement(electedPlugin, videoId, encoding, stream, isLive, params);
+        return _createSharedElement(electedPlugin, videoId, encoding, stream, isLive, params);
       } else {
         // If unlimited or if we didn't exceed the limit
-        _createRealElement(electedPlugin, videoId, parentContainer, encoding, stream, isLive, params);
+        return _createRealElement(electedPlugin, videoId, parentContainer, encoding, stream, isLive, params);
       }
     }, this);
     /**
@@ -45122,61 +46382,90 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       return instanceToShare;
     }, this);
 
-    var _createSharedElementBetweenPlugins = _.bind(function (electedPlugin, videoId, encoding, stream, isLive, parentContainer, params, instanceToShare) {
-      if (!electedPlugin || !videoId) return;
-      log("For video '" + videoId + "', sharing element with video '" + instanceToShare + "'");
-      this.activeInstances[instanceToShare].element.sharedObjectToInstance = videoId; // Create the element object
+    var _createSharedElementBetweenPlugins = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref4 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee4(electedPlugin, videoId, encoding, stream, isLive, parentContainer, params, instanceToShare) {
+        var element, vtcInterface, domId, calculatedElementId;
+        return _regenerator.default.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                if (!(!electedPlugin || !videoId)) {
+                  _context4.next = 2;
+                  break;
+                }
 
-      var element = new VideoElement({
-        plugin: electedPlugin,
-        parentContainer: parentContainer,
-        sharedObjectToInstance: instanceToShare,
-        isControllingObject: false
-      });
-      activeElements.push(element); // Create the video instance object if it doesn't already exist
+                return _context4.abrupt("return");
 
-      var vtcInterface = new VideoControllerInterface(this, videoId, electedPlugin);
+              case 2:
+                log("For video '" + videoId + "', sharing element with video '" + instanceToShare + "'");
+                this.activeInstances[instanceToShare].element.sharedObjectToInstance = videoId; // Create the element object
 
-      if (!this.activeInstances[videoId]) {
-        this.activeInstances[videoId] = new VideoInstance({
-          plugin: electedPlugin,
-          parentContainer: parentContainer,
-          element: element,
-          encoding: encoding,
-          stream: stream,
-          isLive: isLive,
-          vtcInterface: vtcInterface,
-          isControllingElement: true,
-          params: params
-        });
-      } else {
-        this.activeInstances[videoId].element = element;
-      }
+                element = new VideoElement({
+                  plugin: electedPlugin,
+                  parentContainer: parentContainer,
+                  sharedObjectToInstance: instanceToShare,
+                  isControllingObject: false
+                });
+                activeElements.push(element); // Create the video instance object if it doesn't already exist
 
-      if (params) {
-        _setClosedCaptions(videoId, params.closedCaptions);
+                vtcInterface = new VideoControllerInterface(this, videoId, electedPlugin);
 
-        _setCrossorigin(videoId, params.crossorigin);
+                if (!this.activeInstances[videoId]) {
+                  this.activeInstances[videoId] = new VideoInstance({
+                    plugin: electedPlugin,
+                    parentContainer: parentContainer,
+                    element: element,
+                    encoding: encoding,
+                    stream: stream,
+                    isLive: isLive,
+                    vtcInterface: vtcInterface,
+                    isControllingElement: true,
+                    params: params
+                  });
+                } else {
+                  this.activeInstances[videoId].element = element;
+                }
 
-        vtcInterface.authenticationData = params.authenticationData;
-      } // Create the shared element
+                if (params) {
+                  _setClosedCaptions(videoId, params.closedCaptions);
 
+                  _setCrossorigin(videoId, params.crossorigin);
 
-      var domId = this.activeInstances[instanceToShare].element.domId;
-
-      var calculatedElementId = _getElementIdOfVideo(domId);
-
-      element.wrapper = electedPlugin.createFromExisting(calculatedElementId, vtcInterface, this.elementId); // Set the stream
-
-      _setVideoStream(videoId, encoding, stream, isLive); // Secure content
+                  vtcInterface.authenticationData = params.authenticationData;
+                } // Create the shared element
 
 
-      _setSecureContent(videoId, stream.contentMetadata);
+                domId = this.activeInstances[instanceToShare].element.domId;
+                calculatedElementId = _getElementIdOfVideo(domId);
+                element.wrapper = electedPlugin.createFromExisting(calculatedElementId, vtcInterface, this.elementId); // Set the stream
 
-      if (canAutoplay.unmuted) {
-        _safeFunctionCall(this.activeInstances[videoId].element, 'notifyUnmutedContentAutoPlaybackSucceeded');
-      }
-    }, this);
+                _context4.next = 14;
+                return _setVideoStream(videoId, encoding, stream, isLive);
+
+              case 14:
+                // Secure content
+                _setSecureContent(videoId, stream.contentMetadata);
+
+                if (canAutoplay.unmuted) {
+                  _safeFunctionCall(this.activeInstances[videoId].element, 'notifyUnmutedContentAutoPlaybackSucceeded');
+                }
+
+              case 16:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      return function (_x10, _x11, _x12, _x13, _x14, _x15, _x16, _x17) {
+        return _ref4.apply(this, arguments);
+      };
+    }(), this);
 
     var _countElements = _.bind(function (pluginName) {
       var count = 0;
@@ -45190,123 +46479,208 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       return count;
     }, this);
 
-    var _createSharedElement = _.bind(function (electedPlugin, videoId, encoding, stream, isLive, params) {
-      if (!electedPlugin || !videoId) return; // Find an element to wrap
+    var _createSharedElement = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref5 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee5(electedPlugin, videoId, encoding, stream, isLive, params) {
+        var element, index, vtcInterface;
+        return _regenerator.default.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                if (!(!electedPlugin || !videoId)) {
+                  _context5.next = 2;
+                  break;
+                }
 
-      var element = null;
-      var index;
+                return _context5.abrupt("return");
 
-      for (index = 0; index < activeElements.length; index++) {
-        if (activeElements[index].plugin === electedPlugin.name) {
-          element = activeElements[index];
-          break;
-        }
-      }
+              case 2:
+                // Find an element to wrap
+                element = null;
+                index = 0;
 
-      if (!element) return;
-      log("For video '" + videoId + "', sharing existing element with index " + index); // Create the video instance object if it doesn't already exist
+              case 4:
+                if (!(index < activeElements.length)) {
+                  _context5.next = 11;
+                  break;
+                }
 
-      var vtcInterface = new VideoControllerInterface(this, videoId, electedPlugin);
+                if (!(activeElements[index].plugin === electedPlugin.name)) {
+                  _context5.next = 8;
+                  break;
+                }
 
-      if (!this.activeInstances[videoId]) {
-        this.activeInstances[videoId] = new VideoInstance({
-          plugin: electedPlugin,
-          parentContainer: element.parentContainer,
-          element: element,
-          encoding: encoding,
-          stream: stream,
-          isLive: isLive,
-          vtcInterface: vtcInterface,
-          params: params
-        });
-      } else {
-        this.activeInstances[videoId].element = element;
-      }
+                element = activeElements[index];
+                return _context5.abrupt("break", 11);
 
-      if (params) {
-        _setClosedCaptions(videoId, params.closedCaptions);
+              case 8:
+                index++;
+                _context5.next = 4;
+                break;
 
-        _setCrossorigin(videoId, params.crossorigin);
+              case 11:
+                if (element) {
+                  _context5.next = 13;
+                  break;
+                }
 
-        vtcInterface.authenticationData = params.authenticationData;
-      } // Set the stream if we're creating a shared video for main and playback is not ready.
-      // Otherwise the stream won't be set for the main video
+                return _context5.abrupt("return");
 
+              case 13:
+                log("For video '" + videoId + "', sharing existing element with index " + index); // Create the video instance object if it doesn't already exist
 
-      if (videoId === OO.VIDEO.MAIN && !isPlaybackReady) {
-        _prepareInstanceForAction(videoId);
+                vtcInterface = new VideoControllerInterface(this, videoId, electedPlugin);
 
-        _setVideoStream(videoId, encoding, stream, isLive);
-      } // Secure content
+                if (!this.activeInstances[videoId]) {
+                  this.activeInstances[videoId] = new VideoInstance({
+                    plugin: electedPlugin,
+                    parentContainer: element.parentContainer,
+                    element: element,
+                    encoding: encoding,
+                    stream: stream,
+                    isLive: isLive,
+                    vtcInterface: vtcInterface,
+                    params: params
+                  });
+                } else {
+                  this.activeInstances[videoId].element = element;
+                }
 
+                if (params) {
+                  _setClosedCaptions(videoId, params.closedCaptions);
 
-      _setSecureContent(videoId, stream.contentMetadata);
+                  _setCrossorigin(videoId, params.crossorigin);
 
-      if (canAutoplay.unmuted) {
-        _safeFunctionCall(this.activeInstances[videoId].element, 'notifyUnmutedContentAutoPlaybackSucceeded');
-      }
-    }, this);
-
-    var _createRealElement = _.bind(function (electedPlugin, videoId, parentContainer, encoding, stream, isLive, params) {
-      if (!electedPlugin || !videoId) return; // Create the element object
-
-      var element = new VideoElement({
-        plugin: electedPlugin,
-        parentContainer: parentContainer
-      });
-      activeElements.push(element); // Create the video instance object if it doesn't already exist
-
-      var vtcInterface = new VideoControllerInterface(this, videoId, electedPlugin);
-
-      if (!this.activeInstances[videoId]) {
-        this.activeInstances[videoId] = new VideoInstance({
-          plugin: electedPlugin,
-          parentContainer: element.parentContainer,
-          element: element,
-          encoding: encoding,
-          stream: stream,
-          isLive: isLive,
-          vtcInterface: vtcInterface,
-          isControllingElement: true,
-          params: params
-        });
-      } else {
-        this.activeInstances[videoId].element = element;
-      }
-
-      var pluginParams = {};
-
-      if (params) {
-        _setClosedCaptions(videoId, params.closedCaptions);
-
-        _setCrossorigin(videoId, params.crossorigin);
-
-        vtcInterface.authenticationData = params.authenticationData;
-        pluginParams = params.pluginParams || {};
-      }
-
-      var electedPluginParams = pluginParams[electedPlugin.name] || {}; // if inline playback is enabled then pass the parameter along to the plugin.
-
-      if (this.isVr) {
-        iosPlayMode = this.IOS_PLAY_MODE_OPTIONS.INLINE;
-      }
-
-      electedPluginParams.iosPlayMode = iosPlayMode; // Create the real element
-
-      element.wrapper = electedPlugin.create(element.parentContainer, element.domId, vtcInterface, initialCss, this.elementId, electedPluginParams); // Set the stream
-
-      _setVideoStream(videoId, encoding, stream, isLive); // Secure content
+                  vtcInterface.authenticationData = params.authenticationData;
+                } // Set the stream if we're creating a shared video for main and playback is not ready.
+                // Otherwise the stream won't be set for the main video
 
 
-      _setSecureContent(videoId, stream.contentMetadata); // set the playback speed for the video element
+                if (!(videoId === OO.VIDEO.MAIN && !isPlaybackReady)) {
+                  _context5.next = 21;
+                  break;
+                }
+
+                _prepareInstanceForAction(videoId);
+
+                _context5.next = 21;
+                return _setVideoStream(videoId, encoding, stream, isLive);
+
+              case 21:
+                // Secure content
+                _setSecureContent(videoId, stream.contentMetadata);
+
+                if (canAutoplay.unmuted) {
+                  _safeFunctionCall(this.activeInstances[videoId].element, 'notifyUnmutedContentAutoPlaybackSucceeded');
+                }
+
+              case 23:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      return function (_x18, _x19, _x20, _x21, _x22, _x23) {
+        return _ref5.apply(this, arguments);
+      };
+    }(), this);
+
+    var _createRealElement = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref6 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee6(electedPlugin, videoId, parentContainer, encoding, stream, isLive, params) {
+        var element, vtcInterface, pluginParams, electedPluginParams;
+        return _regenerator.default.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                if (!(!electedPlugin || !videoId)) {
+                  _context6.next = 2;
+                  break;
+                }
+
+                return _context6.abrupt("return");
+
+              case 2:
+                // Create the element object
+                element = new VideoElement({
+                  plugin: electedPlugin,
+                  parentContainer: parentContainer
+                });
+                activeElements.push(element); // Create the video instance object if it doesn't already exist
+
+                vtcInterface = new VideoControllerInterface(this, videoId, electedPlugin);
+
+                if (!this.activeInstances[videoId]) {
+                  this.activeInstances[videoId] = new VideoInstance({
+                    plugin: electedPlugin,
+                    parentContainer: element.parentContainer,
+                    element: element,
+                    encoding: encoding,
+                    stream: stream,
+                    isLive: isLive,
+                    vtcInterface: vtcInterface,
+                    isControllingElement: true,
+                    params: params
+                  });
+                } else {
+                  this.activeInstances[videoId].element = element;
+                }
+
+                pluginParams = {};
+
+                if (params) {
+                  _setClosedCaptions(videoId, params.closedCaptions);
+
+                  _setCrossorigin(videoId, params.crossorigin);
+
+                  vtcInterface.authenticationData = params.authenticationData;
+                  pluginParams = params.pluginParams || {};
+                }
+
+                electedPluginParams = pluginParams[electedPlugin.name] || {}; // if inline playback is enabled then pass the parameter along to the plugin.
+
+                if (this.isVr) {
+                  iosPlayMode = this.IOS_PLAY_MODE_OPTIONS.INLINE;
+                }
+
+                electedPluginParams.iosPlayMode = iosPlayMode; // Create the real element
+
+                element.wrapper = electedPlugin.create(element.parentContainer, element.domId, vtcInterface, initialCss, this.elementId, electedPluginParams); // Set the stream
+
+                _context6.next = 14;
+                return _setVideoStream(videoId, encoding, stream, isLive);
+
+              case 14:
+                // Secure content
+                _setSecureContent(videoId, stream.contentMetadata); // set the playback speed for the video element
 
 
-      _setPlaybackSpeed(videoId);
+                _setPlaybackSpeed(videoId);
 
-      if (canAutoplay.unmuted) {
-        _safeFunctionCall(this.activeInstances[videoId].element, 'notifyUnmutedContentAutoPlaybackSucceeded');
-      }
-    }, this);
+                if (canAutoplay.unmuted) {
+                  _safeFunctionCall(this.activeInstances[videoId].element, 'notifyUnmutedContentAutoPlaybackSucceeded');
+                }
+
+              case 17:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6, this);
+      }));
+
+      return function (_x24, _x25, _x26, _x27, _x28, _x29, _x30) {
+        return _ref6.apply(this, arguments);
+      };
+    }(), this);
     /**
      * Mutes a video so that it can auto-playback.
      * @private
@@ -45596,13 +46970,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         _safeFunctionCall(this.activeInstances[videoId].element, 'setInitialTime', [initialTime]);
       }
     }, this);
-
-    var vcPrimeVideos = _.bind(function () {
-      // Prime each video element to enable api-controlled video playback on devices
-      for (var videoId in this.activeInstances) {
-        primeVideo(videoId);
-      }
-    }, this);
     /**
      * Primes a video element with a user click so that we can programaticaly control playback.
      * Needs to be called on a user click thread.
@@ -45639,88 +47006,118 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       mb.publish(OO.EVENTS.VC_PLAY, videoId || this.focusVideoId);
     }, this);
 
-    var vcPlay = _.bind(function (eventName, videoId, url) {
-      if (!(this.activeInstances && this.activeInstances[videoId])) {
-        return;
-      }
+    var vcPlay = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref7 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee7(eventName, videoId, url) {
+        var autoplaying, requiresMutedAutoplay, requiresNoAutoplay, muting, isMuted, checkInstance;
+        return _regenerator.default.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                if (this.activeInstances && this.activeInstances[videoId]) {
+                  _context7.next = 2;
+                  break;
+                }
 
-      var autoplaying = !this.activeInstances[videoId].playing && autoplayed;
-      var requiresMutedAutoplay = autoplaying && canAutoplay.unmuted === false && !currentMuteState && (!this.activeInstances[videoId].element || !this.activeInstances[videoId].element.primedForUnmutedAutoPlayback);
-      var requiresNoAutoplay = autoplaying && canAutoplay.muted === false && (!this.activeInstances[videoId].element || !this.activeInstances[videoId].element.primedForUnmutedAutoPlayback);
-      var muting = false;
+                return _context7.abrupt("return");
 
-      var isMuted = _safeFunctionCall(this.activeInstances[videoId].element, 'isMuted', []); // PBW-7054 + PBW-7044 : Setting the mute state after changing the volume
-      // risks the volume getting reset to 1 in certain cases. Generally this
-      // should never happen but keeping change mute state before change volume
-      // will ensure it never does
+              case 2:
+                autoplaying = !this.activeInstances[videoId].playing && autoplayed;
+                requiresMutedAutoplay = autoplaying && canAutoplay.unmuted === false && !currentMuteState && (!this.activeInstances[videoId].element || !this.activeInstances[videoId].element.primedForUnmutedAutoPlayback);
+                requiresNoAutoplay = autoplaying && canAutoplay.muted === false && (!this.activeInstances[videoId].element || !this.activeInstances[videoId].element.primedForUnmutedAutoPlayback);
+                muting = false;
+                isMuted = _safeFunctionCall(this.activeInstances[videoId].element, 'isMuted', []); // PBW-7054 + PBW-7044 : Setting the mute state after changing the volume
+                // risks the volume getting reset to 1 in certain cases. Generally this
+                // should never happen but keeping change mute state before change volume
+                // will ensure it never does
 
-
-      if (!this.activeInstances[videoId].playing) {
-        // attempt to restore user mute state if needed
-        if (!requiresMutedAutoplay && !requiresNoAutoplay) {
-          muting = currentMuteState && !isMuted;
-          mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, currentMuteState, videoId);
-        } // Set current volume
-
-
-        if (typeof currentVolume === 'number') {
-          mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, videoId);
-        }
-      } else {
-        // TODO: Restore mute state of the video based on its current mute state rather than
-        // the current mute state of the player
-        // attempt to restore user mute state if needed
-        if (!requiresMutedAutoplay && !requiresNoAutoplay) {
-          muting = currentMuteState && !isMuted;
-          mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, currentMuteState, videoId);
-        } // if we're transitioning from a video element that needed to be muted (such as a midroll),
-        // we'll need to restore the proper mute state and current volume here
+                if (!this.activeInstances[videoId].playing) {
+                  // attempt to restore user mute state if needed
+                  if (!requiresMutedAutoplay && !requiresNoAutoplay) {
+                    muting = currentMuteState && !isMuted;
+                    mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, currentMuteState, videoId);
+                  } // Set current volume
 
 
-        if (typeof currentVolume === 'number') {
-          mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, videoId);
-        }
-      }
-
-      if (url) {
-        if (this.activeInstances[videoId].stream) {
-          this.activeInstances[videoId].stream.url = url;
-        } else {
-          this.activeInstances[videoId].stream = {
-            url: url
-          };
-        }
-      }
-
-      _prepareInstanceForAction(videoId); // This value may be null in the case where a module will be controlling the url manually
-      // This is true for freewheel
+                  if (typeof currentVolume === 'number') {
+                    mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, videoId);
+                  }
+                } else {
+                  // TODO: Restore mute state of the video based on its current mute state rather than
+                  // the current mute state of the player
+                  // attempt to restore user mute state if needed
+                  if (!requiresMutedAutoplay && !requiresNoAutoplay) {
+                    muting = currentMuteState && !isMuted;
+                    mb.publish(OO.EVENTS.CHANGE_MUTE_STATE, currentMuteState, videoId);
+                  } // if we're transitioning from a video element that needed to be muted (such as a midroll),
+                  // we'll need to restore the proper mute state and current volume here
 
 
-      var checkInstance = this.activeInstances[videoId].stream && this.activeInstances[videoId].stream.url && this.activeInstances[videoId].plugin !== OO.VIDEO_PLAYERS.BIT_WRAPPER;
+                  if (typeof currentVolume === 'number') {
+                    mb.publish(OO.EVENTS.CHANGE_VOLUME, currentVolume, videoId);
+                  }
+                }
 
-      if (checkInstance) {
-        _setVideoStream(videoId, this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream, this.activeInstances[videoId].isLive); // If we don't sent playing to true here, then if we lose element control before playing is raised
-        // we may not keep our current position.  This happens when switching to an ad after seeking if
-        // we were paused.
+                if (url) {
+                  if (this.activeInstances[videoId].stream) {
+                    this.activeInstances[videoId].stream.url = url;
+                  } else {
+                    this.activeInstances[videoId].stream = {
+                      url: url
+                    };
+                  }
+                }
+
+                _prepareInstanceForAction(videoId); // This value may be null in the case where a module will be controlling the url manually
+                // This is true for freewheel
 
 
-        this.activeInstances[videoId].playing = true;
-      }
+                checkInstance = this.activeInstances[videoId].stream && this.activeInstances[videoId].stream.url && this.activeInstances[videoId].plugin !== OO.VIDEO_PLAYERS.BIT_WRAPPER;
 
-      if (requiresNoAutoplay) {
-        OO.log('VTC: notifying of muted playback failure on initial play ' + 'because test showed we cannot autoplay');
-        this.notify(videoId, '', this.EVENTS.MUTED_PLAYBACK_FAILED);
-      } else if (requiresMutedAutoplay) {
-        OO.log('VTC: notifying of unmuted playback failure on initial play ' + 'because test showed we need to mute');
-        this.notify(videoId, '', this.EVENTS.UNMUTED_PLAYBACK_FAILED);
-      } else {
-        if (muting) {
-          playbackVideoAfterMute = videoId;
-        } else {
-          mb.publish(OO.EVENTS.PLAY_VIDEO_ELEMENT, videoId);
-        }
-      }
-    }, this);
+                if (!checkInstance) {
+                  _context7.next = 15;
+                  break;
+                }
+
+                _context7.next = 14;
+                return _setVideoStream(videoId, this.activeInstances[videoId].encoding, this.activeInstances[videoId].stream, this.activeInstances[videoId].isLive);
+
+              case 14:
+                // If we don't sent playing to true here, then if we lose element control before playing is raised
+                // we may not keep our current position.  This happens when switching to an ad after seeking if
+                // we were paused.
+                this.activeInstances[videoId].playing = true;
+
+              case 15:
+                if (requiresNoAutoplay) {
+                  OO.log('VTC: notifying of muted playback failure on initial play ' + 'because test showed we cannot autoplay');
+                  this.notify(videoId, '', this.EVENTS.MUTED_PLAYBACK_FAILED);
+                } else if (requiresMutedAutoplay) {
+                  OO.log('VTC: notifying of unmuted playback failure on initial play ' + 'because test showed we need to mute');
+                  this.notify(videoId, '', this.EVENTS.UNMUTED_PLAYBACK_FAILED);
+                } else {
+                  if (muting) {
+                    playbackVideoAfterMute = videoId;
+                  } else {
+                    mb.publish(OO.EVENTS.PLAY_VIDEO_ELEMENT, videoId);
+                  }
+                }
+
+              case 16:
+              case "end":
+                return _context7.stop();
+            }
+          }
+        }, _callee7, this);
+      }));
+
+      return function (_x31, _x32, _x33) {
+        return _ref7.apply(this, arguments);
+      };
+    }(), this);
 
     var playVideoElement = _.bind(function (event, videoId) {
       if (!(this.activeInstances && this.activeInstances[videoId])) {
@@ -45847,70 +47244,105 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }
     }, this);
 
-    var changeMuteState = _.bind(function (eventName, muted, videoId, fromUser) {
-      var oldMuteState = currentMuteState;
-      currentMuteState = muted; // If user unmutes, make sure subsequent transitions are unmuted
+    var changeMuteState = _.bind(
+    /*#__PURE__*/
+    function () {
+      var _ref8 = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee8(eventName, muted, videoId, fromUser) {
+        var oldMuteState, sharing, index;
+        return _regenerator.default.wrap(function _callee8$(_context8) {
+          while (1) {
+            switch (_context8.prev = _context8.next) {
+              case 0:
+                oldMuteState = currentMuteState;
+                currentMuteState = muted; // If user unmutes, make sure subsequent transitions are unmuted
 
-      if (muteFirstPlay && !muted && fromUser) {
-        muteFirstPlay = false;
-      }
+                if (muteFirstPlay && !muted && fromUser) {
+                  muteFirstPlay = false;
+                }
 
-      if (autoplayed && !muted && oldMuteState && fromUser) {
-        // if unmuting preroll during muted autoplay, load the content so that we can transition into content
-        // unmuted without an additional click
-        // do not load if we are sharing video elements as that will disrupt the ad
-        var sharing = this.activeInstances && this.activeInstances[OO.VIDEO.MAIN] && this.activeInstances[OO.VIDEO.MAIN].plugin && _checkIfElementSharingRequired(registeredPlugins[this.activeInstances[OO.VIDEO.MAIN].plugin]);
+                if (!(autoplayed && !muted && oldMuteState && fromUser)) {
+                  _context8.next = 12;
+                  break;
+                }
 
-        if (!this.initialPlayHasStarted) {
-          if (!sharing) {
-            loadVideoForUnmutedAutoplay(OO.VIDEO.MAIN);
+                // if unmuting preroll during muted autoplay, load the content so that we can transition into content
+                // unmuted without an additional click
+                // do not load if we are sharing video elements as that will disrupt the ad
+                sharing = this.activeInstances && this.activeInstances[OO.VIDEO.MAIN] && this.activeInstances[OO.VIDEO.MAIN].plugin && _checkIfElementSharingRequired(registeredPlugins[this.activeInstances[OO.VIDEO.MAIN].plugin]);
 
-            if (OO.isAndroid) {
-              // Workaround for PLAYER-2166 and PLAYER-2454. Android requires initial play() calls to be on the user click thread.
-              // We will prime the content on a user click here so that the content can start without a user click unmuted.
-              primeVideo(OO.VIDEO.MAIN);
+                if (this.initialPlayHasStarted) {
+                  _context8.next = 10;
+                  break;
+                }
+
+                if (sharing) {
+                  _context8.next = 10;
+                  break;
+                }
+
+                _context8.next = 9;
+                return loadVideoForUnmutedAutoplay(OO.VIDEO.MAIN);
+
+              case 9:
+                if (OO.isAndroid) {
+                  // Workaround for PLAYER-2166 and PLAYER-2454. Android requires initial play() calls to be on the user click thread.
+                  // We will prime the content on a user click here so that the content can start without a user click unmuted.
+                  primeVideo(OO.VIDEO.MAIN);
+                }
+
+              case 10:
+                // Unmuting on a user click is enough for Safari 11 to autoplay IMA ads unmuted based on investigation.
+                // This line will allow IMA ads to autoplay midrolls unmuted if user unmuted during content
+                if (this.activeInstances && this.activeInstances[OO.VIDEO.ADS] && this.activeInstances[OO.VIDEO.ADS].element) {
+                  this.activeInstances[OO.VIDEO.ADS].element.primedForUnmutedAutoPlayback = true;
+                }
+
+                _callIfInControl(OO.VIDEO.ADS, 'unmute', [fromUser]);
+
+              case 12:
+                if (!muted) {
+                  mutingForAutoplay = false;
+                }
+
+                if (videoId) {
+                  if (muted) {
+                    _callIfInControl(videoId, 'mute');
+                  } else {
+                    if (fromUser && this.activeInstances && this.activeInstances[videoId] && this.activeInstances[videoId].element) {
+                      this.activeInstances[videoId].element.primedForUnmutedAutoPlayback = true;
+                    }
+
+                    _callIfInControl(videoId, 'unmute', [fromUser]);
+                  }
+                } else {
+                  // Change the mute state on all active elements
+                  for (index = 0; index < activeElements.length; index++) {
+                    if (muted) {
+                      _safeFunctionCall(activeElements[index], 'mute');
+                    } else {
+                      if (fromUser) {
+                        activeElements[index].primedForUnmutedAutoPlayback = true;
+                      }
+
+                      _safeFunctionCall(activeElements[index], 'unmute', [fromUser]);
+                    }
+                  }
+                }
+
+              case 14:
+              case "end":
+                return _context8.stop();
             }
           }
-        } // Unmuting on a user click is enough for Safari 11 to autoplay IMA ads unmuted based on investigation.
-        // This line will allow IMA ads to autoplay midrolls unmuted if user unmuted during content
+        }, _callee8, this);
+      }));
 
-
-        if (this.activeInstances && this.activeInstances[OO.VIDEO.ADS] && this.activeInstances[OO.VIDEO.ADS].element) {
-          this.activeInstances[OO.VIDEO.ADS].element.primedForUnmutedAutoPlayback = true;
-        }
-
-        _callIfInControl(OO.VIDEO.ADS, 'unmute', [fromUser]);
-      }
-
-      if (!muted) {
-        mutingForAutoplay = false;
-      }
-
-      if (videoId) {
-        if (muted) {
-          _callIfInControl(videoId, 'mute');
-        } else {
-          if (fromUser && this.activeInstances && this.activeInstances[videoId] && this.activeInstances[videoId].element) {
-            this.activeInstances[videoId].element.primedForUnmutedAutoPlayback = true;
-          }
-
-          _callIfInControl(videoId, 'unmute', [fromUser]);
-        }
-      } else {
-        // Change the mute state on all active elements
-        for (var index = 0; index < activeElements.length; index++) {
-          if (muted) {
-            _safeFunctionCall(activeElements[index], 'mute');
-          } else {
-            if (fromUser) {
-              activeElements[index].primedForUnmutedAutoPlayback = true;
-            }
-
-            _safeFunctionCall(activeElements[index], 'unmute', [fromUser]);
-          }
-        }
-      }
-    }, this);
+      return function (_x34, _x35, _x36, _x37) {
+        return _ref8.apply(this, arguments);
+      };
+    }(), this);
 
     var setVideoVr = _.bind(function (eventName, params) {
       this.isVr = true;
@@ -47042,12 +48474,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
      * @param {string} encoding The encoding of video stream, possible values are found in OO.VIDEO.ENCODING
      * @param {object} stream The url and drm of the stream to set on the video element
      * @param {boolean} isLive True if it is a live asset, false otherwise
+     * @returns {promise} a promise that indicates if the video stream was set
      */
 
 
     var _setVideoStream = _.bind(function (videoId, encoding, stream, isLive) {
       if (!this.activeInstances[videoId]) {
-        return;
+        return Promise.reject(new Error('No videoId was given'));
       }
 
       this.activeInstances[videoId].playhead = 0;
@@ -47350,7 +48783,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   });
 })(OO, OO._, OO.$);
 
-},{}],66:[function(require,module,exports){
+},{"@babel/runtime/helpers/asyncToGenerator":9,"@babel/runtime/helpers/interopRequireDefault":13,"@babel/runtime/helpers/typeof":18,"@babel/runtime/regenerator":20}],79:[function(require,module,exports){
 "use strict";
 
 /*
@@ -47963,7 +49396,7 @@ OO.plugin(OO.MODULE_NAMES.LIBRATO, function (OO, _, $, Window) {
   return Librato;
 });
 
-},{}],67:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 "use strict";
 
 (function (OO, _, $) {
@@ -48037,7 +49470,7 @@ OO.plugin(OO.MODULE_NAMES.LIBRATO, function (OO, _, $, Window) {
   OO.exposeStaticApi('cache', serverCache);
 })(OO, OO._, OO.$);
 
-},{}]},{},[49]);
+},{}]},{},[62]);
 /* eslint-disable */
 (function(OO, $, _) {
   //Reporter.js pulled from http://player.ooyala.com/static/cacheable/e2cf372a6253740de642bd014b679bfc/reporter.js on 5/10/17
