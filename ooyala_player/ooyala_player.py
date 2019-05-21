@@ -307,7 +307,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
-        default='NnYWR4ZzE6gwJ7Ryvp5pyOs2QNSHdHys'
+        default='VtZWc4ODE61SNu7RdCJTlDhHLJ23vl5d'
     )
 
     transcript_file_id = String(
@@ -637,6 +637,17 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         block.xml_config = xml_config
 
         return block
+
+    # TODO move to xblock-utils
+    def local_resource_url(self, block, uri):
+        """
+        local_resource_url for xblocks, with lightchild support.
+        """
+        path = reverse('xblock_resource_url', kwargs={
+            'block_type': block.lightchild_block_type or block.scope_ids.block_type,
+            'uri': uri,
+        })
+        return '//{}{}'.format(settings.SITE_NAME, path)
 
     def _get_unique_id(self):
         # We can have mulitple lightchild in the same block
