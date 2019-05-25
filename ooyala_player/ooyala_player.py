@@ -184,13 +184,10 @@ class OoyalaPlayerMixin(I18NService):
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
-            self.local_resource_url(self, 'public/js/vendor/ooyala/bit_wrapper.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
-            self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
         CSS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.css'),
-            self.local_resource_url(self, 'public/css/ooyala_player.css'),
         ]
 
         fragment = Fragment()
