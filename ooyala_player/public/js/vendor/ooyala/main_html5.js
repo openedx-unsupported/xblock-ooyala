@@ -1234,14 +1234,6 @@ if (!OOV4._) {
     VC_RELOAD: 'videoReload',
 
     /**
-     * Commands the video controller to prepare all video elements for playback.  This event should be
-     * called on a click event and used to enable api-control on html5-based video elements.
-     * @event OOV4.EVENTS#VC_PRIME_VIDEOS
-     * @public
-     */
-    VC_PRIME_VIDEOS: 'videoPrimeVideos',
-
-    /**
      * Notifies the player of tags (such as ID3) encountered during video playback.
      * The handler is called with the following arguments:
      * <ul>
@@ -2462,6 +2454,10 @@ if (!OOV4._) {
     return !!OOV4.platform.match(/Win/);
   }();
 
+  OOV4.isWindows7 = function () {
+    return OOV4.isWindows && window.navigator.userAgent.match(/Windows NT [\d.]*/)[0].trim() === 'Windows NT 6.1';
+  }();
+
   OOV4.isIos = function () {
     return !!OOV4.platform.match(/iPhone|iPad|iPod/);
   }();
@@ -2535,7 +2531,9 @@ if (!OOV4._) {
   }();
 
   OOV4.isSafari = function () {
-    return !!window.navigator.userAgent.match(/AppleWebKit/) && !window.navigator.userAgent.match(/Chrome/) && !window.navigator.userAgent.match(/like iPhone/);
+    return !!window.navigator.userAgent.match(/AppleWebKit/) && !window.navigator.userAgent.match(/Chrome/) && !window.navigator.userAgent.match(/CriOS/) && // check Chrome/Chromium on iPhone
+    // more info is here https://chromium.googlesource.com/chromium/src/+/master/docs/ios/user_agent.md
+    !window.navigator.userAgent.match(/like iPhone/);
   }();
 
   OOV4.chromeMajorVersion = function () {
@@ -3309,11 +3307,11 @@ var HazmatBuilder = function(_,root) {
         return this._safeValue(name, value, fallback, {name: 'Object', checker: _.isObject, evalFallback:false});
       }
     },
-
+    
     safeArray : function(name, value, fallback) {
       return this._safeValue(name, value, fallback, {name: 'Array', checker: _.isArray, evalFallback:false});
     },
-
+    
     safeArrayOfElements : function(name, value, elementValidator, fallback) {
       var safeArray = this._safeValue(name, value, fallback, {name: 'Array', checker: _.isArray, evalFallback:false});
       return _.map(safeArray, elementValidator);
@@ -6925,10 +6923,15 @@ require('../../../html5-common/js/utils/environment.js');
         resetStreamData();
 
         if (_currentUrl === '') {
-          // Workaround of an issue where iOS attempts to set the src to <RELATIVE_PATH>/null
+          // Workaround of an issue where iOS and MacOS attempt to set the src to <RELATIVE_PATH>/null
           // when setting source to null
           if (OOV4.isIos) {
             delete _video.src;
+          } else if (OOV4.isMacOs && OOV4.isSafari) {
+            _video.removeAttribute('src'); // would not trigger Video#loadstart or Airplay#playbackTargetChanged events
+
+
+            _video.load();
           } else {
             _video.src = null;
           }
@@ -8095,17 +8098,14 @@ require('../../../html5-common/js/utils/environment.js');
     var raiseEndedEvent = _.bind(function (event) {
       stopUnderflowWatcher();
 
-      if (!_currentUrl || // iOS Safari will trigger an ended event when the source is cleared with an empty string
-      !_video.ended && OOV4.isSafari) {
-        // iOS raises ended events sometimes when a new stream is played in the same video element
-        // Prevent this faulty event from making it to the player message bus
-        return;
-      }
-
-      if (videoEnded) {
-        return;
-      } // no double firing ended event.
-
+      if (videoEnded || // no double firing ended event
+      !_currentUrl || // iOS Safari will trigger an ended event when the source is cleared with an empty string
+      OOV4.isEdge && !event || // Edge fires empty ended event in the beginning on some mp4
+      !_video.ended && OOV4.isSafari // iOS raises ended events sometimes when a new stream is played in the same video element
+      // Prevent this faulty event from making it to the player message bus
+      ) {
+          return;
+        }
 
       videoEnded = true;
       initialTime.value = 0;

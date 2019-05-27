@@ -4,22 +4,18 @@
 # Imports ###########################################################
 
 import logging
-import json
-from urllib2 import urlopen, URLError
 from uuid import uuid4
 
 from lxml import etree
 from StringIO import StringIO
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.http import Http404
+from django.core.urlresolvers import reverse, NoReverseMatch
 
-from webob import Response
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
-from xblock.exceptions import JsonHandlerError, NoSuchServiceError
+from xblock.exceptions import JsonHandlerError
 
 from mentoring.light_children import (
     LightChild,
@@ -31,7 +27,7 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .utils import render_template, _, resource_url, I18NService
+from .utils import render_template, _, I18NService
 
 # Globals ###########################################################
 
@@ -152,12 +148,12 @@ class OoyalaPlayerMixin(I18NService):
         """
         # Skin file path according to block type
         if hasattr(self, 'lightchild_block_type'):
-            json_config_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
-            bit_movin_player_url = resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type,
+            json_config_url = self.resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
+            bit_movin_player_url = self.resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type,
                                                 BIT_MOVIN_PLAYER_PATH)
         else:
-            json_config_url = resource_url(self.scope_ids.block_type, SKIN_FILE_PATH)
-            bit_movin_player_url = resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
+            json_config_url = self.resource_url(self.scope_ids.block_type, SKIN_FILE_PATH)
+            bit_movin_player_url = self.resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
 
         dom_id = 'ooyala-' + self._get_unique_id()
 
@@ -188,13 +184,10 @@ class OoyalaPlayerMixin(I18NService):
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
-            self.local_resource_url(self, 'public/js/vendor/ooyala/bit_wrapper.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
-            self.local_resource_url(self, 'public/js/ooyala_player.js'),
         ]
         CSS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.css'),
-            self.local_resource_url(self, 'public/css/ooyala_player.css'),
         ]
 
         fragment = Fragment()
@@ -279,6 +272,19 @@ class OoyalaPlayerMixin(I18NService):
         self.runtime.publish(self, "completion", {"completion": value})
         return {"result": "success"}
 
+    def resource_url(self, block_type, uri):
+        try:
+            return reverse('xblock_resource_url', kwargs={
+                'block_type': block_type,
+                'uri': uri,
+            })
+        except NoReverseMatch:
+            return self.local_resource_url(self, uri)
+
+    def local_resource_url(self, block, uri):
+        # TODO move to xblock-utils
+        return self.runtime.local_resource_url(block, uri)
+
 
 @XBlock.needs("i18n")
 @XBlock.wants("settings")
@@ -298,7 +304,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
-        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
+        default='VtZWc4ODE61SNu7RdCJTlDhHLJ23vl5d'
     )
 
     transcript_file_id = String(
@@ -394,10 +400,6 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
     xml_config = String(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
                         scope=Scope.content)
-
-    def local_resource_url(self, block, uri):
-        # TODO move to xblock-utils
-        return self.runtime.local_resource_url(block, uri)
 
     def _get_unique_id(self):
         try:
