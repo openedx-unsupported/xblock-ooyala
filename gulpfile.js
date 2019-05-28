@@ -20,8 +20,7 @@ const compressJS = series(cleanJs, function minifyJS(cb) {
     'ooyala_player/public/js/vendor/ooyala/main_html5.js',
     'ooyala_player/public/js/vendor/popcorn.js',
     'ooyala_player/public/skin/html5-skin.js',
-    'ooyala_player/public/js/vendor/ooyala/bit_wrapper.js',
-    'ooyala_player/public/js/ooyala_player.js'  
+    'ooyala_player/public/js/vendor/ooyala/bit_wrapper.js'
   ])
   .pipe(concat('player_all.js'))
   .pipe(minify({

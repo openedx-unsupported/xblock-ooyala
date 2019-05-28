@@ -184,6 +184,7 @@ class OoyalaPlayerMixin(I18NService):
 
         JS_URLS = [
             self.local_resource_url(self, 'public/build/player_all.min.js'),
+            self.local_resource_url(self, 'public/js/ooyala_player.js'),
             '//p3.3playmedia.com/p3sdk.current.js',
         ]
         CSS_URLS = [
