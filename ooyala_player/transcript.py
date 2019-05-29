@@ -15,7 +15,8 @@ TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/file
                    "/translations/{translation_id}/transcript.html"
 LANGUAGE_API_ENDPOINT = "http://api.3playmedia.com/caption_imports/available_languages?apikey={api_key_3play}"
 LANGUAGE_LIST_CACHE_EXPIRY = (60 * 60) * 24  # 24 Hours
-IMPORTED_TRANSCRIPTS_CACHE_EXPIRY = (60 * 60) * 1  # 1 Hour
+TRANSCRIPT_DETAIL_CACHE_EXPIRY = (60 * 60) * 24  # 24 Hours
+TRANSCRIPT_LIST_CACHE_EXPIRY = (60 * 60) * 1  # 1 Hour
 
 RTL_LANGUAGES = ['Arabic']
 
@@ -71,20 +72,28 @@ class Transcript(object):
             api_key=self.api_key,
             video_id=content_id
         )
+        cache_key = 'ooyala_transcript_{}_details'.format(content_id)
+        transcript = cache.get(cache_key)
 
-        try:
-            response = urlopen(api_endpoint)
-            data = response.read()
-            transcript_details = json.loads(data)
-        except Exception as e:
-            self.error = str(e.message)
-        else:
-            files = transcript_details.get('files', [])
-            if files:
-                transcript = files[0]
-                self.transcript_id = transcript.get('id')
-                self.project_id = transcript.get('project_id')
-                self.language_id = transcript.get('language_id')
+        if transcript is None:
+            try:
+                response = urlopen(api_endpoint)
+                data = response.read()
+                transcript_details = json.loads(data)
+            except Exception as e:
+                self.error = str(e.message)
+                transcript = {}
+            else:
+                files = transcript_details.get('files', [])
+                if files:
+                    transcript = files[0]
+                    cache.set(cache_key, transcript, TRANSCRIPT_DETAIL_CACHE_EXPIRY)
+                else:
+                    transcript = {}
+
+        self.transcript_id = transcript.get('id')
+        self.project_id = transcript.get('project_id')
+        self.language_id = transcript.get('language_id')
 
     def _get_translations(self, selected_lang):
         """
@@ -94,31 +103,37 @@ class Transcript(object):
             file_id=self.transcript_id,
             api_key_3play=self.api_key
         )
+        cache_key = 'ooyala_{}_translated_transcripts'.format(self.transcript_id)
+        translations_list = cache.get(cache_key)
 
-        try:
-            response = urlopen(api_endpoint)
-            data = response.read()
-            translations_list = json.loads(data)
-        except Exception as e:
-            self.error = str(e.message)
-        else:
-            for translation in translations_list:
-                if translation.get('state') == 'complete':
-                    lang_name = translation.get('target_language_name')
-                    lang_code = translation.get('target_language_iso_639_1_code')
-                    localized_name = self.get_localized_name(lang_name, lang_code)
+        if translations_list is None:
+            try:
+                response = urlopen(api_endpoint)
+                data = response.read()
+                translations_list = json.loads(data)
+            except Exception as e:
+                self.error = str(e.message)
+                translations_list = []
+            else:
+                cache.set(cache_key, translations_list, TRANSCRIPT_LIST_CACHE_EXPIRY)
 
-                    self.translations.append({
-                        'language': lang_name,
-                        'lang_code': lang_code,
-                        'localized_name': localized_name,
-                        'selected': True if selected_lang in [lang_code, lang_name] else False,
-                        'url': TRANSLATION_DOWNLOAD_URL.format(
-                            project_id=self.project_id, transcript_file_id=self.transcript_id,
-                            translation_id=translation.get('id')
-                        ),
-                        'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
-                    })
+        for translation in translations_list:
+            if translation.get('state') == 'complete':
+                lang_name = translation.get('target_language_name')
+                lang_code = translation.get('target_language_iso_639_1_code')
+                localized_name = self.get_localized_name(lang_name, lang_code)
+
+                self.translations.append({
+                    'language': lang_name,
+                    'lang_code': lang_code,
+                    'localized_name': localized_name,
+                    'selected': True if selected_lang in [lang_code, lang_name] else False,
+                    'url': TRANSLATION_DOWNLOAD_URL.format(
+                        project_id=self.project_id, transcript_file_id=self.transcript_id,
+                        translation_id=translation.get('id')
+                    ),
+                    'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
+                })
 
     def get_localized_name(self, lang_name, lang_code):
         try:
@@ -135,8 +150,8 @@ class Transcript(object):
         language_api_endpoint = LANGUAGE_API_ENDPOINT.format(
             api_key_3play=self.api_key
         )
-        lang_cache_key = 'ooyala_lang_details'
-        lang_details = cache.get('ooyala_lang_details')
+        cache_key = 'ooyala_lang_details'
+        lang_details = cache.get(cache_key)
 
         if lang_details is None:
             try:
@@ -150,7 +165,7 @@ class Transcript(object):
                     d.get('language_id'): {'name': d.get('full_name'), 'code': d.get('iso_639_1_code')}
                     for d in lang_list
                 }
-                cache.set(lang_cache_key, lang_details, LANGUAGE_LIST_CACHE_EXPIRY)
+                cache.set(cache_key, lang_details, LANGUAGE_LIST_CACHE_EXPIRY)
 
         if lang_id:
             return lang_details.get(lang_id, {})
@@ -172,7 +187,7 @@ class Transcript(object):
             except Exception as e:
                 imports_list = []
             else:
-                cache.set(cache_key, imports_list, IMPORTED_TRANSCRIPTS_CACHE_EXPIRY)
+                cache.set(cache_key, imports_list, TRANSCRIPT_LIST_CACHE_EXPIRY)
 
         return imports_list
 
