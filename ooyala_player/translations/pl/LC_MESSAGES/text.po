@@ -1,0 +1,249 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-05-29 17:41+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ooyala_player/ooyala_player.py:291 ooyala_player/ooyala_player.py:514
+msgid "Display Name"
+msgstr "Wyświetlana nazwa"
+
+#: ooyala_player/ooyala_player.py:292 ooyala_player/ooyala_player.py:515
+msgid "This name appears in the horizontal navigation at the top of the page."
+msgstr "Nazwa ta pojawi się w pasku horyzontalnym nawigacji u góry strony."
+
+#: ooyala_player/ooyala_player.py:294 ooyala_player/ooyala_player.py:517
+msgid "Ooyala Player"
+msgstr "Odtwarzacz Ooyala"
+
+#: ooyala_player/ooyala_player.py:298 ooyala_player/ooyala_player.py:521
+#: ooyala_player/templates/html/ooyala_player_edit.html:14
+msgid "Content Id"
+msgstr "ID zawartości"
+
+#: ooyala_player/ooyala_player.py:299 ooyala_player/ooyala_player.py:522
+msgid "Identifier for the Content Id."
+msgstr "Identyfikator dla ID zawartości"
+
+#: ooyala_player/ooyala_player.py:305 ooyala_player/ooyala_player.py:528
+msgid "3Play Transcript Id"
+msgstr "ID transkryptu 3Play"
+
+#: ooyala_player/ooyala_player.py:306 ooyala_player/ooyala_player.py:529
+msgid "Identifier for the 3Play Transcript File"
+msgstr "Identyfikator dla pliku transkryptu 3Play"
+
+#: ooyala_player/ooyala_player.py:312 ooyala_player/ooyala_player.py:535
+msgid "Closed Captions Language"
+msgstr "Język napisów closed caption"
+
+#: ooyala_player/ooyala_player.py:313 ooyala_player/ooyala_player.py:536
+msgid "User's preference for closed captions language"
+msgstr "Wybór użytkownika języka napisów closed caption"
+
+#: ooyala_player/ooyala_player.py:319 ooyala_player/ooyala_player.py:542
+msgid "Turn Off Closed Captions and Translated transcripts"
+msgstr "Wyłącz napisy closed caption i przetłumaczone transkrypty"
+
+#: ooyala_player/ooyala_player.py:320 ooyala_player/ooyala_player.py:543
+msgid "Hides the CC button and transcript languages selection for this video"
+msgstr "Ukrywa przycisk CC i wybór języków transkryptów dla tego filmu"
+
+#: ooyala_player/ooyala_player.py:326 ooyala_player/ooyala_player.py:549
+msgid "Enable Player Autoplay"
+msgstr "Włącz autoodtwarzanie"
+
+#: ooyala_player/ooyala_player.py:327 ooyala_player/ooyala_player.py:550
+msgid "Set to True if you the player to automatically play."
+msgstr "Ustaw na true, jeśli chcesz, aby odtwarzać odtwarzał automatycznie"
+
+#: ooyala_player/ooyala_player.py:333 ooyala_player/ooyala_player.py:556
+#: ooyala_player/templates/html/ooyala_player_edit.html:35
+msgid "Enable Player Token"
+msgstr "Włącz token odtwarzacza"
+
+#: ooyala_player/ooyala_player.py:334 ooyala_player/ooyala_player.py:557
+msgid ""
+"Set to True if a player token is required, e.g. if streaming videos to the "
+"mobile app."
+msgstr "Ustaw na true, jeśli wymagany jest token odtwarzacza, na przykład podczas jeśli film jest przesyłany strumieniowo do aplikacji mobilnej."
+
+#: ooyala_player/ooyala_player.py:340 ooyala_player/ooyala_player.py:563
+#: ooyala_player/templates/html/ooyala_player_edit.html:48
+msgid "Partner Code"
+msgstr "Kod partnera"
+
+#: ooyala_player/ooyala_player.py:341
+msgid "Required for V4 Player. Also needed to generate a player token."
+msgstr "Wymagany dla odtwarzacza V4 Player. Wymagany także, aby wygenerować token odtwarzacza."
+
+#: ooyala_player/ooyala_player.py:348 ooyala_player/ooyala_player.py:355
+#: ooyala_player/ooyala_player.py:564 ooyala_player/ooyala_player.py:571
+#: ooyala_player/ooyala_player.py:578
+#: ooyala_player/templates/html/ooyala_player_edit.html:44
+#: ooyala_player/templates/html/ooyala_player_edit.html:51
+#: ooyala_player/templates/html/ooyala_player_edit.html:58
+#: ooyala_player/templates/html/ooyala_player_edit.html:65
+msgid "Needed to generate a player token."
+msgstr "Wymagany, aby wygenerować token odtwarzacza."
+
+#: ooyala_player/ooyala_player.py:354 ooyala_player/ooyala_player.py:577
+msgid "Api SecRet Key"
+msgstr "Tajny klucz api"
+
+#: ooyala_player/ooyala_player.py:361 ooyala_player/ooyala_player.py:584
+msgid "3play Api Key"
+msgstr "Klucz 3play api"
+
+#: ooyala_player/ooyala_player.py:362 ooyala_player/ooyala_player.py:585
+msgid "3play Api Key for transcript."
+msgstr "Klucz 3play api do transkryptów"
+
+#: ooyala_player/ooyala_player.py:368 ooyala_player/ooyala_player.py:591
+#: ooyala_player/templates/html/ooyala_player_edit.html:76
+msgid "Player Width"
+msgstr "Szerokość odtwarzacza"
+
+#: ooyala_player/ooyala_player.py:369 ooyala_player/ooyala_player.py:592
+msgid "The width of the player in pixels."
+msgstr "Szerokość odtwarzacza wyrażona w pikselach."
+
+#: ooyala_player/ooyala_player.py:375 ooyala_player/ooyala_player.py:598
+#: ooyala_player/templates/html/ooyala_player_edit.html:83
+msgid "Player Height"
+msgstr "Wysokość odtwarzacza"
+
+#: ooyala_player/ooyala_player.py:376 ooyala_player/ooyala_player.py:599
+msgid "The height of the player in pixels."
+msgstr "Wysokość odtwarzacza wyrażona w pikselach."
+
+#: ooyala_player/ooyala_player.py:382 ooyala_player/ooyala_player.py:605
+#: ooyala_player/templates/html/ooyala_player_edit.html:90
+msgid "Expiration Time"
+msgstr "Czas wygaśnięcia"
+
+#: ooyala_player/ooyala_player.py:383 ooyala_player/ooyala_player.py:606
+#: ooyala_player/templates/html/ooyala_player_edit.html:93
+msgid "Expiration time in seconds. Needed to generate a player token."
+msgstr "Czas wygaśnięcia wyrażony w sekundach. Wymagany, aby wygenerować token odtwarzacza."
+
+#: ooyala_player/ooyala_player.py:389 ooyala_player/ooyala_player.py:612
+msgid "Fire Progress Event on Student View"
+msgstr "Fire Progress Event w widoku ucznia"
+
+#: ooyala_player/ooyala_player.py:390 ooyala_player/ooyala_player.py:613
+msgid ""
+"Set to True if you would like to get a progress event in the event stream "
+"when the user views this xBlock."
+msgstr "Ustaw na true, jeśli chcesz uzyskać parametr progress event w strumieniu wydarzeń, kiedy użytkownik ogląda ten xBlock."
+
+#: ooyala_player/ooyala_player.py:395 ooyala_player/ooyala_player.py:618
+#: ooyala_player/templates/html/ooyala_player_edit.html:97
+msgid "XML Configuration"
+msgstr "Konfiguracja XML"
+
+#: ooyala_player/ooyala_player.py:415
+msgid "Missing event_type in JSON data"
+msgstr "Brak event_type w danych JSON"
+
+#: ooyala_player/ooyala_player.py:570
+#: ooyala_player/templates/html/ooyala_player_edit.html:55
+msgid "Api Key"
+msgstr "Klucz Api"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:7
+msgid "Title"
+msgstr "Tytuł"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:10
+msgid "The title of the Ooyala Player that is displayed to the user"
+msgstr "Tytuł Ooyala Player wyświetlany użytkownikowi"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:17
+msgid "This is the Ooyala Content Identifier"
+msgstr "To jest identyfikator treści Ooyala"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:21
+msgid "Transcript File Id"
+msgstr "ID pliku z transkryptem"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:24
+msgid "This is the 3Play Transcript File Identifier"
+msgstr "To jest identyfikator dla pliku transkryptu 3Play"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:28
+msgid "Hide CC and Translations"
+msgstr "Ukryj CC i tłumaczenia"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:31
+msgid "Hide the CC button and transcript languages selection for this video"
+msgstr "Ukryj przycisk CC i wybór języków transkryptów dla tego filmu"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:40
+msgid "True"
+msgstr "True"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:41
+msgid "False"
+msgstr "False"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:62
+msgid "Api Secret Key"
+msgstr "Tajny klucz api"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:69
+msgid "3Play Api Key"
+msgstr "Klucz 3play api"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:72
+msgid "3Play Api Key for transcript."
+msgstr "Klucz 3play api do transkryptów"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:79
+msgid "Player width as a CSS length or percentage."
+msgstr "Szerokość odtwarzacza wyrażona jako długość lub procent w CSS."
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:86
+msgid "Player height as a CSS length or percentage."
+msgstr "Wysokość odtwarzacza wyrażona jako długość lub procent w CSS."
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:98
+msgid "// JS crashes when empty //"
+msgstr "// JS doznaje awarii gdy jest pusty //"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:107
+msgid "Save"
+msgstr "Zapisz"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:111
+msgid "Cancel"
+msgstr "Anuluj"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:6
+msgid "Hide Transcript"
+msgstr "Ukryj transkrypt"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:7
+msgid "Show Transcript"
+msgstr "Pokaż transkrypt"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:24
+msgid "Print Transcript"
+msgstr "Wydrukuj transkrypt"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:25
+msgid "Download Transcript"
+msgstr "Pobierz transkrypt"
