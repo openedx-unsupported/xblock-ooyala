@@ -238,7 +238,7 @@ msgstr "成績証明書を非表示にする"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:7
 msgid "Show Transcript"
-msgstr "成績証明書を表示する"
+msgstr "文字起こしを表示する"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:24
 msgid "Print Transcript"
