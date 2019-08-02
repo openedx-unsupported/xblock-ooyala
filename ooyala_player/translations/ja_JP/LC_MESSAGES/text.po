@@ -234,7 +234,7 @@ msgstr "キャンセル"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:6
 msgid "Hide Transcript"
-msgstr "成績証明書を非表示にする"
+msgstr "文字起こしを閉じる"
 
 #: ooyala_player/templates/html/ooyala_transcript.html:7
 msgid "Show Transcript"
