@@ -27,7 +27,11 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .utils import render_template, _, I18NService
+from .brightcove_player import BrightcovePlayerMixin
+from .utils import (
+    render_template,
+    _, I18NService
+)
 
 # Globals ###########################################################
 
@@ -39,7 +43,7 @@ COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPL
 # Classes ###########################################################
 
 
-class OoyalaPlayerMixin(I18NService):
+class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
     """
     Base functionality for the ooyala player.
     """
@@ -53,6 +57,7 @@ class OoyalaPlayerMixin(I18NService):
         'partner_code': 'PARTNER_CODE',
         'api_key': 'API_KEY',
         'api_secret_key': 'API_SECRET_KEY',
+        'brightcove_policy': 'BCOVE_POLICY',
     }
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
@@ -69,7 +74,11 @@ class OoyalaPlayerMixin(I18NService):
         Otherwise check if it has a default in the settings service.
         If neither are available, return None
         """
-        available_attr = getattr(self, attribute_name)
+        try:
+            available_attr = getattr(self, attribute_name)
+        except AttributeError:
+            available_attr = None
+
         if available_attr:
             return available_attr
 
@@ -146,6 +155,22 @@ class OoyalaPlayerMixin(I18NService):
         """
         Player view, displayed to the student
         """
+        context = {
+            'dom_id': 'bcove-' + self._get_unique_id(),
+            'content_id': self.content_id,
+            'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE
+        }
+
+        if self.is_brightcove_video:
+            return self.bcov_student_view(context=context)
+        else:
+            # try getting Brightcove id using content_id
+            bc_video_id = self.get_brightcove_video_id(self.get_attribute_or_default('brightcove_policy'))
+
+            if bc_video_id:
+                context.update({'content_id': bc_video_id})
+                return self.bcov_student_view(context=context)
+
         # Skin file path according to block type
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = self.resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
@@ -304,7 +329,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
-        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
+        default='6068609899001'
     )
 
     transcript_file_id = String(

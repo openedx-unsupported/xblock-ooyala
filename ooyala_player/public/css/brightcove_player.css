@@ -1,0 +1,9 @@
+/* CSS for Hologram3dXBlock */
+
+.brightcove_player_block .count {
+    font-weight: bold;
+}
+
+.brightcove_player_block p {
+    cursor: pointer;
+}
