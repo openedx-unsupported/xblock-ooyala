@@ -155,10 +155,15 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         """
         Player view, displayed to the student
         """
+        transcript = self.transcript.render(i18n_service=self.i18n_service)
+
         context = {
             'dom_id': 'bcove-' + self._get_unique_id(),
             'content_id': self.content_id,
-            'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE
+            'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
+            'transcript': transcript,
+            'autoplay': self.autoplay,
+            'cc_lang': self.cc_language_preference,
         }
 
         if self.is_brightcove_video:
@@ -185,8 +190,6 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         overlay_fragments = ""
         for overlay in self.overlays:
             overlay_fragments += overlay.render()
-
-        transcript = self.transcript.render(i18n_service=self.i18n_service)
 
         context = self.player_token()
         context.update({
