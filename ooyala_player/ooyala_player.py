@@ -110,7 +110,9 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
     def transcript(self):
         return Transcript(
             threeplay_api_key=self.get_attribute_or_default('api_key_3play'),
-            content_id=self.content_id,
+            # if a reference id exists then it should be
+            # used to fetch transcript
+            content_id=self.reference_id or self.content_id,
             user_lang=self.cc_language_preference,
             cc_disabled=self.disable_cc_and_translations
         )
@@ -333,6 +335,14 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
         default='6068609899001'
+    )
+
+
+    reference_id = String(
+        display_name=_("Reference Id"),
+        help=_("Reference ID for the Content Id."),
+        scope=Scope.content,
+        default=''
     )
 
     transcript_file_id = String(
