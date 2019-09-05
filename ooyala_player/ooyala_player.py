@@ -304,7 +304,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
-        default='VtZWc4ODE61SNu7RdCJTlDhHLJ23vl5d'
+        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
     transcript_file_id = String(
