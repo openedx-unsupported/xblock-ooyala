@@ -160,10 +160,16 @@ function BrightcovePlayerXblock(runtime, element) {
                     setTranscriptDirection();
                 });
             }
-            
+
             $('.p3sdk-container', element).toggleClass('hide');
             var currentSelected = $('.transcript-track.selected', element);
-            currentSelected.trigger('click');
+
+            if(currentSelected.length){
+                currentSelected.trigger('click');
+            }else{
+                // trigger transcript change event
+                $(element).trigger('Transcript:changed');
+            }
         }
     };
 
