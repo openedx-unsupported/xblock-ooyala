@@ -268,6 +268,8 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
                   "player_token_expires": 1501812713,
                   "partner_code: "53YWsyOszKOsfS1IvcQoKn8YhWYk",
                   "content_id": "5sMHA1YzE6KHI-dFSKgDz-pcMOx37_f9",
+                  "player_type": "bcove",
+                  "bcove_id": "6068615189001"
                 }
 
             See player_token() for more information on the player_token_* fields.
@@ -275,8 +277,11 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         data = self.player_token()
         data.update({
             'partner_code': self.get_attribute_or_default('partner_code'),
-            'content_id': self.content_id,
+            'content_id': self.reference_id or self.content_id,
+            'player_type': 'bcove' if self.is_brightcove_video else 'ooyala',
+            'bcove_id': self.content_id if self.is_brightcove_video else None
         })
+
         return data
 
     @XBlock.json_handler
