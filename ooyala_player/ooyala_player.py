@@ -569,6 +569,13 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
+    reference_id = LCString(
+        display_name=_("Reference Id"),
+        help=_("Reference ID for the Content Id."),
+        scope=LCScope.content,
+        default=''
+    )
+
     transcript_file_id = LCString(
         display_name=_("3Play Transcript Id"),
         help=_("Identifier for the 3Play Transcript File"),
@@ -662,6 +669,11 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
 
     xml_config = LCString(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
                         scope=LCScope.content)
+
+    @property
+    def brightcove_policy(self):
+        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
+        return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_POLICY')
 
     @classmethod
     def init_block_from_node(cls, block, node, attr):
