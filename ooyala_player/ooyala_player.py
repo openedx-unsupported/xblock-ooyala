@@ -27,7 +27,10 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .brightcove_player import BrightcovePlayerMixin
+from .brightcove_player import (
+    BrightcovePlayerMixin,
+    BRIGHTCOVE_ACCOUNT_ID
+)
 from .utils import (
     render_template,
     _, I18NService
@@ -279,7 +282,9 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             'partner_code': self.get_attribute_or_default('partner_code'),
             'content_id': self.reference_id or self.content_id,
             'player_type': 'bcove' if self.is_brightcove_video else 'ooyala',
-            'bcove_id': self.content_id if self.is_brightcove_video else None
+            'bcove_id': self.content_id if self.is_brightcove_video else None,
+            'bcove_account_id': BRIGHTCOVE_ACCOUNT_ID,
+            'bcove_policy': self.get_attribute_or_default('brightcove_policy'),
         })
 
         return data
