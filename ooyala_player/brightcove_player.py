@@ -54,6 +54,15 @@ class BrightcovePlayerMixin(object):
         else:
             return True
 
+    @property
+    def brightcove_playback_enabled(self):
+        try:
+            import waffle
+        except ImportError:
+            return False
+        else:
+            return waffle.switch_is_active("bcove-playback")
+
     def get_brightcove_video_id(self, bcove_policy):
         """
         Get a Brightcove video id against reference id
