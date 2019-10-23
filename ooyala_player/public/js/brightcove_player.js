@@ -8,7 +8,6 @@ function BrightcovePlayerXblock(runtime, element) {
             this.ccLang = null;
 
             this.subscribePlayerEvents();
-            this.showTranscript();
 
             if(this.data.autoplay === "True")
                 this.player.play();
@@ -25,6 +24,7 @@ function BrightcovePlayerXblock(runtime, element) {
         subscribePlayerEvents: function(){
             this.player.on('timeupdate', this.eventHandlers.timeupdate.bind(this));
             this.player.on('texttrackchange', this.eventHandlers.ccChanged.bind(this));
+            this.player.on('loadedmetadata', this.showTranscript.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
             $('.transcript-track', element).on('click', this.eventHandlers.getTranscript.bind(this));
