@@ -156,9 +156,13 @@ function BrightcovePlayerXblock(runtime, element) {
 
                 // if user selected cc dosn't exist, select the first available
                 if(trackFound === false){
-                    if(tracks.length){
-                        tracks[0].mode = "showing";
-                        this.ccLang = this.transcriptLang;
+                    for (var i = 0; i < (tracks.length); i++) {
+                        var trackLang = tracks[i].language.substr(0, 2);
+                        if (trackLang) {
+                            tracks[i].mode = "showing";
+                            this.ccLang = this.transcriptLang;
+                            break;
+                        }
                     }
                 }
             }
