@@ -139,15 +139,26 @@ function BrightcovePlayerXblock(runtime, element) {
 
                 // change CC accordingly
                 var tracks = this.player.textTracks();
+                var trackFound = false;
+
                 for (var i = 0; i < (tracks.length); i++) {
                     var trackLang = tracks[i].language.substr(0, 2);
                     if (trackLang) {
                         if (trackLang === this.transcriptLang) {
                             tracks[i].mode = "showing";
                             this.ccLang = this.transcriptLang;
+                            trackFound = true;
                         }else {
                             tracks[i].mode = "disabled";
                         }
+                    }
+                }
+
+                // if user selected cc dosn't exist, select the first available
+                if(trackFound === false){
+                    if(tracks.length){
+                        tracks[0].mode = "showing";
+                        this.ccLang = this.transcriptLang;
                     }
                 }
             }
@@ -163,12 +174,20 @@ function BrightcovePlayerXblock(runtime, element) {
 
             $('.p3sdk-container', element).toggleClass('hide');
             var currentSelected = $('.transcript-track.selected', element);
-
+            
+            // if user's saved lang exists select it
+            // otherwise select first lang from available languages
             if(currentSelected.length){
                 currentSelected.trigger('click');
             }else{
-                // trigger transcript change event
-                $(element).trigger('Transcript:changed');
+                var transcripts = $('.transcript-track', element);
+                if(transcripts.length) {
+                    currentSelected = $(transcripts[0]);
+                    currentSelected.trigger('click');
+                }else{
+                    // trigger transcript change event
+                    $(element).trigger('Transcript:changed');
+                }
             }
         }
     };
