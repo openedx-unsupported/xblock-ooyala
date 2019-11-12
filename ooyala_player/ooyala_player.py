@@ -337,7 +337,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Display Name"),
         help=_("This name appears in the horizontal navigation at the top of the page."),
         scope=Scope.settings,
-        default=_("Ooyala Player")
+        default=_("Brightcove Player")
     )
 
     content_id = String(
