@@ -49,7 +49,7 @@ class BrightcovePlayerMixin(object):
         """
         try:
             int(self.content_id)
-        except ValueError:
+        except (ValueError, TypeError):
             return False
         else:
             return True
