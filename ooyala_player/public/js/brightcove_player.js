@@ -16,7 +16,7 @@ function BrightcovePlayerXblock(runtime, element) {
             return {
                 videoId: $('.video-js', element).data('video-id'),
                 playerId: $('.video-js', element).attr('id'),
-                completePercentage: $('.video-js', element).data('complete-percentage'),
+                completePercentage: toFloat($('.video-js', element).data('complete-percentage')),
                 autoplay: $('.video-js', element).data('autoplay'),
                 ccLang: $('.video-js', element).data('cc-lang')
             }
@@ -202,6 +202,13 @@ function BrightcovePlayerXblock(runtime, element) {
         var dir = langDir == 'rtl' ? 'right' : 'left';
 
         $('.transcript-content > p', element).css('textAlign', dir);
+    }
+
+    function toFloat(str){
+        // converts localized decimals back to . notations
+        if($.type(str) === "string")
+            return parseFloat(str.replace(/,(\d+)$/,'.$1'));
+        return str;
     }
 
     function download(filename, text) {
