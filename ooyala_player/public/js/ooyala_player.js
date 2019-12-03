@@ -183,9 +183,7 @@ function OoyalaPlayerBlock(runtime, element) {
                     time: this.player.getPlayheadTime(),
                     player_state: this.player.getState()
                 });
-                console.log('fullscreenchanged')
                 var playing = this.player.isPlaying();
-                console.log('playing: ' + playing)
                 if (playing == true) {
                   $('#' + this.data.domId).find('.oo-icon-pause-slick').click()
                   setTimeout(() => {$('#' + this.data.domId).find('.oo-icon-play-slick').click()}, 0.3*1000)
