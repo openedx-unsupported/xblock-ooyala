@@ -11,7 +11,7 @@ from xblock.fragment import Fragment
 from .utils import render_template
 
 
-PLAYBACK_API_ENDPOINT = 'https://edge.api.brightcove.com/playback/v1/accounts/{account_id}/videos/ref:{reference_id}'
+PLAYBACK_API_ENDPOINT = 'https://edge.api.brightcove.com/playback/v1/accounts/{account_id}/videos/{video_id}'
 BRIGHTCOVE_ACCOUNT_ID = '6057949416001'
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class BrightcovePlayerMixin(object):
         bc_video_id = None
         api_endpoint = PLAYBACK_API_ENDPOINT.format(
             account_id=self.bc_account_id,
-            reference_id=self.content_id
+            video_id='ref:{reference_id}'.format(reference_id=self.content_id)
         )
 
         request = urllib2.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
@@ -88,3 +88,27 @@ class BrightcovePlayerMixin(object):
             bc_video_id = video_data.get('id')
 
         return bc_video_id
+
+
+def get_brightcove_video_detail(bcove_id, bcove_policy):
+    """
+    Fetches details of a Brightcove video
+    """
+    api_endpoint = PLAYBACK_API_ENDPOINT.format(
+        account_id=BRIGHTCOVE_ACCOUNT_ID,
+        video_id=bcove_id
+    )
+    video_data = {}
+
+    request = urllib2.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
+
+    try:
+        response = urllib2.urlopen(request).read()
+        video_data = json.loads(response)
+    except Exception as e:
+        logger.warning('Brightcove video details retrieval failed for video ID: `{}` with exception {}'
+                       .format(bcove_id, e))
+    else:
+        logger.info('Successfully retrieval of Brightcove video details for video ID: `{}`'.format(bcove_id))
+
+    return video_data

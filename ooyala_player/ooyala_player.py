@@ -46,6 +46,14 @@ COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPL
 # Classes ###########################################################
 
 
+class VideoType:
+    """
+    Enum to hold video types
+    """
+    OOYALA = 'ooyala'
+    BRIGHTCOVE = 'bcove'
+
+
 class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
     """
     Base functionality for the ooyala player.
@@ -117,7 +125,9 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             # used to fetch transcript
             content_id=self.reference_id or self.content_id,
             user_lang=self.cc_language_preference,
-            cc_disabled=self.disable_cc_and_translations
+            cc_disabled=self.disable_cc_and_translations,
+            bcove_policy=self.get_attribute_or_default('brightcove_policy'),
+            video_type=VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
         )
 
     def player_token(self):
@@ -281,7 +291,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         data.update({
             'partner_code': self.get_attribute_or_default('partner_code'),
             'content_id': self.reference_id or self.content_id,
-            'player_type': 'bcove' if self.is_brightcove_video else 'ooyala',
+            'player_type': VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
             'bcove_id': self.content_id if self.is_brightcove_video else None,
             'bcove_account_id': BRIGHTCOVE_ACCOUNT_ID,
             'bcove_policy': self.get_attribute_or_default('brightcove_policy'),
