@@ -121,9 +121,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
     def transcript(self):
         return Transcript(
             threeplay_api_key=self.get_attribute_or_default('api_key_3play'),
-            # if a reference id exists then it should be
-            # used to fetch transcript
-            content_id=self.reference_id or self.content_id,
+            content_id=self.content_id,
             user_lang=self.cc_language_preference,
             cc_disabled=self.disable_cc_and_translations,
             bcove_policy=self.get_attribute_or_default('brightcove_policy'),
