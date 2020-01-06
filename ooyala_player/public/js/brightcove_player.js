@@ -8,6 +8,7 @@ function BrightcovePlayerXblock(runtime, element) {
             this.ccLang = null;
 
             this.subscribePlayerEvents();
+            this.showTranscript();
 
             if(this.data.autoplay === "True")
                 this.player.play();
