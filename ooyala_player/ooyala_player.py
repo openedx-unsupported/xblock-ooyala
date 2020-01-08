@@ -27,10 +27,7 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .brightcove_player import (
-    BrightcovePlayerMixin,
-    BRIGHTCOVE_ACCOUNT_ID
-)
+from .brightcove_player import BrightcovePlayerMixin
 from .utils import (
     render_template,
     _, I18NService
@@ -69,6 +66,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         'api_key': 'API_KEY',
         'api_secret_key': 'API_SECRET_KEY',
         'brightcove_policy': 'BCOVE_POLICY',
+        'brightcove_account': 'BCOVE_ACCOUNT_ID',
     }
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
@@ -125,6 +123,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             user_lang=self.cc_language_preference,
             cc_disabled=self.disable_cc_and_translations,
             bcove_policy=self.get_attribute_or_default('brightcove_policy'),
+            bcove_account=self.get_attribute_or_default('brightcove_account'),
             video_type=VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
         )
 
@@ -291,7 +290,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             'content_id': self.reference_id or self.content_id,
             'player_type': VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
             'bcove_id': self.content_id if self.is_brightcove_video else None,
-            'bcove_account_id': BRIGHTCOVE_ACCOUNT_ID,
+            'bcove_account_id': self.get_attribute_or_default('brightcove_account'),
             'bcove_policy': self.get_attribute_or_default('brightcove_policy'),
         })
 

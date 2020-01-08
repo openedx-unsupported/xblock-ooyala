@@ -12,14 +12,11 @@ from .utils import render_template
 
 
 PLAYBACK_API_ENDPOINT = 'https://edge.api.brightcove.com/playback/v1/accounts/{account_id}/videos/{video_id}'
-BRIGHTCOVE_ACCOUNT_ID = '6057949416001'
 
 logger = logging.getLogger(__name__)
 
 
 class BrightcovePlayerMixin(object):
-    bc_account_id = BRIGHTCOVE_ACCOUNT_ID
-
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
@@ -37,7 +34,7 @@ class BrightcovePlayerMixin(object):
         frag.add_javascript_url(url="//p3.3playmedia.com/p3sdk.current.js")
 
         frag.add_javascript_url(url='//players.brightcove.net/{}/default_default/index.min.js'
-                                .format(BRIGHTCOVE_ACCOUNT_ID))
+                                .format(self.get_attribute_or_default('brightcove_account')))
         frag.initialize_js('BrightcovePlayerXblock')
         return frag
 
@@ -63,18 +60,21 @@ class BrightcovePlayerMixin(object):
         else:
             return waffle.switch_is_active("bcove-playback")
 
-    def get_brightcove_video_id(self, bcove_policy):
+    def get_brightcove_video_id(self):
         """
         Get a Brightcove video id against reference id
         using Brightcove Playback API
         """
         bc_video_id = None
         api_endpoint = PLAYBACK_API_ENDPOINT.format(
-            account_id=self.bc_account_id,
+            account_id=self.get_attribute_or_default('brightcove_account'),
             video_id='ref:{reference_id}'.format(reference_id=self.content_id)
         )
 
-        request = urllib2.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
+        request = urllib2.Request(
+            api_endpoint,
+            headers={"BCOV-Policy": self.get_attribute_or_default('brightcove_policy')}
+        )
 
         try:
             response = urllib2.urlopen(request).read()
@@ -90,12 +90,12 @@ class BrightcovePlayerMixin(object):
         return bc_video_id
 
 
-def get_brightcove_video_detail(bcove_id, bcove_policy):
+def get_brightcove_video_detail(bcove_id, bcove_policy, bcove_account):
     """
     Fetches details of a Brightcove video
     """
     api_endpoint = PLAYBACK_API_ENDPOINT.format(
-        account_id=BRIGHTCOVE_ACCOUNT_ID,
+        account_id=bcove_account,
         video_id=bcove_id
     )
     video_data = {}
