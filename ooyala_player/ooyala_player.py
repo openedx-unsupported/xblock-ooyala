@@ -687,6 +687,11 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
         return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_POLICY')
 
+    @property
+    def brightcove_account(self):
+        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
+        return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_ACCOUNT_ID')
+
     @classmethod
     def init_block_from_node(cls, block, node, attr):
         # hack, we remove all children from node. This is ooyala specific xml config
