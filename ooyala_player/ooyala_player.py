@@ -182,7 +182,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             return self.bcov_student_view(context=context)
         elif self.brightcove_playback_enabled:  # Fire up bcove player only if flag is on
             # try getting Brightcove id using content_id
-            bc_video_id = self.get_brightcove_video_id(self.get_attribute_or_default('brightcove_policy'))
+            bc_video_id = self.get_brightcove_video_id()
 
             if bc_video_id:
                 context.update({'content_id': bc_video_id})
