@@ -93,7 +93,7 @@ class Transcript(object):
                 files = transcript_details.get('files', [])
                 if files:
                     transcript = files[0]
-                    if transcript.get('state', '') == 'delivered':
+                    if transcript.get('state') in ('delivered', 'complete'):
                         cache.set(cache_key, transcript, TRANSCRIPT_DETAIL_CACHE_EXPIRY)
                     else:
                         transcript = {}
