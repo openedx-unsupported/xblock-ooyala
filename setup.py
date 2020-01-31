@@ -22,7 +22,8 @@ def package_data(pkg, root_list):
 # Main ##############################################################
 
 BLOCKS = [
-    'ooyala-player = ooyala_player:OoyalaPlayerBlock'
+    'brightcove-player = ooyala_player:OoyalaPlayerBlock',
+    'ooyala-player = ooyala_player:OoyalaPlayerBlock',
 ]
 
 BLOCKS_CHILDREN = [
@@ -31,7 +32,7 @@ BLOCKS_CHILDREN = [
 
 setup(
     name='xblock-ooyala-player',
-    version='2.1.6',
+    version='3.0.0',
     description='XBlock - Ooyala Video Player',
     packages=['ooyala_player'],
     install_requires=[

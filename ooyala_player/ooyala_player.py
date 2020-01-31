@@ -27,7 +27,11 @@ from mentoring.light_children import (
 from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
-from .utils import render_template, _, I18NService
+from .brightcove_player import BrightcovePlayerMixin
+from .utils import (
+    render_template,
+    _, I18NService
+)
 
 # Globals ###########################################################
 
@@ -39,7 +43,15 @@ COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPL
 # Classes ###########################################################
 
 
-class OoyalaPlayerMixin(I18NService):
+class VideoType:
+    """
+    Enum to hold video types
+    """
+    OOYALA = 'ooyala'
+    BRIGHTCOVE = 'bcove'
+
+
+class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
     """
     Base functionality for the ooyala player.
     """
@@ -53,6 +65,8 @@ class OoyalaPlayerMixin(I18NService):
         'partner_code': 'PARTNER_CODE',
         'api_key': 'API_KEY',
         'api_secret_key': 'API_SECRET_KEY',
+        'brightcove_policy': 'BCOVE_POLICY',
+        'brightcove_account': 'BCOVE_ACCOUNT_ID',
     }
 
     player_id = '8582dca2417b4e13bed27a4f0647c139'
@@ -69,7 +83,11 @@ class OoyalaPlayerMixin(I18NService):
         Otherwise check if it has a default in the settings service.
         If neither are available, return None
         """
-        available_attr = getattr(self, attribute_name)
+        try:
+            available_attr = getattr(self, attribute_name)
+        except AttributeError:
+            available_attr = None
+
         if available_attr:
             return available_attr
 
@@ -103,7 +121,10 @@ class OoyalaPlayerMixin(I18NService):
             threeplay_api_key=self.get_attribute_or_default('api_key_3play'),
             content_id=self.content_id,
             user_lang=self.cc_language_preference,
-            cc_disabled=self.disable_cc_and_translations
+            cc_disabled=self.disable_cc_and_translations,
+            bcove_policy=self.get_attribute_or_default('brightcove_policy'),
+            bcove_account=self.get_attribute_or_default('brightcove_account'),
+            video_type=VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
         )
 
     def player_token(self):
@@ -146,6 +167,27 @@ class OoyalaPlayerMixin(I18NService):
         """
         Player view, displayed to the student
         """
+        transcript = self.transcript.render(i18n_service=self.i18n_service)
+
+        context = {
+            'dom_id': 'bcove-' + self._get_unique_id(),
+            'content_id': self.content_id,
+            'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
+            'transcript': transcript,
+            'autoplay': self.autoplay,
+            'cc_lang': self.cc_language_preference,
+        }
+
+        if self.is_brightcove_video:
+            return self.bcov_student_view(context=context)
+        elif self.brightcove_playback_enabled:  # Fire up bcove player only if flag is on
+            # try getting Brightcove id using content_id
+            bc_video_id = self.get_brightcove_video_id()
+
+            if bc_video_id:
+                context.update({'content_id': bc_video_id})
+                return self.bcov_student_view(context=context)
+
         # Skin file path according to block type
         if hasattr(self, 'lightchild_block_type'):
             json_config_url = self.resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
@@ -160,8 +202,6 @@ class OoyalaPlayerMixin(I18NService):
         overlay_fragments = ""
         for overlay in self.overlays:
             overlay_fragments += overlay.render()
-
-        transcript = self.transcript.render(i18n_service=self.i18n_service)
 
         context = self.player_token()
         context.update({
@@ -238,6 +278,8 @@ class OoyalaPlayerMixin(I18NService):
                   "player_token_expires": 1501812713,
                   "partner_code: "53YWsyOszKOsfS1IvcQoKn8YhWYk",
                   "content_id": "5sMHA1YzE6KHI-dFSKgDz-pcMOx37_f9",
+                  "player_type": "bcove",
+                  "bcove_id": "6068615189001"
                 }
 
             See player_token() for more information on the player_token_* fields.
@@ -245,8 +287,13 @@ class OoyalaPlayerMixin(I18NService):
         data = self.player_token()
         data.update({
             'partner_code': self.get_attribute_or_default('partner_code'),
-            'content_id': self.content_id,
+            'content_id': self.reference_id or self.content_id,
+            'player_type': VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
+            'bcove_id': self.content_id if self.is_brightcove_video else None,
+            'bcove_account_id': self.get_attribute_or_default('brightcove_account'),
+            'bcove_policy': self.get_attribute_or_default('brightcove_policy'),
         })
+
         return data
 
     @XBlock.json_handler
@@ -297,14 +344,22 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Display Name"),
         help=_("This name appears in the horizontal navigation at the top of the page."),
         scope=Scope.settings,
-        default=_("Ooyala Player")
+        default=_("Brightcove Player")
     )
 
     content_id = String(
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
-        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
+        default='6068614205001'
+    )
+
+
+    reference_id = String(
+        display_name=_("Reference Id"),
+        help=_("Reference ID for the Content Id."),
+        scope=Scope.content,
+        default=''
     )
 
     transcript_file_id = String(
@@ -526,6 +581,13 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
     )
 
+    reference_id = LCString(
+        display_name=_("Reference Id"),
+        help=_("Reference ID for the Content Id."),
+        scope=LCScope.content,
+        default=''
+    )
+
     transcript_file_id = LCString(
         display_name=_("3Play Transcript Id"),
         help=_("Identifier for the 3Play Transcript File"),
@@ -619,6 +681,16 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
 
     xml_config = LCString(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
                         scope=LCScope.content)
+
+    @property
+    def brightcove_policy(self):
+        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
+        return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_POLICY')
+
+    @property
+    def brightcove_account(self):
+        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
+        return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_ACCOUNT_ID')
 
     @classmethod
     def init_block_from_node(cls, block, node, attr):

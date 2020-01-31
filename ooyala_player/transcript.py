@@ -6,6 +6,7 @@ from django.core.cache import cache
 
 from xblockutils.resources import ResourceLoader
 
+from .brightcove_player import get_brightcove_video_detail
 
 loader = ResourceLoader(__name__)
 
@@ -29,7 +30,10 @@ class Transcript(object):
     """
     Represents 3play transcript which appears below video
     """
-    def __init__(self, threeplay_api_key, content_id, user_lang, cc_disabled):
+    def __init__(
+        self, threeplay_api_key, content_id, user_lang,
+        cc_disabled, bcove_policy, bcove_account, video_type
+    ):
         self.transcript_id = None
         self.api_key = None
         self.project_id = None
@@ -39,7 +43,7 @@ class Transcript(object):
 
         if threeplay_api_key and content_id:
             self.api_key = threeplay_api_key
-            self._get_transcript_details(content_id)
+            self._get_transcript_details(content_id, video_type, bcove_policy, bcove_account)
 
         if self.transcript_id:
             # add source language in all cases
@@ -64,10 +68,12 @@ class Transcript(object):
             if INCLUDE_IMPORTED_TRANSCRIPTS and not cc_disabled:
                 self._get_imported_transcripts(selected_lang=user_lang)
 
-    def _get_transcript_details(self, content_id):
+    def _get_transcript_details(self, content_id, video_type, bcove_policy, bcove_account):
         """
         Use content id to retrieve and set transcript details
         """
+        from .ooyala_player import VideoType
+
         api_endpoint = FILES_API_ENDPOINT.format(
             api_key=self.api_key,
             video_id=content_id
@@ -87,9 +93,26 @@ class Transcript(object):
                 files = transcript_details.get('files', [])
                 if files:
                     transcript = files[0]
-                    cache.set(cache_key, transcript, TRANSCRIPT_DETAIL_CACHE_EXPIRY)
+                    if transcript.get('state') in ('delivered', 'complete'):
+                        cache.set(cache_key, transcript, TRANSCRIPT_DETAIL_CACHE_EXPIRY)
+                    else:
+                        transcript = {}
                 else:
-                    transcript = {}
+                    if video_type == VideoType.BRIGHTCOVE:
+                        # this might be a migrated video with 3play link detached
+                        # get corresponding reference id and try fetching transcript
+                        video_data = get_brightcove_video_detail(content_id, bcove_policy, bcove_account)
+                        if isinstance(video_data, dict) and video_data.get('reference_id'):
+                            return self._get_transcript_details(
+                                content_id=video_data.get('reference_id'),
+                                video_type=VideoType.OOYALA,
+                                bcove_policy=bcove_policy,
+                                bcove_account=bcove_account,
+                            )
+                        else:
+                            transcript = {}
+                    else:
+                        transcript = {}
 
         self.transcript_id = transcript.get('id')
         self.project_id = transcript.get('project_id')

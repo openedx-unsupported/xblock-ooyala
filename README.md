@@ -1,7 +1,9 @@
-Ooyala XBlock
-=============
+Ooyala/Brightcove XBlock
+========================
 
-This XBlock allows to include Ooyala videos within an edX course.
+This XBlock allows to include Ooyala and Brightcove videos within an edX course.
+
+**Note:** Ooyala is going to be shutdown around `April 2020` so the code supporting Ooyala playback will become useless and will be removed from this XBlock. 
 
 It supports:
 
@@ -53,7 +55,7 @@ below.
 The following settings can be set in studio edit:
 
 * _Title_: The title displayed in the unit for this xblock.
-* _Content Id_: Ooyala content identifier.
+* _Content Id_: Ooyala or Brightcove content identifier.
 * _Transcript File Id_: 3Play transcript file identifier. Leave empty
   if your video does not use a transcript.
 * _3Play Api key_: 3play API key, to access the 3Play transcript file
