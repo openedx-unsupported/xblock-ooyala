@@ -351,7 +351,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=Scope.content,
-        default='6068614205001'
+        default='6110589153001'
     )
 
 
