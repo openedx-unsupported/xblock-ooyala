@@ -1,0 +1,245 @@
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: XBlocks\n"
+"POT-Creation-Date: 2016-05-25 15:49+0500\n"
+"PO-Revision-Date: 2016-06-08 14:37+0000\n"
+"Last-Translator: \n"
+"Language-Team: Korean (Korea)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko_KR\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ooyala_player/ooyala_player.py:308 ooyala_player/ooyala_player.py:529
+msgid "Display Name"
+msgstr "표시 이름"
+
+#: ooyala_player/ooyala_player.py:309 ooyala_player/ooyala_player.py:530
+msgid "This name appears in the horizontal navigation at the top of the page."
+msgstr "이 이름은 페이지 상단의 가로 탐색 영역에 표시됩니다."
+
+#: ooyala_player/ooyala_player.py:311 ooyala_player/ooyala_player.py:532
+msgid "Ooyala Player"
+msgstr "Ooyala 플레이어"
+
+#: ooyala_player/ooyala_player.py:315 ooyala_player/ooyala_player.py:536
+#: ooyala_player/templates/html/ooyala_player_edit.html:14
+msgid "Content Id"
+msgstr "콘텐츠 Id"
+
+#: ooyala_player/ooyala_player.py:316 ooyala_player/ooyala_player.py:537
+msgid "Identifier for the Content Id."
+msgstr "콘텐츠 Id의 식별자입니다."
+
+#: ooyala_player/ooyala_player.py:322 ooyala_player/ooyala_player.py:543
+msgid "3Play Transcript Id"
+msgstr "3Play 대본 Id"
+
+#: ooyala_player/ooyala_player.py:323 ooyala_player/ooyala_player.py:544
+msgid "Identifier for the 3Play Transcript File"
+msgstr "3Play 대본 파일의 식별자"
+
+#: ooyala_player/ooyala_player.py:329 ooyala_player/ooyala_player.py:550
+msgid "Closed Captions Language"
+msgstr "자막 언어"
+
+#: ooyala_player/ooyala_player.py:330 ooyala_player/ooyala_player.py:551
+msgid "User's preference for closed captions language"
+msgstr "사용자가 자막으로 사용하고자 하는 언어"
+
+#: ooyala_player/ooyala_player.py:336 ooyala_player/ooyala_player.py:557
+msgid "Turn Off Closed Captions and Translated transcripts"
+msgstr "자막 및 번역된 대본 끄기"
+
+#: ooyala_player/ooyala_player.py:337 ooyala_player/ooyala_player.py:558
+msgid "Hides the CC button and transcript languages selection for this video"
+msgstr "이 비디오에서 자막 버튼 및 대본 언어 선택을 숨깁니다."
+
+#: ooyala_player/ooyala_player.py:343 ooyala_player/ooyala_player.py:564
+msgid "Enable Player Autoplay"
+msgstr "플레이어 자동 재생 사용"
+
+#: ooyala_player/ooyala_player.py:344 ooyala_player/ooyala_player.py:565
+msgid "Set to True if you the player to automatically play."
+msgstr "플레이어가 자동으로 재생되도록 하려면 True로 설정합니다."
+
+#: ooyala_player/ooyala_player.py:350 ooyala_player/ooyala_player.py:571
+#: ooyala_player/templates/html/ooyala_player_edit.html:35
+msgid "Enable Player Token"
+msgstr "플레이어 토큰 사용"
+
+#: ooyala_player/ooyala_player.py:351 ooyala_player/ooyala_player.py:572
+msgid ""
+"Set to True if a player token is required, e.g. if streaming videos to the "
+"mobile app."
+msgstr "플레이어 토큰이 필요한 경우(예: 모바일 앱에 비디오를 스트리밍하는 경우) True로 설정합니다."
+
+#: ooyala_player/ooyala_player.py:357 ooyala_player/ooyala_player.py:578
+#: ooyala_player/templates/html/ooyala_player_edit.html:48
+msgid "Partner Code"
+msgstr "파트너 코드"
+
+#: ooyala_player/ooyala_player.py:358
+msgid "Required for V4 Player. Also needed to generate a player token."
+msgstr "V4 플레이어에 필요합니다. 또한 플레이어 토큰을 생성하는 데 필요합니다."
+
+#: ooyala_player/ooyala_player.py:365 ooyala_player/ooyala_player.py:372
+#: ooyala_player/ooyala_player.py:579 ooyala_player/ooyala_player.py:586
+#: ooyala_player/ooyala_player.py:593
+#: ooyala_player/templates/html/ooyala_player_edit.html:44
+#: ooyala_player/templates/html/ooyala_player_edit.html:51
+#: ooyala_player/templates/html/ooyala_player_edit.html:58
+#: ooyala_player/templates/html/ooyala_player_edit.html:65
+msgid "Needed to generate a player token."
+msgstr "플레이어 토큰을 생성하는 데 필요합니다."
+
+#: ooyala_player/ooyala_player.py:371 ooyala_player/ooyala_player.py:592
+msgid "Api SecRet Key"
+msgstr "Api SecRet 키"
+
+#: ooyala_player/ooyala_player.py:378 ooyala_player/ooyala_player.py:599
+msgid "3play Api Key"
+msgstr "3play Api 키"
+
+#: ooyala_player/ooyala_player.py:379 ooyala_player/ooyala_player.py:600
+msgid "3play Api Key for transcript."
+msgstr "대본의 3play Api 키입니다."
+
+#: ooyala_player/ooyala_player.py:385 ooyala_player/ooyala_player.py:606
+#: ooyala_player/templates/html/ooyala_player_edit.html:76
+msgid "Player Width"
+msgstr "플레이어 너비"
+
+#: ooyala_player/ooyala_player.py:386 ooyala_player/ooyala_player.py:607
+msgid "The width of the player in pixels."
+msgstr "플레이어의 너비입니다(단위: 픽셀)."
+
+#: ooyala_player/ooyala_player.py:392 ooyala_player/ooyala_player.py:613
+#: ooyala_player/templates/html/ooyala_player_edit.html:83
+msgid "Player Height"
+msgstr "플레이어 높이"
+
+#: ooyala_player/ooyala_player.py:393 ooyala_player/ooyala_player.py:614
+msgid "The height of the player in pixels."
+msgstr "플레이어의 높이입니다(단위: 픽셀)."
+
+#: ooyala_player/ooyala_player.py:399 ooyala_player/ooyala_player.py:620
+#: ooyala_player/templates/html/ooyala_player_edit.html:90
+msgid "Expiration Time"
+msgstr "만료 시간"
+
+#: ooyala_player/ooyala_player.py:400 ooyala_player/ooyala_player.py:621
+#: ooyala_player/templates/html/ooyala_player_edit.html:93
+msgid "Expiration time in seconds. Needed to generate a player token."
+msgstr "만료 시간(단위: 초)이며, 플레이어 토큰을 생성하는 데 필요합니다."
+
+#: ooyala_player/ooyala_player.py:406 ooyala_player/ooyala_player.py:627
+msgid "Fire Progress Event on Student View"
+msgstr "수강자 보기에서 프로그레스 이벤트 실행"
+
+#: ooyala_player/ooyala_player.py:407 ooyala_player/ooyala_player.py:628
+msgid ""
+"Set to True if you would like to get a progress event in the event stream "
+"when the user views this xBlock."
+msgstr "사용자가 이 xBlock을 볼 때 이벤트 스트림에 프로그레스 이벤트를 가져오려면 True로 설정합니다."
+
+#: ooyala_player/ooyala_player.py:412 ooyala_player/ooyala_player.py:633
+#: ooyala_player/templates/html/ooyala_player_edit.html:97
+msgid "XML Configuration"
+msgstr "XML 구성"
+
+#: ooyala_player/ooyala_player.py:432
+msgid "Missing event_type in JSON data"
+msgstr "JSON 데이터에 event_type이 누락되었습니다."
+
+#: ooyala_player/ooyala_player.py:585
+#: ooyala_player/templates/html/ooyala_player_edit.html:55
+msgid "Api Key"
+msgstr "Api 키"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:7
+msgid "Title"
+msgstr "제목"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:10
+msgid "The title of the Ooyala Player that is displayed to the user"
+msgstr "사용자에게 표시되는 Ooyala 플레이어의 제목"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:17
+msgid "This is the Ooyala Content Identifier"
+msgstr "Ooyala 콘텐츠 식별자"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:21
+msgid "Transcript File Id"
+msgstr "대본 파일 Id"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:24
+msgid "This is the 3Play Transcript File Identifier"
+msgstr "3Play 대본 파일 식별자"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:28
+msgid "Hide CC and Translations"
+msgstr "캡션 및 번역 숨김"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:31
+msgid "Hide the CC button and transcript languages selection for this video"
+msgstr "이 비디오에서 자막 버튼 및 대본 언어 선택을 숨김"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:40
+msgid "True"
+msgstr "True"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:41
+msgid "False"
+msgstr "False"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:62
+msgid "Api Secret Key"
+msgstr "Api Secret 키"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:69
+msgid "3Play Api Key"
+msgstr "3Play Api 키"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:72
+msgid "3Play Api Key for transcript."
+msgstr "대본의 3Play Api 키입니다."
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:79
+msgid "Player width as a CSS length or percentage."
+msgstr "CSS 길이 또는 비율로 나타낸 플레이어 너비입니다."
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:86
+msgid "Player height as a CSS length or percentage."
+msgstr "CSS 길이 또는 비율로 나타낸 플레이어 높이입니다."
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:98
+msgid "// JS crashes when empty //"
+msgstr "// 비어 있는 경우 JS가 충돌합니다. //"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:107
+msgid "Save"
+msgstr "저장"
+
+#: ooyala_player/templates/html/ooyala_player_edit.html:111
+msgid "Cancel"
+msgstr "취소"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:6
+msgid "Hide Transcript"
+msgstr "대본 숨김"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:7
+msgid "Show Transcript"
+msgstr "대본 표시"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:24
+msgid "Print Transcript"
+msgstr "대본 인쇄"
+
+#: ooyala_player/templates/html/ooyala_transcript.html:25
+msgid "Download Transcript"
+msgstr "대본 다운로드"
