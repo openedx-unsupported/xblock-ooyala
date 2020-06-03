@@ -1,13 +1,14 @@
-Ooyala/Brightcove XBlock
+Brightcove XBlock
 ========================
 
-This XBlock allows to include Ooyala and Brightcove videos within an edX course.
+This XBlock allows to include Brightcove videos within an edX course.
 
-**Note:** Ooyala is going to be shutdown around `April 2020` so the code supporting Ooyala playback will become useless and will be removed from this XBlock. 
+**Note:** Ooyala has been shutdown since `April 2020` so the XBlock 
+has been renamed to Brightcove and only supports Brightcove videos now.
 
 It supports:
 
-* **Ooyala Video**, the component to visualize the video.
+* **Brightcove Video**, the component to visualize the video.
 * **Transcript**, which allows your users to interact with your video
   using text capabilities (video words, search, navigation).
 * **Overlays**, which allows you to place raw text or HTML content at
@@ -55,7 +56,7 @@ below.
 The following settings can be set in studio edit:
 
 * _Title_: The title displayed in the unit for this xblock.
-* _Content Id_: Ooyala or Brightcove content identifier.
+* _Content Id_: Brightcove content identifier.
 * _Transcript File Id_: 3Play transcript file identifier. Leave empty
   if your video does not use a transcript.
 * _3Play Api key_: 3play API key, to access the 3Play transcript file
@@ -78,35 +79,6 @@ The following settings can be set in studio edit:
   the player (ie. overlays) by editing the XML.
 
 ![Studio Edit](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/studio-edit.png)
-
-### Overlays
-
-In studio edit, you can add messages to be displayed at certain points
-while the video is playing using overlays. You can add an overlay in
-the studio by editing the _XML Configuration_ field.
-
-Each overlay is configured using an `<overlay>` tag. The `start` and
-`end` attributes control the time during video play while the overlay
-is visible and should be given in seconds.
-
-The content of an `<overlay>` tag can be either plain text or HTML
-content wrapped in a `<html>` tag.
-
-All overlays should be grouped under an `<overlays>` tag. Example:
-
-```xml
-<ooyala>
-  <overlays>
-    <overlay start="39" end="45"><html>Thats <b>Chris!!</b> one of our colleagues!</html></overlay>
-    <overlay start="4"  end="15"><html><a href='http://www.edx.org'>Welcome</a> to <b>our course</b>!</html></overlay>
-    <overlay start="16" end="20">This is raw text</overlay>
-  </overlays>
-</ooyala>
-```
-
-One of the overlay displayed during video play:
-
-![Video Overlay](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/student-view-overlay.png)
 
 Custom workbench settings
 -------------------------

@@ -8,7 +8,6 @@ function BrightcovePlayerXblock(runtime, element) {
             this.ccLang = null;
 
             this.subscribePlayerEvents();
-            this.showTranscript();
 
             if(this.data.autoplay === "True")
                 this.player.play();
@@ -24,14 +23,17 @@ function BrightcovePlayerXblock(runtime, element) {
         },
         subscribePlayerEvents: function(){
             this.player.on('timeupdate', this.eventHandlers.timeupdate.bind(this));
-            this.player.on('texttrackchange', this.eventHandlers.ccChanged.bind(this));
-            this.player.on('loadedmetadata', this.showTranscript.bind(this));
+            this.player.on('loadedmetadata', this.eventHandlers.metadataloaded.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
             $('.transcript-track', element).on('click', this.eventHandlers.getTranscript.bind(this));
             $(element).on('Transcript:changed', this.eventHandlers.transcriptChanged.bind(this));
         },
         eventHandlers: {
+            metadataloaded: function(){
+                this.showTranscript();
+                this.player.on('texttrackchange', this.eventHandlers.ccChanged.bind(this));
+            },
             timeupdate: function (evt, payload) {
                 var currentTime = evt.target.player.currentTime();
                 var duration = evt.target.player.duration();
@@ -52,10 +54,15 @@ function BrightcovePlayerXblock(runtime, element) {
             },
             ccChanged: function (evt) {
                 this.ccLang = currentCCLang(this.player.textTracks());
-                
+
                 // Update stored language preference
                 if (this.ccLang != this.data.ccLang) {
                     var updateUrl = runtime.handlerUrl(element, 'store_language_preference');
+
+                    // user has turned off CC
+                    if(this.ccLang === undefined){
+                        this.ccLang = 'off';
+                    }
 
                     $.ajax({
                         type: "POST",
@@ -135,7 +142,7 @@ function BrightcovePlayerXblock(runtime, element) {
                 }
             },
             transcriptChanged: function(){
-                if(this.ccLang == this.transcriptLang)
+                if(this.ccLang == this.transcriptLang || this.data.ccLang == 'off')
                     return;
 
                 // change CC accordingly
@@ -179,7 +186,7 @@ function BrightcovePlayerXblock(runtime, element) {
 
             $('.p3sdk-container', element).toggleClass('hide');
             var currentSelected = $('.transcript-track.selected', element);
-            
+
             // if user's saved lang exists select it
             // otherwise select first lang from available languages
             if(currentSelected.length){
