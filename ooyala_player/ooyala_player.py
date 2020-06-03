@@ -24,7 +24,6 @@ from mentoring.light_children import (
     Boolean as LCBoolean
 )
 
-from .overlay import OoyalaOverlay
 from .tokens import generate_player_token
 from .transcript import Transcript
 from .brightcove_player import BrightcovePlayerMixin
@@ -99,23 +98,6 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         return available_attr  # Ensures that the field's default type is preserved
 
     @property
-    def overlays(self):
-        """
-        Parse the xml config and return the overlays
-        """
-
-        overlays = []
-        node = etree.parse(StringIO(self.xml_config)).getroot()
-        overlays_node = node.find('overlays')
-        video_id = 'ooyala-' + self._get_unique_id()
-        if overlays_node is not None:
-            for child_id, xml_child in enumerate(overlays_node.findall('overlay')):
-                overlay = OoyalaOverlay.init_overlay_from_node(xml_child, video_id)
-                overlays.append(overlay)
-
-        return overlays
-
-    @property
     def transcript(self):
         return Transcript(
             threeplay_api_key=self.get_attribute_or_default('api_key_3play'),
@@ -178,76 +160,13 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             'cc_lang': self.cc_language_preference,
         }
 
-        if self.is_brightcove_video:
-            return self.bcov_student_view(context=context)
-        elif self.brightcove_playback_enabled:  # Fire up bcove player only if flag is on
-            # try getting Brightcove id using content_id
-            bc_video_id = self.get_brightcove_video_id()
-
-            if bc_video_id:
-                context.update({'content_id': bc_video_id})
-                return self.bcov_student_view(context=context)
-
-        # Skin file path according to block type
-        if hasattr(self, 'lightchild_block_type'):
-            json_config_url = self.resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type, SKIN_FILE_PATH)
-            bit_movin_player_url = self.resource_url(OoyalaPlayerLightChildBlock.lightchild_block_type,
-                                                BIT_MOVIN_PLAYER_PATH)
-        else:
-            json_config_url = self.resource_url(self.scope_ids.block_type, SKIN_FILE_PATH)
-            bit_movin_player_url = self.resource_url(self.scope_ids.block_type, BIT_MOVIN_PLAYER_PATH)
-
-        dom_id = 'ooyala-' + self._get_unique_id()
-
-        overlay_fragments = ""
-        for overlay in self.overlays:
-            overlay_fragments += overlay.render()
-
-        context = self.player_token()
-        context.update({
-            'title': self.display_name,
-            'cc_lang': self.cc_language_preference,
-            'cc_disabled': self.disable_cc_and_translations,
-            'pcode': self.pcode,
-            'content_id': self.content_id,
-            'player_id': self.player_id,
-            'dom_id': dom_id,
-            'overlay_fragments': overlay_fragments,
-            'transcript': transcript,
-            'width': self.width,
-            'height': self.height,
-            'autoplay': self.autoplay,
-            'config_url': json_config_url,
-            'complete_percentage': COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
-            'bit_movin_player': bit_movin_player_url,
-        })
-
-        JS_URLS = [
-            self.local_resource_url(self, 'public/build/player_all.min.js'),
-            '//p3.3playmedia.com/p3sdk.current.js',
-        ]
-        CSS_URLS = [
-            self.local_resource_url(self, 'public/build/player_all.min.css'),
-        ]
-
-        fragment = Fragment()
-        fragment.add_content(render_template('/templates/html/ooyala_player.html', context))
-
-        for url in JS_URLS:
-            fragment.add_javascript_url(url)
-
-        for url in CSS_URLS:
-            fragment.add_css_url(url)
-
-        fragment.initialize_js('OoyalaPlayerBlock')
-
         if self.fire_progress_event_on_student_view:
             # In certain cases we want to know when a student has visited a video player
             # as an indication that they are progressing through a course
             # Progress *does not* mean progress over viewing a video (i.e. elapsed time)
             self.runtime.publish(self, 'completion', {"completion": 1.0})
 
-        return fragment
+        return self.bcov_student_view(context=context)
 
     def xblock_view(self):
         """
@@ -482,10 +401,10 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         Editing view in Studio
         """
         fragment = Fragment()
-        fragment.add_content(render_template('/templates/html/ooyala_player_edit.html', {
+        fragment.add_content(render_template('/templates/html/bcove_player_edit.html', {
             'self': self,
         }))
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/ooyala_player_edit.js'))
+        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/bcove_player_edit.js'))
 
         fragment.initialize_js('OoyalaPlayerEditBlock')
 
