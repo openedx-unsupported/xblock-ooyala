@@ -22,8 +22,10 @@
                 </ul>
                 <ul>
                     <li><a class="print-transcript-btn" title="{% trans 'Print Transcript' %}"></a></li>
-                    <li><a href="javascript:void(0);" class="transcript-download-btn" title="{% trans 'Download Transcript' %}" download_format="pdf"></i>
-</a></li>
+                    {% if self.download_transcript_button %}
+                        <li><a href="javascript:void(0);" class="transcript-download-btn" title="{% trans 'Download Transcript' %}" download_format="pdf"></i>
+    </a></li>
+                    {% endif %}
                 </ul>
             </li>
         </ul>
