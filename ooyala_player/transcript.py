@@ -15,9 +15,11 @@ TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/transl
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
                    "/translations/{translation_id}/transcript.html"
 LANGUAGE_API_ENDPOINT = "http://api.3playmedia.com/caption_imports/available_languages?apikey={api_key_3play}"
-LANGUAGE_LIST_CACHE_EXPIRY = (60 * 60) * 24  # 24 Hours
-TRANSCRIPT_DETAIL_CACHE_EXPIRY = (60 * 60) * 24  # 24 Hours
-TRANSCRIPT_LIST_CACHE_EXPIRY = (60 * 60) * 1  # 1 Hour
+HOUR = (60 * 60)
+
+LANGUAGE_LIST_CACHE_EXPIRY = 24 * HOUR
+TRANSCRIPT_DETAIL_CACHE_EXPIRY = 24 * HOUR
+TRANSCRIPT_LIST_CACHE_EXPIRY = 1 * HOUR
 
 RTL_LANGUAGES = ['Arabic']
 
@@ -25,11 +27,16 @@ RTL_LANGUAGES = ['Arabic']
 # get via different APIs
 INCLUDE_IMPORTED_TRANSCRIPTS = True
 
+# Enable transcript download
+TRANSCRIPT_DOWNLOAD_OPTION = False
+
 
 class Transcript(object):
     """
     Represents 3play transcript which appears below video
     """
+    download_transcript_button = TRANSCRIPT_DOWNLOAD_OPTION
+
     def __init__(
         self, threeplay_api_key, content_id, user_lang,
         cc_disabled, bcove_policy, bcove_account, video_type
@@ -273,4 +280,3 @@ class Transcript(object):
             },
             i18n_service=i18n_service
         )
-

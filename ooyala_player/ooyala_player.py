@@ -2,8 +2,6 @@
 #
 
 # Imports ###########################################################
-
-import logging
 from uuid import uuid4
 
 from lxml import etree
@@ -33,10 +31,6 @@ from .utils import (
 )
 
 # Globals ###########################################################
-
-log = logging.getLogger(__name__)
-BIT_MOVIN_PLAYER_PATH = 'public/js/vendor/ooyala/bitmovinplayer.swf'
-SKIN_FILE_PATH = 'public/skin/skin.js'
 COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
 
 # Classes ###########################################################
