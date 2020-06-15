@@ -150,7 +150,7 @@ function BrightcovePlayerXblock(runtime, element) {
                 var trackFound = false;
 
                 for (var i = 0; i < (tracks.length); i++) {
-                    var trackLang = tracks[i].language.substr(0, 2);
+                    var trackLang = tracks[i].language;
                     if (trackLang) {
                         if (trackLang === this.transcriptLang) {
                             tracks[i].mode = "showing";
