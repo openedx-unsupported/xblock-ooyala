@@ -150,7 +150,7 @@ class Transcript(object):
         for translation in translations_list:
             if translation.get('state') == 'complete':
                 lang_name = translation.get('target_language_name')
-                lang_code = translation.get('target_language_iso_639_1_code')
+                lang_code = translation.get('target_language_brightcove_id')
                 localized_name = self.get_localized_name(lang_name, lang_code)
 
                 self.translations.append({
@@ -192,7 +192,7 @@ class Transcript(object):
                 lang_details = {}
             else:
                 lang_details = {
-                    d.get('language_id'): {'name': d.get('full_name'), 'code': d.get('iso_639_1_code')}
+                    d.get('language_id'): {'name': d.get('full_name'), 'code': d.get('brightcove_code')}
                     for d in lang_list
                 }
                 cache.set(cache_key, lang_details, LANGUAGE_LIST_CACHE_EXPIRY)
