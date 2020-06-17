@@ -75,10 +75,21 @@ function BrightcovePlayerXblock(runtime, element) {
                     });
                 }
 
-                if (this.transcriptLang != this.ccLang){
+                if (!this.ccAndTranscriptMatch()){
                     var langElement = $('.transcript-track', element).filter(
                         '[data-lang-code=' + this.ccLang + '], [data-lang-name=' + this.ccLang + ']'
                     );
+
+                    if(langElement.length == 0){
+                      // try a 2 letter scheme for match
+                      var ccLang = this.ccLang.substr(0, 2);
+                      $('.transcript-track', element).each(function(){
+                         var transcriptLang = $(this).data('lang-code').substr(0,2);
+                         if(transcriptLang == ccLang){
+                           langElement = $(this);
+                         }
+                      });
+                    }
 
                     langElement.trigger('click');
                 }
@@ -142,7 +153,7 @@ function BrightcovePlayerXblock(runtime, element) {
                 }
             },
             transcriptChanged: function(){
-                if(this.ccLang == this.transcriptLang || this.data.ccLang == 'off')
+                if(this.ccAndTranscriptMatch() || this.data.ccLang == 'off')
                     return;
 
                 // change CC accordingly
@@ -162,10 +173,26 @@ function BrightcovePlayerXblock(runtime, element) {
                     }
                 }
 
-                // if user selected cc dosn't exist, select the first available
+                // if user selected cc doesn't exist, try using 2 letter codes
+                // ignoring dialetcs
                 if(trackFound === false){
+                    var transcriptLang = this.transcriptLang.substr(0, 2);
                     for (var i = 0; i < (tracks.length); i++) {
                         var trackLang = tracks[i].language.substr(0, 2);
+                        if (trackLang === transcriptLang) {
+                            tracks[i].mode = "showing";
+                            this.ccLang = this.transcriptLang;
+                            trackFound = true;
+                        }else {
+                            tracks[i].mode = "disabled";
+                        }
+                    }
+                }
+
+                // if user selected cc doesn't exist, select the first available
+                if(trackFound === false){
+                    for (var i = 0; i < (tracks.length); i++) {
+                        var trackLang = tracks[i].language;
                         if (trackLang) {
                             tracks[i].mode = "showing";
                             this.ccLang = this.transcriptLang;
@@ -174,6 +201,12 @@ function BrightcovePlayerXblock(runtime, element) {
                     }
                 }
             }
+        },
+        ccAndTranscriptMatch: function(){
+          if(this.ccLang)
+            return this.ccLang.substr(0,2) == this.transcriptLang.substr(0,2);
+
+          return false;
         },
         showTranscript: function() {
             // transcript direction control
