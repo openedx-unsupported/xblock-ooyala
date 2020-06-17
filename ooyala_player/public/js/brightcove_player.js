@@ -226,6 +226,22 @@ function BrightcovePlayerXblock(runtime, element) {
                 currentSelected.trigger('click');
             }else{
                 var transcripts = $('.transcript-track', element);
+
+                // give a try to 2 letter scheme
+                var userLang = this.transcriptLang.substr(0, 2);
+                transcripts.each(function(){
+                   var transcriptLang = $(this).data('lang-code').substr(0, 2);
+                   if(transcriptLang == userLang){
+                     currentSelected = $(this);
+                   }
+                });
+
+                if(currentSelected.length){
+                  currentSelected.trigger('click');
+                  return;
+                }
+
+                // select first language
                 if(transcripts.length) {
                     currentSelected = $(transcripts[0]);
                     currentSelected.trigger('click');
