@@ -15,11 +15,12 @@ TRANSLATIONS_API_ENDPOINT = "http://static.3playmedia.com/files/{file_id}/transl
 TRANSLATION_DOWNLOAD_URL = "//static.3playmedia.com/p/projects/{project_id}/files/{transcript_file_id}" \
                    "/translations/{translation_id}/transcript.html"
 LANGUAGE_API_ENDPOINT = "http://api.3playmedia.com/caption_imports/available_languages?apikey={api_key_3play}"
-HOUR = (60 * 60)
+MINUTE = (60 * 1)
+HOUR = (60 * MINUTE)
 
 LANGUAGE_LIST_CACHE_EXPIRY = 24 * HOUR
-TRANSCRIPT_DETAIL_CACHE_EXPIRY = 24 * HOUR
-TRANSCRIPT_LIST_CACHE_EXPIRY = 1 * HOUR
+TRANSCRIPT_DETAIL_CACHE_EXPIRY = 30 * MINUTE
+TRANSCRIPT_LIST_CACHE_EXPIRY = 30 * MINUTE
 
 RTL_LANGUAGES = ['Arabic']
 
@@ -242,7 +243,7 @@ class Transcript(object):
                 except KeyError:
                     localized_name = language
 
-                if language and lang_code and threeplay_id:
+                if language and lang_code and threeplay_id and lang_id != self.language_id:
                     self.imported_translations.append({
                         'threeplay_id': threeplay_id,
                         'transcript_id': self.transcript_id,
