@@ -43,7 +43,7 @@ Add following settings in `XBLOCK_SETTINGS` in `lms.env.json` and `cms.env.json`
 
 Set following in `lms.env.json` to control after what percentage of 
 video watched the module should be marked as completed. 
-It should be a value between 0.0 and 1.0. By default it is set to 1.0 i.e. 100%.
+It should be a value between `0.0` and `1.0`. By default it is set to `1.0` i.e. 100%.
 
 ```bash
 COMPLETION_VIDEO_COMPLETE_PERCENTAGE
@@ -75,7 +75,7 @@ The following settings can be set in studio edit:
 * _Content Id_: Brightcove content identifier.
 * _Enable Autoplay_: Set to True if you want the video to automatically play.
 * _Fire Progress Event on Student View_: Set to True if you would like to trigger progress event when the user views this xBlock. 
-By default progress event is triggered when COMPLETION_VIDEO_COMPLETE_PERCENTAGE is reached.
+By default progress event is triggered when [COMPLETION_VIDEO_COMPLETE_PERCENTAGE](#Settings) is reached.
 
 ![Studio Edit](/doc/img/studio-edit.png?raw=true "Studio View")
 
