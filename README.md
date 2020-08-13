@@ -30,24 +30,24 @@ This will install requirements and the Brightcove XBlock itself.
 Settings
 --------
 
-Add following settings in _XBLOCK_SETTINGS_ in _lms.env.json_ and _cms.env.json_:
+Add following settings in `XBLOCK_SETTINGS` in `lms.env.json` and `cms.env.json`:
 
-.. code:: bash
+```bash
+"OoyalaPlayerBlock": {
+    "BCOVE_ACCOUNT_ID": "YOUR_BRIGHTCOVE_ACCOUNT_ID"
+    "BCOVE_POLICY": "BCOVE_POLICY_KEY [Optional]",
+    "3PLAY_API_KEY": "3Play_API_Key [Optional]"
+},
+...
+```
 
-    "OoyalaPlayerBlock": {
-        "BCOVE_ACCOUNT_ID": "YOUR_BRIGHTCOVE_ACCOUNT_ID"
-        "BCOVE_POLICY": "BCOVE_POLICY_KEY [Optional]",
-        "3PLAY_API_KEY": "3Play_API_Key [Optional]"
-    },
-    ...
-
-Set following in _lms.env.json_ to control after what percentage of 
+Set following in `lms.env.json` to control after what percentage of 
 video watched the module should be marked as completed. 
 It should be a value between 0.0 and 1.0. By default it is set to 1.0 i.e. 100%.
 
-.. code:: bash
-
-    COMPLETION_VIDEO_COMPLETE_PERCENTAGE
+```bash
+COMPLETION_VIDEO_COMPLETE_PERCENTAGE
+```
 
 Enabling in Studio
 ------------------
