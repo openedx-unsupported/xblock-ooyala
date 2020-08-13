@@ -5,15 +5,14 @@
 from uuid import uuid4
 
 from lxml import etree
-from StringIO import StringIO
 
 from django.conf import settings
 from django.core.urlresolvers import reverse, NoReverseMatch
 
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Integer, Boolean
-from xblock.fragment import Fragment
+from xblock.fields import Scope, String, Boolean
 from xblock.exceptions import JsonHandlerError
+from xblockutils.studio_editable import StudioEditableXBlockMixin
 
 from mentoring.light_children import (
     LightChild,
@@ -22,12 +21,11 @@ from mentoring.light_children import (
     Boolean as LCBoolean
 )
 
-from .tokens import generate_player_token
 from .transcript import Transcript
 from .brightcove_player import BrightcovePlayerMixin
 from .utils import (
-    render_template,
-    _, I18NService
+    _,
+    I18NService
 )
 
 # Globals ###########################################################
@@ -62,9 +60,6 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         'brightcove_account': 'BCOVE_ACCOUNT_ID',
     }
 
-    player_id = '8582dca2417b4e13bed27a4f0647c139'
-    pcode = '5zdHcxOlM7fQJOMrCdwnnu16WP-d'
-
     @property
     def course_id(self):
         """Move to xblock-utils"""
@@ -97,47 +92,10 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
             threeplay_api_key=self.get_attribute_or_default('api_key_3play'),
             content_id=self.content_id,
             user_lang=self.cc_language_preference,
-            cc_disabled=self.disable_cc_and_translations,
             bcove_policy=self.get_attribute_or_default('brightcove_policy'),
             bcove_account=self.get_attribute_or_default('brightcove_account'),
             video_type=VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
         )
-
-    def player_token(self):
-        """
-        Return a player token URL and its expiry datetime.
-
-        Returns:
-            If the player token is enabled, returns e.g.:
-
-                {
-                  "player_token": "http://player.ooyala.com/sas/embed_token/53YWsyOszKOsfS1...",
-                  "player_token_expires: 1501812713,
-                }
-
-            If the player token is disabled, returns:
-
-                {
-                  "player_token": "",
-                  "player_token_expires: None,
-                }
-        """
-        if self.get_attribute_or_default('enable_player_token'):
-            player_token, expiry = generate_player_token(
-                self.get_attribute_or_default('partner_code'),
-                self.get_attribute_or_default('api_key'),
-                self.get_attribute_or_default('api_secret_key'),
-                self.content_id,
-                self.expiration_time,
-            )
-        else:
-            player_token = ''
-            expiry = None
-
-        return {
-            'player_token': player_token,
-            'player_token_expires': expiry,
-        }
 
     def student_view(self, context):
         """
@@ -187,19 +145,16 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         Returns:
             E.g.,
                 {
-                  "player_token": "http://player.ooyala.com/sas/embed_token/53YWsyOszKOsfS1...",
-                  "player_token_expires": 1501812713,
-                  "partner_code: "53YWsyOszKOsfS1IvcQoKn8YhWYk",
-                  "content_id": "5sMHA1YzE6KHI-dFSKgDz-pcMOx37_f9",
+                  "content_id": "6068615189001",
                   "player_type": "bcove",
-                  "bcove_id": "6068615189001"
+                  "bcove_id": "6068615189001",
+                  "bcove_account_id": "893493",
+                  "bcove_policy": "secret_key"
                 }
 
-            See player_token() for more information on the player_token_* fields.
         """
-        data = self.player_token()
+        data = {}
         data.update({
-            'partner_code': self.get_attribute_or_default('partner_code'),
             'content_id': self.reference_id or self.content_id,
             'player_type': VideoType.BRIGHTCOVE if self.is_brightcove_video else VideoType.OOYALA,
             'bcove_id': self.content_id if self.is_brightcove_video else None,
@@ -248,11 +203,10 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
 
 @XBlock.needs("i18n")
 @XBlock.wants("settings")
-class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
+class OoyalaPlayerBlock(OoyalaPlayerMixin, StudioEditableXBlockMixin, XBlock):
     """
     XBlock providing a video player for videos hosted on Ooyala
     """
-
     display_name = String(
         display_name=_("Display Name"),
         help=_("This name appears in the horizontal navigation at the top of the page."),
@@ -262,22 +216,14 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
     content_id = String(
         display_name=_("Content Id"),
-        help=_("Identifier for the Content Id."),
+        help=_("Brightcove Video ID."),
         scope=Scope.content,
         default='6110589153001'
     )
 
-
     reference_id = String(
         display_name=_("Reference Id"),
         help=_("Reference ID for the Content Id."),
-        scope=Scope.content,
-        default=''
-    )
-
-    transcript_file_id = String(
-        display_name=_("3Play Transcript Id"),
-        help=_("Identifier for the 3Play Transcript File"),
         scope=Scope.content,
         default=''
     )
@@ -289,85 +235,21 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
         default='en'
     )
 
-    disable_cc_and_translations = Boolean(
-        display_name=_("Turn Off Closed Captions and Translated transcripts"),
-        help=_("Hides the CC button and transcript languages selection for this video"),
-        scope=Scope.settings,
-        default=False
-    )
-
     autoplay = Boolean(
-        display_name=_("Enable Player Autoplay"),
-        help=_("Set to True if you the player to automatically play."),
+        display_name=_("Enable Autoplay"),
+        help=_("Set to True if you want the video to automatically play."),
         scope=Scope.content,
         default=True
-    )
-
-    enable_player_token = Boolean(
-        display_name=_("Enable Player Token"),
-        help=_("Set to True if a player token is required, e.g. if streaming videos to the mobile app."),
-        scope=Scope.content,
-        default=False
-    )
-
-    partner_code = String(
-        display_name=_("Partner Code"),
-        help=_("Required for V4 Player. Also needed to generate a player token."),
-        scope=Scope.content,
-        default=''
-    )
-
-    api_key = String(
-        display_name="Api Key",
-        help=_("Needed to generate a player token."),
-        scope=Scope.content,
-        default=''
-    )
-
-    api_secret_key = String(
-        display_name=_("Api SecRet Key"),
-        help=_("Needed to generate a player token."),
-        scope=Scope.content,
-        default=''
-    )
-
-    api_key_3play = String(
-        display_name=_("3play Api Key"),
-        help=_("3play Api Key for transcript."),
-        scope=Scope.content,
-        default=''
-    )
-
-    width = String(
-        display_name=_("Player Width"),
-        help=_("The width of the player in pixels."),
-        scope=Scope.content,
-        default="100%"
-    )
-
-    height = String(
-        display_name=_("Player Height"),
-        help=_('The height of the player in pixels.'),
-        scope=Scope.content,
-        default="100%"
-    )
-
-    expiration_time = Integer(
-        display_name=_("Expiration Time"),
-        help=_('Expiration time in seconds. Needed to generate a player token.'),
-        scope=Scope.content,
-        default=600
     )
 
     fire_progress_event_on_student_view = Boolean(
         display_name=_("Fire Progress Event on Student View"),
-        help=_('Set to True if you would like to get a progress event in the event stream when the user views this xBlock.'),
+        help=_('Set to True if you would like to trigger progress event when the user views this xBlock.'),
         scope=Scope.content,
-        default=True
+        default=False
     )
 
-    xml_config = String(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
-                        scope=Scope.content)
+    editable_fields = ('content_id', 'autoplay', 'fire_progress_event_on_student_view')
 
     def _get_unique_id(self):
         try:
@@ -389,20 +271,6 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
         self.runtime.publish(self, event_type, data)
         return {'result':'success'}
-
-    def studio_view(self, context):
-        """
-        Editing view in Studio
-        """
-        fragment = Fragment()
-        fragment.add_content(render_template('/templates/html/bcove_player_edit.html', {
-            'self': self,
-        }))
-        fragment.add_javascript_url(self.local_resource_url(self, 'public/js/bcove_player_edit.js'))
-
-        fragment.initialize_js('OoyalaPlayerEditBlock')
-
-        return fragment
 
     @XBlock.json_handler
     def store_language_preference(self, data, suffix=''):
@@ -433,38 +301,6 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, XBlock):
 
         return {'content': content}
 
-    @XBlock.json_handler
-    def studio_submit(self, submissions, suffix=''):
-
-        xml_config = submissions['xml_config']
-        try:
-            etree.parse(StringIO(xml_config))
-        except etree.XMLSyntaxError as e:
-            response = {
-                'result': 'error',
-                'message': e.message
-            }
-        else:
-            response = {
-                'result': 'success',
-            }
-
-            self.xml_config = xml_config
-            self.display_name = submissions['display_name']
-            self.content_id = submissions['content_id'].strip()
-            self.transcript_file_id = submissions['transcript_file_id'].strip()
-            self.enable_player_token = submissions['enable_player_token']
-            self.partner_code = submissions['partner_code']
-            self.api_key = submissions['api_key']
-            self.api_secret_key = submissions['api_secret_key']
-            self.api_key_3play = submissions['api_key_3play']
-            self.expiration_time = submissions['expiration_time']
-            self.width = submissions['width']
-            self.height = submissions['height']
-            self.disable_cc_and_translations = submissions['cc_disable']
-
-        return response
-
     @staticmethod
     def workbench_scenarios():
         """A canned scenario for display in the workbench."""
@@ -491,19 +327,12 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         display_name=_("Content Id"),
         help=_("Identifier for the Content Id."),
         scope=LCScope.content,
-        default='RpOGxhMTE6p6DkTB8MBGtKN6v0_A_BdQ'
+        default='6110589153001'
     )
 
     reference_id = LCString(
         display_name=_("Reference Id"),
         help=_("Reference ID for the Content Id."),
-        scope=LCScope.content,
-        default=''
-    )
-
-    transcript_file_id = LCString(
-        display_name=_("3Play Transcript Id"),
-        help=_("Identifier for the 3Play Transcript File"),
         scope=LCScope.content,
         default=''
     )
@@ -515,74 +344,11 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         default='en'
     )
 
-    disable_cc_and_translations = LCBoolean(
-        display_name=_("Turn Off Closed Captions and Translated transcripts"),
-        help=_("Hides the CC button and transcript languages selection for this video"),
-        scope=LCScope.content,
-        default=False
-    )
-
     autoplay = LCBoolean(
         display_name=_("Enable Player Autoplay"),
         help=_('Set to True if you the player to automatically play.'),
         scope=LCScope.content,
         default=False
-    )
-
-    enable_player_token = LCBoolean(
-        display_name=_("Enable Player Token"),
-        help=_('Set to True if a player token is required, e.g. if streaming videos to the mobile app.'),
-        scope=LCScope.content,
-        default=False
-    )
-
-    partner_code = LCString(
-        display_name=_("Partner Code"),
-        help=_('Needed to generate a player token.'),
-        scope=LCScope.content,
-        default=''
-    )
-
-    api_key = LCString(
-        display_name=_("Api Key"),
-        help=_('Needed to generate a player token.'),
-        scope=LCScope.content,
-        default=''
-    )
-
-    api_secret_key = LCString(
-        display_name=_("Api SecRet Key"),
-        help=_('Needed to generate a player token.'),
-        scope=LCScope.content,
-        default=''
-    )
-
-    api_key_3play = LCString(
-        display_name=_("3play Api Key"),
-        help=_('3play Api Key for transcript.'),
-        scope=LCScope.content,
-        default=''
-    )
-
-    width = LCString(
-        display_name=_("Player Width"),
-        help=_('The width of the player in pixels.'),
-        scope=LCScope.content,
-        default="100%"
-    )
-
-    height = LCString(
-        display_name=_("Player Height"),
-        help=_('The height of the player in pixels.'),
-        scope=LCScope.content,
-        default="428px"
-    )
-
-    expiration_time = Integer(
-        display_name=_("Expiration Time"),
-        help=_('Expiration time in seconds. Needed to generate a player token.'),
-        scope=LCScope.content,
-        default=600
     )
 
     fire_progress_event_on_student_view = LCBoolean(
@@ -591,9 +357,6 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
         scope=LCScope.content,
         default=True
     )
-
-    xml_config = LCString(help=_("XML Configuration"), default='<ooyala>\n</ooyala>',
-                        scope=LCScope.content)
 
     @property
     def brightcove_policy(self):

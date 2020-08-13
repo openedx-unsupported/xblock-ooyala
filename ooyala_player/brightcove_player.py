@@ -51,44 +51,6 @@ class BrightcovePlayerMixin(object):
         else:
             return True
 
-    @property
-    def brightcove_playback_enabled(self):
-        try:
-            import waffle
-        except ImportError:
-            return False
-        else:
-            return waffle.switch_is_active("bcove-playback")
-
-    def get_brightcove_video_id(self):
-        """
-        Get a Brightcove video id against reference id
-        using Brightcove Playback API
-        """
-        bc_video_id = None
-        api_endpoint = PLAYBACK_API_ENDPOINT.format(
-            account_id=self.get_attribute_or_default('brightcove_account'),
-            video_id='ref:{reference_id}'.format(reference_id=self.content_id)
-        )
-
-        request = urllib2.Request(
-            api_endpoint,
-            headers={"BCOV-Policy": self.get_attribute_or_default('brightcove_policy')}
-        )
-
-        try:
-            response = urllib2.urlopen(request).read()
-            video_data = json.loads(response)
-        except Exception as e:
-            logger.warning('Brightcove ID retrieval failed against reference ID: `{}`.'
-                           'Falling back to Ooyala Player'.format(self.content_id))
-        else:
-            logger.info('Successfully retrieval of Brightcove ID against reference ID: `{}`'
-                           .format(self.content_id))
-            bc_video_id = video_data.get('id')
-
-        return bc_video_id
-
 
 def get_brightcove_video_detail(bcove_id, bcove_policy, bcove_account):
     """

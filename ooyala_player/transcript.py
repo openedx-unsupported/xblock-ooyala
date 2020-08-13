@@ -40,7 +40,7 @@ class Transcript(object):
 
     def __init__(
         self, threeplay_api_key, content_id, user_lang,
-        cc_disabled, bcove_policy, bcove_account, video_type
+        bcove_policy, bcove_account, video_type
     ):
         self.transcript_id = None
         self.api_key = None
@@ -70,10 +70,10 @@ class Transcript(object):
                 'dir': 'rtl' if lang_name in RTL_LANGUAGES else 'ltr'
             }]
 
-            if not cc_disabled:
-                self._get_translations(selected_lang=user_lang)
 
-            if INCLUDE_IMPORTED_TRANSCRIPTS and not cc_disabled:
+            self._get_translations(selected_lang=user_lang)
+
+            if INCLUDE_IMPORTED_TRANSCRIPTS:
                 self._get_imported_transcripts(selected_lang=user_lang)
 
     def _get_transcript_details(self, content_id, video_type, bcove_policy, bcove_account):
