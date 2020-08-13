@@ -77,7 +77,7 @@ The following settings can be set in studio edit:
 * _Fire Progress Event on Student View_: Set to True if you would like to trigger progress event when the user views this xBlock. 
 By default progress event is triggered when COMPLETION_VIDEO_COMPLETE_PERCENTAGE is reached.
 
-![Studio Edit](doc/img/studio-edit.png)
+![Studio Edit](/doc/img/studio-edit.png?raw=true "Studio View")
 
 Custom workbench settings
 -------------------------
