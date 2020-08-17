@@ -9,12 +9,10 @@ has been renamed to Brightcove and only supports Brightcove videos now.
 It supports:
 
 * **Brightcove Video**, the component to visualize the video.
-* **Transcript**, which allows your users to interact with your video
-  using text capabilities (video words, search, navigation).
-* **Overlays**, which allows you to place raw text or HTML content at
-  a specific moment in your video.
-* **Player token**, which allows you to secure your video content
-  using a token with an expiration time.
+* **3Play Transcript**, which allows your users to view the 3Play Transcript 
+associated with the video. That requires you to have the 
+[3Play integration ](https://www.brightcove.com/en/partners/3play-media) 
+setup.
 
 Installation
 ------------
@@ -27,12 +25,34 @@ root folder:
 pip install -r requirements.txt
 ```
 
-This will install requirements and the Ooyala XBlock itself.
+This will install requirements and the Brightcove XBlock itself.
+
+Settings
+--------
+
+Add following settings in `XBLOCK_SETTINGS` in `lms.env.json` and `cms.env.json`:
+
+```bash
+"OoyalaPlayerBlock": {
+    "BCOVE_ACCOUNT_ID": "YOUR_BRIGHTCOVE_ACCOUNT_ID"
+    "BCOVE_POLICY": "BCOVE_POLICY_KEY [Optional]",
+    "3PLAY_API_KEY": "3Play_API_Key [Optional]"
+},
+...
+```
+
+Set following in `lms.env.json` to control after what percentage of 
+video watched the module should be marked as completed. 
+It should be a value between `0.0` and `1.0`. By default it is set to `1.0` i.e. 100%.
+
+```bash
+COMPLETION_VIDEO_COMPLETE_PERCENTAGE
+```
 
 Enabling in Studio
 ------------------
 
-You can enable the Ooyala XBlock in Studio through the advanced
+You can enable the Brightcove XBlock in Studio through the advanced
 settings:
 
 1. From the main page of a specific course, click on *Settings*,
@@ -44,41 +64,20 @@ settings:
 Usage
 -----
 
-Once enabled, you can find _Ooyala Player_ component under the _Advanced_
+Once enabled, you can find _Brightcove Player_ component under the _Advanced_
 tab in the Studio. When you add it to a course in the studio, the
-block is set up with default content, shown in the screenshot
-below.
+block is set up with the default content.
 
-![Studio View](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/studio-view.png)
-
-### Settings
+### Studio Settings
 
 The following settings can be set in studio edit:
 
-* _Title_: The title displayed in the unit for this xblock.
 * _Content Id_: Brightcove content identifier.
-* _Transcript File Id_: 3Play transcript file identifier. Leave empty
-  if your video does not use a transcript.
-* _3Play Api key_: 3play API key, to access the 3Play transcript file
-* _Enable Player Token_: has to be set to `True` if you want to use
-  short-lived tokens. Defaults to `False`.
-* _Partner Code_: Ooyala partner code (also known as _pcode_) is
-  needed to be able to generate a player token. Only required when
-  using short-lived tokens.
-* _Api Key_: Ooyala API key. Only required when using a transcript
-  file and/or short-lived tokens.
-* _Api Secret Key_: Ooyala secret key. Only required when using
-  short-lived tokens.
-* _Player Width_: The width of the player in valid CSS units; defaults
-  to `760px`.
-* _Player Height_: The height of the player in valid CSS units;
-  defaults to `427px`.
-* _Expiration Time_: the expiration time of a short-lived token in
-  seconds; defaults to `600`.
-* _XML Configuration_: Allows you to configure advanced properties of
-  the player (ie. overlays) by editing the XML.
+* _Enable Autoplay_: Set to True if you want the video to automatically play.
+* _Fire Progress Event on Student View_: Set to True if you would like to trigger progress event when the user views this xBlock. 
+By default progress event is triggered when [COMPLETION_VIDEO_COMPLETE_PERCENTAGE](#Settings) is reached.
 
-![Studio Edit](https://raw.githubusercontent.com/edx-solutions/xblock-ooyala/cfb3a47c8b4842491a1c9797fd6752df3bad5fbf/doc/img/studio-edit.png)
+![Studio Edit](/doc/img/studio-edit.png?raw=true "Studio View")
 
 Custom workbench settings
 -------------------------
@@ -111,5 +110,5 @@ $ python run_tests.py --with-cover --cover-package=ooyala_player
 License
 -------
 
-The Image Explorer XBlock is available under the GNU Affero General
+The Brightcove XBlock is available under the GNU Affero General
 Public License (AGPLv3).
