@@ -52,10 +52,6 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
 
     DEFAULT_ATTRIBUTE_SETTINGS = {
         'api_key_3play': '3PLAY_API_KEY',
-        'enable_player_token': 'ENABLE_PLAYER_TOKEN',
-        'partner_code': 'PARTNER_CODE',
-        'api_key': 'API_KEY',
-        'api_secret_key': 'API_SECRET_KEY',
         'brightcove_policy': 'BCOVE_POLICY',
         'brightcove_account': 'BCOVE_ACCOUNT_ID',
     }
@@ -249,7 +245,7 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, StudioEditableXBlockMixin, XBlock):
         default=False
     )
 
-    editable_fields = ('content_id', 'autoplay', 'fire_progress_event_on_student_view')
+    editable_fields = ('display_name', 'content_id', 'autoplay', 'fire_progress_event_on_student_view')
 
     def _get_unique_id(self):
         try:
