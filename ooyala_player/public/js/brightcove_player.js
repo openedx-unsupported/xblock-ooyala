@@ -26,6 +26,7 @@ function BrightcovePlayerXblock(runtime, element) {
             this.player.on('loadedmetadata', this.eventHandlers.metadataloaded.bind(this));
             $('.print-transcript-btn', element).on('click', this.eventHandlers.printTranscript.bind(this));
             $('.transcript-download-btn', element).on('click', this.eventHandlers.downloadTranscript.bind(this));
+            $('.p3sdk-interactive-transcript-collapse-visible', element).on('click', this.eventHandlers.toggleTranscript.bind(this));
             $('.transcript-track', element).on('click', this.eventHandlers.getTranscript.bind(this));
             $(element).on('Transcript:changed', this.eventHandlers.transcriptChanged.bind(this));
         },
@@ -50,6 +51,19 @@ function BrightcovePlayerXblock(runtime, element) {
                         }
                     });
                     this.completionPublished = true;
+                }
+            },
+            toggleTranscript: function (evt) {
+                $('.collapsable', element).toggle();
+                var collapsed = $('.collapsable', element).data('collapsed');
+                var btn = $(evt.currentTarget).children('a');
+
+                if(collapsed == true){
+                    btn.html(btn.attr('label_when_expanded'));
+                    $('.collapsable', element).data('collapsed', false);
+                }else{
+                    btn.html(btn.attr('label_when_collapsed'));
+                    $('.collapsable', element).data('collapsed', true);
                 }
             },
             ccChanged: function (evt) {
@@ -124,33 +138,25 @@ function BrightcovePlayerXblock(runtime, element) {
 
                 langElement.addClass('selected');
 
-                this.transcriptLang = langElement.data('lang-code');
+                var threeplayId = langElement.data('3play-id');
+                var transcriptUrl = runtime.handlerUrl(element, 'load_transcript');
 
-                 // trigger transcript change event
-                $(element).trigger('Transcript:changed');
-
-                if(langElement.hasClass('imported-transcript')){
-                    // need to load transcript ourselves
-                    var threeplayId = langElement.data('3play-id');
-                    var trascriptId = langElement.data('transcript-id');
-                    var transcriptUrl = runtime.handlerUrl(element, 'load_transcript');
-
-                    $.ajax({
-                        type: "POST",
-                        data: JSON.stringify({'threeplay_id': threeplayId, 'transcript_id': trascriptId}),
-                        url: transcriptUrl,
-                        context: this,
-                        success: function (data) {
-                            var transcript = data.content;
-                            if(transcript){
-                                var p3Instance = p3sdk.get(this.data.playerId);
-
-                                if(p3Instance && p3Instance.interactive_transcripts)
-                                    p3Instance.interactive_transcripts[0].set_transcript(transcript);
-                            }
+                $.ajax({
+                    type: "POST",
+                    data: JSON.stringify({'threeplay_id': threeplayId, 'video_id': this.data.videoId}),
+                    url: transcriptUrl,
+                    context: this,
+                    success: function (data) {
+                        var transcript = data.content;
+                        if(transcript){
+                            this.transcriptLang = langElement.data('lang-code');
+                            $('.transcript-content', element).html(transcript);
+                            setTranscriptDirection();
+                            // trigger transcript change event
+                            $(element).trigger('Transcript:changed');
                         }
-                    });
-                }
+                    }
+                });
             },
             transcriptChanged: function(){
                 if(this.ccAndTranscriptMatch() || this.data.ccLang == 'off')
@@ -209,15 +215,6 @@ function BrightcovePlayerXblock(runtime, element) {
           return false;
         },
         showTranscript: function() {
-            // transcript direction control
-            var p3Instance = p3sdk.get(this.data.playerId);
-            if(p3Instance){
-                p3$(p3Instance).bind("transcript:track_loaded", function (name, atts){
-                    setTranscriptDirection();
-                });
-            }
-
-            $('.p3sdk-container', element).toggleClass('hide');
             var currentSelected = $('.transcript-track.selected', element);
 
             // if user's saved lang exists select it

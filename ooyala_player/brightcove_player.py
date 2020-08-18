@@ -31,8 +31,6 @@ class BrightcovePlayerMixin(object):
         frag = Fragment(html)
         frag.add_css(self.resource_string("public/css/brightcove_player.css"))
         frag.add_javascript(self.resource_string("public/js/brightcove_player.js"))
-        frag.add_javascript_url(url="//p3.3playmedia.com/p3sdk.current.js")
-
         frag.add_javascript_url(url='//players.brightcove.net/{}/default_default/index.min.js'
                                 .format(self.get_attribute_or_default('brightcove_account')))
         frag.initialize_js('BrightcovePlayerXblock')
