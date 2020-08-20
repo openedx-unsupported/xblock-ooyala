@@ -1,38 +1,35 @@
 {% load i18n %}
 
-{% if self.transcript_id %}
+{% if self.transcripts %}
 <div class="p3sdk-interactive-transcript">
     <div class="p3sdk-interactive-transcript-collapse-visible">
         {% trans "Hide Transcript" as label_when_expanded %}
         {% trans "Show Transcript" as label_when_collapsed %}
         <a href="javascript:void(0);" class="p3sdk-interactive-transcript-collapse p3sdk-collapse-onload" label_when_expanded = "&nbsp;<span class='transcript-toggle'>{{label_when_expanded}}</span><span class='fa fa-sort-asc transcript-hide fa-2' aria-hidden='true'></span>" label_when_collapsed = "&nbsp;<span class='transcript-toggle'>{{label_when_collapsed}}</span><span class='fa fa-sort-desc transcript-show fa-2' aria-hidden='true'></span>">
-            {{label_when_expanded}}
+            <span class='transcript-toggle'>{{label_when_collapsed}}</span>
+            <span class='fa fa-sort-desc transcript-show fa-2' aria-hidden='true'></span>
         </a>
     </div>
-    <div class="transcript-header">
-        <ul>
-            <li class="language-tracks">
-                <ul>
-                {% for link in self.translations %}
-                    <li data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" data-lang-dir="{{link.dir}}" class="transcript-track p3sdk-interactive-transcript-track {% if link.selected %}selected{% endif %}" remote-src="{{link.url}}">{{link.localized_name}}</li>
-                {% endfor %}
-                {% for link in self.imported_translations %}
-                    <li data-3play-id="{{link.threeplay_id}}" data-transcript-id="{{link.transcript_id}}" data-lang-name="{{link.language}}" data-lang-code="{{link.lang_code}}" data-lang-dir="{{link.dir}}" class="transcript-track imported-transcript {% if link.selected %}selected{% endif %}">{{link.localized_name}}</li>
-                {% endfor %}
-                </ul>
-                <ul>
-                    <li><a class="print-transcript-btn" title="{% trans 'Print Transcript' %}"></a></li>
-                    {% if self.download_transcript_button %}
-                        <li><a href="javascript:void(0);" class="transcript-download-btn" title="{% trans 'Download Transcript' %}" download_format="pdf"></i>
-    </a></li>
-                    {% endif %}
-                </ul>
-            </li>
-        </ul>
+    <div class="collapsable" style="display: none" data-collapsed="true">
+        <div class="transcript-header">
+            <ul>
+                <li class="language-tracks">
+                    <ul>
+                    {% for transcript in self.transcripts %}
+                        <li data-3play-id="{{transcript.id}}" data-lang-name="{{transcript.language}}" data-lang-code="{{transcript.lang_code}}" data-lang-dir="{{transcript.dir}}" class="transcript-track p3sdk-interactive-transcript-track {% if transcript.selected %}selected{% endif %}">{{transcript.localized_name}}</li>
+                    {% endfor %}
+                    </ul>
+                    <ul>
+                        <li><a class="print-transcript-btn" title="{% trans 'Print Transcript' %}"></a></li>
+                        {% if self.download_transcript_button %}
+                            <li><a href="javascript:void(0);" class="transcript-download-btn" title="{% trans 'Download Transcript' %}" download_format="pdf"></i>
+        </a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="transcript-content p3sdk-interactive-transcript-content"></div>
     </div>
-    <div class="transcript-content p3sdk-interactive-transcript-content"></div>
 </div>
-{% elif self.error %}
-    {# Include any transcript error as an HTML comment to help with debugging. #}
-    {{ self.error }}
 {% endif %}

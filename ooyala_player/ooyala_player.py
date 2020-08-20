@@ -285,14 +285,14 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, StudioEditableXBlockMixin, XBlock):
         Store user's cc language selection
         """
         threeplay_id = data.get('threeplay_id')
-        transcript_id = data.get('transcript_id')
+        video_id = data.get('video_id')
         content = ''
 
         if threeplay_id:
             content = Transcript.get_transcript_by_threeplay_id(
                 api_key=self.get_attribute_or_default('api_key_3play'),
                 threeplay_id=threeplay_id,
-                transcript_id=transcript_id,
+                video_id=video_id,
             )
 
         return {'content': content}
