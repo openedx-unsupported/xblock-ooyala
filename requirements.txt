@@ -1,3 +1,9 @@
 -e .
 -e git://github.com/open-craft/xblock-mentoring.git@1a6e2092a361f0befff18d07607517d437046e3b#egg=xblock-mentoring
 -e git://github.com/nosedjango/nosedjango.git@ed7d7f9aa969252ff799ec159f828eaa8c1cbc5a#egg=nosedjango-dev
+
+xblock==1.2.9
+django-statici18n==1.8.2
+edx-i18n-tools==0.4.7
+django-appconf==1.0.3; python_version == '2.7'
+django-appconf==1.0.4; python_version > '2.7'

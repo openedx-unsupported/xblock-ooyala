@@ -32,7 +32,7 @@ BLOCKS_CHILDREN = [
 
 setup(
     name='xblock-ooyala-player',
-    version='4.0.7',
+    version='4.0.8',
     description='XBlock - Ooyala Video Player',
     packages=['ooyala_player'],
     install_requires=[
