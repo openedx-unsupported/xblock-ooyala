@@ -26,3 +26,12 @@ compile_translations: ## compile translation files, outputting .mo files for eac
 	cd $(WORKING_DIR) && i18n_tool generate
 	python manage.py compilejsi18n --output $(JS_TARGET)
 
+detect_changed_source_translations:
+	cd $(WORKING_DIR) && i18n_tool changed
+
+dummy_translations: ## generate dummy translation (.po) files
+	cd $(WORKING_DIR) && i18n_tool dummy
+
+build_dummy_translations: dummy_translations compile_translations ## generate and compile dummy translation files
+
+validate_translations: build_dummy_translations detect_changed_source_translations ## validate translations
