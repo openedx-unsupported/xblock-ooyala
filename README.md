@@ -130,7 +130,7 @@ If you want to add a new language:
   ```bash
   make extract_translations
   ```
-  3. Clone `en` directory to `ooyala_player/translations/<lang_code>/` for example: `problem_builder/translations/fa_IR/`
+  3. Clone `en` directory to `ooyala_player/translations/<lang_code>/` for example: `ooyala_player/translations/fa_IR/`
   4. Make necessary changes to translation files headers. Make sure you have proper `Language` and `Plural-Forms` lines.
   5. When you finished your modification process, re-compile the translation messages.
   ```bash
