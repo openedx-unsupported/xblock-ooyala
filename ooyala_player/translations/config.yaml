@@ -15,3 +15,15 @@ locales:
 # The locales used for fake-accented English, for testing.
 dummy_locales:
     - eo
+
+# Directories we don't search for strings.
+ignore_dirs:
+    - tests
+    - translations
+
+# i18n_tools produces just "django-partial.po" by default, but we need "text.po":
+generate_merge:
+    text.po:
+        - django-partial.po
+    textjs.po:
+        - djangojs-partial.po

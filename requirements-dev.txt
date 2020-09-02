@@ -1,0 +1,8 @@
+Django>=1.8, <1.9
+
+xblock==1.2.9
+-r requirements.txt
+django-statici18n==1.8.2
+edx-i18n-tools==0.4.7
+django-appconf==1.0.3; python_version == '2.7'
+django-appconf==1.0.4; python_version > '2.7'

@@ -3,15 +3,15 @@ Brightcove XBlock
 
 This XBlock allows to include Brightcove videos within an edX course.
 
-**Note:** Ooyala has been shutdown since `April 2020` so the XBlock 
+**Note:** Ooyala has been shutdown since `April 2020` so the XBlock
 has been renamed to Brightcove and only supports Brightcove videos now.
 
 It supports:
 
 * **Brightcove Video**, the component to visualize the video.
-* **3Play Transcript**, which allows your users to view the 3Play Transcript 
-associated with the video. That requires you to have the 
-[3Play integration ](https://www.brightcove.com/en/partners/3play-media) 
+* **3Play Transcript**, which allows your users to view the 3Play Transcript
+associated with the video. That requires you to have the
+[3Play integration ](https://www.brightcove.com/en/partners/3play-media)
 setup.
 
 Installation
@@ -41,8 +41,8 @@ Add following settings in `XBLOCK_SETTINGS` in `lms.env.json` and `cms.env.json`
 ...
 ```
 
-Set following in `lms.env.json` to control after what percentage of 
-video watched the module should be marked as completed. 
+Set following in `lms.env.json` to control after what percentage of
+video watched the module should be marked as completed.
 It should be a value between `0.0` and `1.0`. By default it is set to `1.0` i.e. 100%.
 
 ```bash
@@ -74,7 +74,7 @@ The following settings can be set in studio edit:
 
 * _Content Id_: Brightcove content identifier.
 * _Enable Autoplay_: Set to True if you want the video to automatically play.
-* _Fire Progress Event on Student View_: Set to True if you would like to trigger progress event when the user views this xBlock. 
+* _Fire Progress Event on Student View_: Set to True if you would like to trigger progress event when the user views this xBlock.
 By default progress event is triggered when [COMPLETION_VIDEO_COMPLETE_PERCENTAGE](#Settings) is reached.
 
 ![Studio Edit](/doc/img/studio-edit.png?raw=true "Studio View")
@@ -106,6 +106,36 @@ $ pushd $VIRTUAL_ENV/src/xblock-mentoring/; pip install -r requirements.txt; pop
 ```bash
 $ python run_tests.py --with-cover --cover-package=ooyala_player
 ```
+
+Translation (i18n)
+-------------------------------
+
+This repo offers multiple make targets to automate the translation tasks.
+First, install `requirements-dev.txt`:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Each make target will be explained below:
+
+- `extract_translations`. Use [`i18n_tool` extract](https://github.com/edx/i18n-tools) to create `.po` files based on all the tagged strings in the python and javascript code.
+- `compile_translations`. Use [`i18n_tool` generate](https://github.com/edx/i18n-tools) to create `.mo` compiled files.
+- `detect_changed_source_translations`. Use [`i18n_tool` changed](https://github.com/edx/i18n-tools) to identify any updated translations.
+- `validate_translations`. Compile translations and check the source translations haven't changed.
+
+If you want to add a new language:
+  1. Add language to `ooyala_player/translations/config.yaml`
+  2. Make sure all tagged strings have been extracted:
+  ```bash
+  make extract_translations
+  ```
+  3. Clone `en` directory to `ooyala_player/translations/<lang_code>/` for example: `ooyala_player/translations/fa_IR/`
+  4. Make necessary changes to translation files headers. Make sure you have proper `Language` and `Plural-Forms` lines.
+  5. When you finished your modification process, re-compile the translation messages.
+  ```bash
+  make compile_translations
+  ```
 
 License
 -------
