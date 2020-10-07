@@ -176,7 +176,7 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         """
         value = data.get('completion', None)
         if not 0.0 <= value <= 1.0:
-            message = u"Invalid completion value {}. Must be in range [0.0, 1.0]"
+            message = "Invalid completion value {}. Must be in range [0.0, 1.0]"
             raise JsonHandlerError(400, message.format(value))
         if value >= COMPLETION_VIDEO_COMPLETE_PERCENTAGE:
             value = 1.0
@@ -367,11 +367,11 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
     @classmethod
     def init_block_from_node(cls, block, node, attr):
         # hack, we remove all children from node. This is ooyala specific xml config
-        xml_config = u"<ooyala>\n"
+        xml_config = "<ooyala>\n"
         for child in node:
-            xml_config += unicode(etree.tostring(child))
+            xml_config += str(etree.tostring(child))
             node.remove(child)
-        xml_config += u"</ooyala>"
+        xml_config += "</ooyala>"
 
         block = super(OoyalaPlayerLightChildBlock, cls).init_block_from_node(block, node, attr)
 

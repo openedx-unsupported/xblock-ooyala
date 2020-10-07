@@ -3,7 +3,7 @@ from mock import MagicMock
 
 import re
 from lxml import etree
-from StringIO import StringIO
+from io import StringIO
 
 from ooyala_player.overlay import OoyalaOverlay
 

@@ -1,6 +1,6 @@
 """ Xblock Mixin to play Brightcove videos """
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import logging
 
@@ -60,10 +60,10 @@ def get_brightcove_video_detail(bcove_id, bcove_policy, bcove_account):
     )
     video_data = {}
 
-    request = urllib2.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
+    request = urllib.request.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
 
     try:
-        response = urllib2.urlopen(request).read()
+        response = urllib.request.urlopen(request).read()
         video_data = json.loads(response)
     except Exception as e:
         logger.warning('Brightcove video details retrieval failed for video ID: `{}` with exception {}'
