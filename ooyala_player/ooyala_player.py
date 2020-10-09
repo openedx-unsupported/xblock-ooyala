@@ -7,7 +7,7 @@ from uuid import uuid4
 from lxml import etree
 
 from django.conf import settings
-from django.core.urlresolvers import reverse, NoReverseMatch
+from django.urls import reverse, NoReverseMatch
 
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Boolean
