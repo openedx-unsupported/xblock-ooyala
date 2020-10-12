@@ -1,3 +1,2 @@
 -e .
--e git://github.com/open-craft/xblock-mentoring.git@1a6e2092a361f0befff18d07607517d437046e3b#egg=xblock-mentoring
--e git://github.com/nosedjango/nosedjango.git@ed7d7f9aa969252ff799ec159f828eaa8c1cbc5a#egg=nosedjango-dev
+-e git://github.com/edx-solutions/xblock-mentoring.git@6732ef7871f20560070b189d5293a2750b66e1cd#egg=xblock-mentoring

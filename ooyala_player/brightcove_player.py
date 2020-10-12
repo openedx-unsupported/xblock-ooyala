@@ -1,15 +1,15 @@
 """ Xblock Mixin to play Brightcove videos """
 
-import urllib.request, urllib.error, urllib.parse
 import json
 import logging
+import urllib.error
+import urllib.parse
+import urllib.request
 
 import pkg_resources
-
 from xblock.fragment import Fragment
 
 from .utils import render_template
-
 
 PLAYBACK_API_ENDPOINT = 'https://edge.api.brightcove.com/playback/v1/accounts/{account_id}/videos/{video_id}'
 

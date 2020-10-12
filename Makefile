@@ -13,6 +13,19 @@ help: ## display this help message
 	@echo "Please use \`make <target>' where <target> is one of"
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
 
+quality: ## check coding style with pycodestyle and pylint
+	pycodestyle ooyala_player --max-line-length=120
+	pylint ooyala_player --disable=all --enable=function-redefined,undefined-variable,unused-variable
+
+test: ## run tests in the current virtualenv
+	mkdir -p var  # for var/workbench.log
+	python run_tests.py
+
+requirements: ## install development environment requirements
+	pip install -r requirements-dev.txt --exists-action w
+	pip install -r tests/requirements.txt --exists-action w
+	pip install -e .
+
 extract_translations: ## extract strings to be translated, outputting .po files
 	cd $(WORKING_DIR) && i18n_tool extract
 	mv $(EXTRACTED_DJANGO) $(EXTRACTED_TEXT)

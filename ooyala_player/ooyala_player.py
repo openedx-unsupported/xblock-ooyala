@@ -4,29 +4,21 @@
 # Imports ###########################################################
 from uuid import uuid4
 
-from lxml import etree
-
 from django.conf import settings
-from django.core.urlresolvers import reverse, NoReverseMatch
-
+from django.urls import NoReverseMatch, reverse
+from lxml import etree
+from mentoring.light_children import Boolean as LCBoolean
+from mentoring.light_children import LightChild
+from mentoring.light_children import Scope as LCScope
+from mentoring.light_children import String as LCString
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Boolean
 from xblock.exceptions import JsonHandlerError
+from xblock.fields import Boolean, Scope, String
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 
-from mentoring.light_children import (
-    LightChild,
-    Scope as LCScope,
-    String as LCString,
-    Boolean as LCBoolean
-)
-
-from .transcript import Transcript
 from .brightcove_player import BrightcovePlayerMixin
-from .utils import (
-    _,
-    I18NService
-)
+from .transcript import Transcript
+from .utils import I18NService, _
 
 # Globals ###########################################################
 COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
@@ -259,14 +251,14 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, StudioEditableXBlockMixin, XBlock):
     def publish_event(self, data, suffix=''):
         try:
             event_type = data.pop('event_type')
-        except KeyError as e:
+        except KeyError:
             return {'result': 'error', 'message': self.ugettext('Missing event_type in JSON data')}
 
         data['content_id'] = self.content_id
         data['user_id'] = self.scope_ids.user_id
 
         self.runtime.publish(self, event_type, data)
-        return {'result':'success'}
+        return {'result': 'success'}
 
     @XBlock.json_handler
     def store_language_preference(self, data, suffix=''):
@@ -310,7 +302,7 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
     TODO: refactor to not duplicated all field definitions.
     """
 
-    lightchild_block_type = 'ooyala-player' # used by LightChild.local_resource_url
+    lightchild_block_type = 'ooyala-player'  # used by LightChild.local_resource_url
 
     display_name = LCString(
         display_name=_("Display Name"),
@@ -349,7 +341,9 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
 
     fire_progress_event_on_student_view = LCBoolean(
         display_name=_("Fire Progress Event on Student View"),
-        help=_('Set to True if you would like to get a progress event in the event stream when the user views this xBlock.'),
+        help=_(
+            'Set to True if you would like to get a progress event in the event stream when the user views this xBlock.'
+        ),
         scope=LCScope.content,
         default=True
     )

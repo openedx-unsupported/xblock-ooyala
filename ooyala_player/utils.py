@@ -4,10 +4,9 @@
 # Imports ###########################################################
 
 import logging
+
 import pkg_resources
-
 from django.template import Context, Template
-
 
 # Globals ###########################################################
 

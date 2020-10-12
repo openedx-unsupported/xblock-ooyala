@@ -1,8 +1,10 @@
-from nose.tools import assert_equal
-import mock
 import datetime
 
+import mock
+from nose.tools import assert_equal
+
 from ooyala_player import tokens
+
 from .utils import MockNow
 
 # Helpers

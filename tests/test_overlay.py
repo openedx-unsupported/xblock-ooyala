@@ -1,11 +1,12 @@
-from nose.tools import assert_equal, assert_false
-from mock import MagicMock
-
 import re
-from lxml import etree
 from io import StringIO
 
+from lxml import etree
+from mock import MagicMock
+from nose.tools import assert_equal, assert_false
+
 from ooyala_player.overlay import OoyalaOverlay
+
 
 def test_init_overlay_from_minimal_node():
     node = etree.parse(StringIO("<overlay />")).getroot()

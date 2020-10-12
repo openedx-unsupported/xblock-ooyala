@@ -7,9 +7,9 @@ This script is required to run our selenium tests inside the xblock-sdk workbenc
 because the workbench SDK's settings file is not inside any python module.
 """
 
+import logging
 import os
 import sys
-import logging
 
 logging_level_overrides = {
     'workbench.views': logging.ERROR,
