@@ -141,7 +141,7 @@ class Transcript(object):
         )
 
         try:
-            transcript_content = requests.get(api_endpoint).content
+            transcript_content = requests.get(api_endpoint).content.decode("utf-8")
         except Exception as e:
             logger.error('Failed to load transcript content for transcript {}. Error {}'.format(threeplay_id, e))
 

@@ -20,7 +20,7 @@ class BrightcovePlayerMixin(object):
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        return data.decode("utf8")
+        return data.decode("utf-8")
 
     def bcov_student_view(self, context=None):
         """
@@ -64,7 +64,7 @@ def get_brightcove_video_detail(bcove_id, bcove_policy, bcove_account):
 
     try:
         response = urllib.request.urlopen(request).read()
-        video_data = json.loads(response)
+        video_data = json.loads(response.decode('utf-8'))
     except Exception as e:
         logger.warning('Brightcove video details retrieval failed for video ID: `{}` with exception {}'
                        .format(bcove_id, e))
