@@ -16,7 +16,7 @@ PLAYBACK_API_ENDPOINT = 'https://edge.api.brightcove.com/playback/v1/accounts/{a
 logger = logging.getLogger(__name__)
 
 
-class BrightcovePlayerMixin(object):
+class BrightcovePlayerMixin:
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)

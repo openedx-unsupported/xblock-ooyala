@@ -28,7 +28,7 @@ TRANSCRIPT_DOWNLOAD_OPTION = False
 logger = logging.getLogger(__name__)
 
 
-class Transcript(object):
+class Transcript:
     """
     Represents 3play transcript which appears below video
     """
