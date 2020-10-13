@@ -1,9 +1,8 @@
 import logging
+
 import requests
-
-from django.utils.translation import get_language_info
 from django.core.cache import cache
-
+from django.utils.translation import get_language_info
 from xblockutils.resources import ResourceLoader
 
 from .brightcove_player import get_brightcove_video_detail
@@ -29,7 +28,7 @@ TRANSCRIPT_DOWNLOAD_OPTION = False
 logger = logging.getLogger(__name__)
 
 
-class Transcript(object):
+class Transcript:
     """
     Represents 3play transcript which appears below video
     """
@@ -82,7 +81,9 @@ class Transcript(object):
                     if video_type == VideoType.BRIGHTCOVE:
                         # this might be a migrated video with 3play link detached
                         # get corresponding reference id and try re-fetching
-                        video_data = get_brightcove_video_detail(self.video_id, self.bcove_policy_key, self.bcove_account_id)
+                        video_data = get_brightcove_video_detail(
+                            self.video_id, self.bcove_policy_key, self.bcove_account_id
+                        )
                         if isinstance(video_data, dict) and video_data.get('reference_id'):
                             return self._get_transcripts(
                                 video_id=video_data.get('reference_id'),
@@ -133,14 +134,14 @@ class Transcript(object):
     @staticmethod
     def get_transcript_by_threeplay_id(api_key, threeplay_id, video_id):
         transcript_content = ''
-        api_endpoint =  TRANSCRIPT_CONTENT_API.format(
+        api_endpoint = TRANSCRIPT_CONTENT_API.format(
             video_id=video_id,
             api_key_3play=api_key,
             threeplay_id=threeplay_id
         )
 
         try:
-            transcript_content = requests.get(api_endpoint).content
+            transcript_content = requests.get(api_endpoint).content.decode("utf-8")
         except Exception as e:
             logger.error('Failed to load transcript content for transcript {}. Error {}'.format(threeplay_id, e))
 

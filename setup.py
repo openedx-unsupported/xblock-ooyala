@@ -3,8 +3,8 @@
 # Imports ###########################################################
 
 import os
-from setuptools import setup
 
+from setuptools import setup
 
 # Functions #########################################################
 
@@ -22,17 +22,17 @@ def package_data(pkg, root_list):
 # Main ##############################################################
 
 BLOCKS = [
-    'brightcove-player = ooyala_player:OoyalaPlayerBlock',
-    'ooyala-player = ooyala_player:OoyalaPlayerBlock',
+    'brightcove-player = ooyala_player.ooyala_player:OoyalaPlayerBlock',
+    'ooyala-player = ooyala_player.ooyala_player:OoyalaPlayerBlock',
 ]
 
 BLOCKS_CHILDREN = [
-    'ooyala-player = ooyala_player:OoyalaPlayerLightChildBlock'
+    'ooyala-player = ooyala_player.ooyala_player:OoyalaPlayerLightChildBlock'
 ]
 
 setup(
     name='xblock-ooyala-player',
-    version='4.1.0',
+    version='5.0.0',
     description='XBlock - Ooyala Video Player',
     packages=['ooyala_player'],
     install_requires=[
