@@ -1,2 +1,2 @@
 -e .
--e git://github.com/edx-solutions/xblock-mentoring.git@6732ef7871f20560070b189d5293a2750b66e1cd#egg=xblock-mentoring
+-e git://github.com/edx-solutions/xblock-mentoring.git@38d450999fce4f4a481f940cf76b12f307a0d8dc#egg=xblock-mentoring
