@@ -115,7 +115,7 @@ function BrightcovePlayerXblock(runtime, element) {
                 w.document.close();
                 w.focus();
                 w.print();
-                w.close();
+                setTimeout(function(){w.close();}, 100)
             },
             downloadTranscript: function () {
                 var currentSelected = $('.transcript-track.selected', element);

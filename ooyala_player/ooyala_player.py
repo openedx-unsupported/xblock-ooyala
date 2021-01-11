@@ -89,7 +89,11 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         """
         Player view, displayed to the student
         """
-        transcript = self.transcript.render(i18n_service=self.i18n_service)
+        if hasattr(self, 'lightchild_block_type'):
+            # Don't display transcript in case of OoyalaPlayerLightChildBlock
+            transcript = ''
+        else:
+            transcript = self.transcript.render(i18n_service=self.i18n_service)
 
         context = {
             'dom_id': 'bcove-' + self._get_unique_id(),
