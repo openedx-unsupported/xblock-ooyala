@@ -118,9 +118,9 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
         """
 
         try:
-            course_id = self.course_id.to_deprecated_string()
+            course_id = str(self.course_id)
             usage_id = self.course_id.make_usage_key(self.scope_ids.block_type, self.location.name)
-            usage_id = usage_id.to_deprecated_string().replace('/', ';_')
+            usage_id = str(usage_id).replace('/', ';_')
         except AttributeError:
             # workaround for workbench
             course_id = None
