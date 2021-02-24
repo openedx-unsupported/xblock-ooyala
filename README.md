@@ -1,6 +1,9 @@
 Brightcove XBlock
 ========================
 
+## Notice: This repo will be archived in April 2021.
+
+
 This XBlock allows to include Brightcove videos within an edX course.
 
 **Note:** Ooyala has been shutdown since `April 2020` so the XBlock
