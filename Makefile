@@ -13,6 +13,10 @@ help: ## display this help message
 	@echo "Please use \`make <target>' where <target> is one of"
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
 
+quality: ## check coding style with pycodestyle and pylint
+	pycodestyle ooyala_player --max-line-length=120
+	pylint ooyala_player
+
 extract_translations: ## extract strings to be translated, outputting .po files
 	cd $(WORKING_DIR) && i18n_tool extract
 	mv $(EXTRACTED_DJANGO) $(EXTRACTED_TEXT)

@@ -4,10 +4,9 @@
 # Imports ###########################################################
 
 import logging
+
 import pkg_resources
-
 from django.template import Context, Template
-
 
 # Globals ###########################################################
 
@@ -28,7 +27,7 @@ def load_resource(resource_path):
     Gets the content of a resource
     """
     resource_content = pkg_resources.resource_string(__name__, resource_path)
-    return unicode(resource_content)
+    return resource_content.decode("utf-8")
 
 
 def render_template(template_path, context={}):
@@ -48,7 +47,7 @@ def ngettext_fallback(text_singular, text_plural, number):
         return text_plural
 
 
-class DummyTranslationService(object):
+class DummyTranslationService:
     """
     Dummy drop-in replacement for i18n XBlock service
     """
@@ -57,7 +56,7 @@ class DummyTranslationService(object):
     ngettext = ngettext_fallback
 
 
-class I18NService(object):
+class I18NService:
     """
     Add i18n_service attribute to XBlocks
     """
