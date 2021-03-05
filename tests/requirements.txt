@@ -1,8 +1,10 @@
-Django>=1.8, <1.9
+Django~=2.2
 mock
 nose
 coverage
 rednose
+pylint
+pycodestyle==2.4.0
 
 -e .
--e git://github.com/edx/xblock-sdk.git@v0.1.4#egg=xblock-sdk
+-e git://github.com/edx/xblock-sdk.git@0.2.2#egg=xblock-sdk==v0.2.2

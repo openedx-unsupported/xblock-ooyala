@@ -6,15 +6,11 @@ from mock import Mock
 from nose.tools import assert_equal, assert_not_equal
 from xblock.field_data import DictFieldData
 from xblock.fields import ScopeIds
-from xblock.runtime import (
-    DictKeyValueStore,
-    KvsFieldData,
-)
-from xblock.test.tools import (
-    assert_false, TestRuntime
-)
+from xblock.runtime import DictKeyValueStore, KvsFieldData
+from xblock.test.tools import TestRuntime, assert_false
 
 from ooyala_player import OoyalaPlayerBlock, OoyalaPlayerLightChildBlock
+
 from .utils import MockNow, MockRuntime
 
 runtime = MockRuntime()

@@ -7,9 +7,9 @@ This script is required to run our selenium tests inside the xblock-sdk workbenc
 because the workbench SDK's settings file is not inside any python module.
 """
 
+import logging
 import os
 import sys
-import logging
 
 logging_level_overrides = {
     'workbench.views': logging.ERROR,
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     from django.conf import settings
     settings.INSTALLED_APPS += ("ooyala_player", )
 
-    for noisy_logger, log_level in logging_level_overrides.iteritems():
+    for noisy_logger, log_level in logging_level_overrides.items():
         logging.getLogger(noisy_logger).setLevel(log_level)
 
     from django.core.management import execute_from_command_line

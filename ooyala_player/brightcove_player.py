@@ -1,26 +1,26 @@
 """ Xblock Mixin to play Brightcove videos """
 
-import urllib2
 import json
 import logging
+import urllib.error
+import urllib.parse
+import urllib.request
 
 import pkg_resources
-
 from xblock.fragment import Fragment
 
 from .utils import render_template
-
 
 PLAYBACK_API_ENDPOINT = 'https://edge.api.brightcove.com/playback/v1/accounts/{account_id}/videos/{video_id}'
 
 logger = logging.getLogger(__name__)
 
 
-class BrightcovePlayerMixin(object):
+class BrightcovePlayerMixin:
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        return data.decode("utf8")
+        return data.decode("utf-8")
 
     def bcov_student_view(self, context=None):
         """
@@ -60,11 +60,11 @@ def get_brightcove_video_detail(bcove_id, bcove_policy, bcove_account):
     )
     video_data = {}
 
-    request = urllib2.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
+    request = urllib.request.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
 
     try:
-        response = urllib2.urlopen(request).read()
-        video_data = json.loads(response)
+        response = urllib.request.urlopen(request).read()
+        video_data = json.loads(response.decode('utf-8'))
     except Exception as e:
         logger.warning('Brightcove video details retrieval failed for video ID: `{}` with exception {}'
                        .format(bcove_id, e))
