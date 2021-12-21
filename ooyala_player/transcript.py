@@ -46,7 +46,8 @@ class Transcript:
         self.transcripts = self._get_transcripts(self.video_id, video_type)
 
         for transcript in self.transcripts:
-            lang_details = self.get_language_details(transcript.get('language_id'))
+            lang_details = self.get_language_details(
+                transcript.get('language_id'))
             lang_name = lang_details.get('name', 'English')
             lang_code = lang_details.get('code', 'en')
             localized_name = self.get_localized_name(lang_name, lang_code)
@@ -66,14 +67,16 @@ class Transcript:
             video_id=self.video_id,
             api_key_3play=self.threeplay_api_key
         )
-        cache_key = '{}_3play_transcripts'.format(video_id)
+        cache_key = f'{video_id}_3play_transcripts'
         transcripts = cache.get(cache_key)
 
         if transcripts is None:
             try:
                 transcripts = requests.get(api_endpoint).json()
             except Exception as e:
-                logger.error('Failed to load 3Play transcripts for video {}. Error {}'.format(video_id, e))
+                logger.error(
+                    # pylint: disable-next=consider-using-f-string
+                    'Failed to load 3Play transcripts for video {}. Error {}'.format(video_id, e))
                 transcripts = []
             else:
                 if type(transcripts) == dict and 'iserror' in transcripts:
@@ -108,7 +111,10 @@ class Transcript:
             try:
                 response = requests.get(language_api_endpoint).json()
             except Exception as e:
-                logger.error('Failed to load 3Play languages list. Error {}'.format(e))
+
+                logger.error(
+                    # pylint: disable-next=consider-using-f-string
+                    'Failed to load 3Play languages list. Error {}'.format(e))
                 lang_details = {}
             else:
                 lang_details = {
@@ -141,10 +147,12 @@ class Transcript:
         )
 
         try:
-            transcript_content = requests.get(api_endpoint).content.decode("utf-8")
+            transcript_content = requests.get(
+                api_endpoint).content.decode("utf-8")
         except Exception as e:
-            logger.error('Failed to load transcript content for transcript {}. Error {}'.format(threeplay_id, e))
-
+            # pylint: disable-next=consider-using-f-string
+            logger.error('Failed to load transcript content for transcript {}. Error {}'.format(
+                threeplay_id, e))
         return transcript_content
 
     def render(self, i18n_service=None):

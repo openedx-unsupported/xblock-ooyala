@@ -27,12 +27,16 @@ class BrightcovePlayerMixin:
         The primary view of the BrightcovePlayerXblock, shown to students
         when viewing courses.
         """
-        html = render_template("templates/html/brightcove_player.html", context=context)
+        html = render_template(
+            "templates/html/brightcove_player.html", context=context)
         frag = Fragment(html)
         frag.add_css(self.resource_string("public/css/brightcove_player.css"))
-        frag.add_javascript(self.resource_string("public/js/brightcove_player.js"))
-        frag.add_javascript_url(url='//players.brightcove.net/{}/default_default/index.min.js'
-                                .format(self.get_attribute_or_default('brightcove_account')))
+        frag.add_javascript(self.resource_string(
+            "public/js/brightcove_player.js"))
+        frag.add_javascript_url(url=f'//players.brightcove.net/'
+                                f'{self.get_attribute_or_default("brightcove_account")}/'
+                                f'default_default/index.min.js'
+                                )
         frag.initialize_js('BrightcovePlayerXblock')
         return frag
 
@@ -54,21 +58,27 @@ def get_brightcove_video_detail(bcove_id, bcove_policy, bcove_account):
     """
     Fetches details of a Brightcove video
     """
+    # pylint: disable-next=consider-using-f-string
     api_endpoint = PLAYBACK_API_ENDPOINT.format(
         account_id=bcove_account,
         video_id=bcove_id
     )
     video_data = {}
 
-    request = urllib.request.Request(api_endpoint, headers={"BCOV-Policy": bcove_policy})
+    request = urllib.request.Request(
+        api_endpoint, headers={"BCOV-Policy": bcove_policy})
 
     try:
-        response = urllib.request.urlopen(request).read()
+        with urllib.request.urlopen(request) as reader:
+            response = reader.read()
         video_data = json.loads(response.decode('utf-8'))
     except Exception as e:
+        # pylint: disable-next=consider-using-f-string
         logger.warning('Brightcove video details retrieval failed for video ID: `{}` with exception {}'
                        .format(bcove_id, e))
     else:
-        logger.info('Successfully retrieval of Brightcove video details for video ID: `{}`'.format(bcove_id))
+        logger.info(
+            # pylint: disable-next=consider-using-f-string
+            'Successfully retrieval of Brightcove video details for video ID: `{}`'.format(bcove_id))
 
     return video_data

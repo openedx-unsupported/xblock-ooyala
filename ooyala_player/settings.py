@@ -20,7 +20,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # SECURITY WARNING: keep the secret key used in production secret!
 # This is just a container for running tests, it's okay to allow it to be
 # defaulted here if not present in environment settings
-SECRET_KEY = os.environ.get('SECRET_KEY', 'xydut433=!s!i(n9u&1oiyv!hu1k=(h-)nuu30d(gd(ew%7+1w')
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY', 'xydut433=!s!i(n9u&1oiyv!hu1k=(h-)nuu30d(gd(ew%7+1w')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # This is just a container for running tests
@@ -66,7 +67,8 @@ LOCALE_PATHS = [
 # statici18n
 # http://django-statici18n.readthedocs.io/en/latest/settings.html
 
-with open(os.path.join(BASE_DIR, 'ooyala_player/translations/config.yaml'), 'r') as locale_config_file:
+with open(
+        os.path.join(BASE_DIR, 'ooyala_player/translations/config.yaml'), 'r', encoding='utf-8') as locale_config_file:
     LOCALE_CONFIG = yaml.load(locale_config_file)
 
     LANGUAGES = [

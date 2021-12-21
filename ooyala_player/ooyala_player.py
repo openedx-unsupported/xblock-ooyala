@@ -21,7 +21,8 @@ from .transcript import Transcript
 from .utils import I18NService, _
 
 # Globals ###########################################################
-COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
+COMPLETION_VIDEO_COMPLETE_PERCENTAGE = getattr(
+    settings, 'COMPLETION_VIDEO_COMPLETE_PERCENTAGE', 1.0)
 
 # Classes ###########################################################
 
@@ -119,7 +120,8 @@ class OoyalaPlayerMixin(I18NService, BrightcovePlayerMixin):
 
         try:
             course_id = str(self.course_id)
-            usage_id = self.course_id.make_usage_key(self.scope_ids.block_type, self.location.name)
+            usage_id = self.course_id.make_usage_key(
+                self.scope_ids.block_type, self.location.name)
             usage_id = str(usage_id).replace('/', ';_')
         except AttributeError:
             # workaround for workbench
@@ -241,7 +243,8 @@ class OoyalaPlayerBlock(OoyalaPlayerMixin, StudioEditableXBlockMixin, XBlock):
         default=False
     )
 
-    editable_fields = ('display_name', 'content_id', 'autoplay', 'fire_progress_event_on_student_view')
+    editable_fields = ('display_name', 'content_id', 'autoplay',
+                       'fire_progress_event_on_student_view')
 
     def _get_unique_id(self):
         try:
@@ -306,7 +309,8 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
     TODO: refactor to not duplicated all field definitions.
     """
 
-    lightchild_block_type = 'ooyala-player'  # used by LightChild.local_resource_url
+    # used by LightChild.local_resource_url
+    lightchild_block_type = 'ooyala-player'
 
     display_name = LCString(
         display_name=_("Display Name"),
@@ -354,12 +358,14 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
 
     @property
     def brightcove_policy(self):
-        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
+        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(
+            settings, "XBLOCK_SETTINGS") else {}
         return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_POLICY')
 
     @property
     def brightcove_account(self):
-        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(settings, "XBLOCK_SETTINGS") else {}
+        xblock_settings = settings.XBLOCK_SETTINGS if hasattr(
+            settings, "XBLOCK_SETTINGS") else {}
         return xblock_settings.get('OoyalaPlayerBlock', {}).get('BCOVE_ACCOUNT_ID')
 
     @classmethod
@@ -371,7 +377,8 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
             node.remove(child)
         xml_config += "</ooyala>"
 
-        block = super(OoyalaPlayerLightChildBlock, cls).init_block_from_node(block, node, attr)
+        block = super(OoyalaPlayerLightChildBlock,
+                      cls).init_block_from_node(block, node, attr)
 
         block.xml_config = xml_config
 
@@ -386,10 +393,10 @@ class OoyalaPlayerLightChildBlock(OoyalaPlayerMixin, LightChild):
             'block_type': block.lightchild_block_type or block.scope_ids.block_type,
             'uri': uri,
         })
-        return '//{}{}'.format(settings.SITE_NAME, path)
+        return f'//{settings.SITE_NAME}{path}'
 
     def _get_unique_id(self):
         # We can have mulitple lightchild in the same block
         unique_id = self.location.name
-        unique_id += "-{0}".format(uuid4().hex)
+        unique_id += f"-{uuid4().hex}"
         return unique_id
